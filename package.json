@@ -9,6 +9,10 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.12.9"
+    "@astrojs/tailwind": "^6.0.2",
+    "astro": "^5.12.9",
+    "mp4box": "^1.4.7",
+    "tailwindcss": "^3.4.17",
+    "video.js": "^8.23.4"
   }
 }

@@ -3,133 +3,133 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout>
-	<main>
-		<header class="hero">
-			<div class="container">
-				<h1>QuickEditVideo</h1>
-				<p class="slogan">Edit, Convert & Compress Videos Online - Fast, Free & Professional</p>
+	<main class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen">
+		<header class="text-center py-16 text-white">
+			<div class="max-w-6xl mx-auto px-5">
+				<h1 class="text-4xl md:text-6xl font-bold mb-5 drop-shadow-lg">QuickEditVideo</h1>
+				<p class="text-xl md:text-2xl font-light max-w-2xl mx-auto opacity-95">Edit, Convert & Compress Videos Online - Fast, Free & Professional</p>
 			</div>
 		</header>
 
-		<section class="tools-section">
-			<div class="container">
-				<div class="tools-grid">
+		<section class="bg-white rounded-t-3xl mt-10 py-20 shadow-2xl">
+			<div class="max-w-6xl mx-auto px-5">
+				<div class="space-y-16">
 					<div class="tool-category">
-						<h2>Video Editing</h2>
-						<div class="tools-list">
-							<a href="/trim" class="tool-item">
-								<span class="tool-icon">✂️</span>
-								<span class="tool-name">Video Trimmer</span>
+						<h2 class="text-3xl font-semibold text-gray-800 mb-8 border-b-4 border-blue-500 pb-4 text-center">Video Editing</h2>
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+							<a href="/trim" class="flex items-center p-4 bg-gray-50 hover:bg-blue-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">✂️</span>
+								<span class="font-medium">Video Trimmer</span>
 							</a>
-							<a href="/merge" class="tool-item">
-								<span class="tool-icon">🔗</span>
-								<span class="tool-name">Video Merger</span>
+							<a href="/merge" class="flex items-center p-4 bg-gray-50 hover:bg-blue-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🔗</span>
+								<span class="font-medium">Video Merger</span>
 							</a>
-							<a href="/resize" class="tool-item">
-								<span class="tool-icon">📏</span>
-								<span class="tool-name">Video Resizer</span>
+							<a href="/resize" class="flex items-center p-4 bg-gray-50 hover:bg-blue-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">📏</span>
+								<span class="font-medium">Video Resizer</span>
 							</a>
-							<a href="/rotate" class="tool-item">
-								<span class="tool-icon">🔄</span>
-								<span class="tool-name">Video Rotator</span>
+							<a href="/rotate" class="flex items-center p-4 bg-gray-50 hover:bg-blue-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🔄</span>
+								<span class="font-medium">Video Rotator</span>
 							</a>
-							<a href="/crop" class="tool-item">
-								<span class="tool-icon">✂️</span>
-								<span class="tool-name">Video Cropper</span>
+							<a href="/crop" class="flex items-center p-4 bg-gray-50 hover:bg-blue-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">✂️</span>
+								<span class="font-medium">Video Cropper</span>
 							</a>
-							<a href="/speed" class="tool-item">
-								<span class="tool-icon">⚡</span>
-								<span class="tool-name">Speed Changer</span>
+							<a href="/speed" class="flex items-center p-4 bg-gray-50 hover:bg-blue-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">⚡</span>
+								<span class="font-medium">Speed Changer</span>
 							</a>
 						</div>
 					</div>
 
 					<div class="tool-category">
-						<h2>Video Converters</h2>
-						<div class="tools-list">
-							<a href="/to-mp4" class="tool-item">
-								<span class="tool-icon">🎬</span>
-								<span class="tool-name">To MP4</span>
+						<h2 class="text-3xl font-semibold text-gray-800 mb-8 border-b-4 border-green-500 pb-4 text-center">Video Converters</h2>
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+							<a href="/to-mp4" class="flex items-center p-4 bg-gray-50 hover:bg-green-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🎬</span>
+								<span class="font-medium">To MP4</span>
 							</a>
-							<a href="/to-avi" class="tool-item">
-								<span class="tool-icon">📹</span>
-								<span class="tool-name">To AVI</span>
+							<a href="/to-avi" class="flex items-center p-4 bg-gray-50 hover:bg-green-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">📹</span>
+								<span class="font-medium">To AVI</span>
 							</a>
-							<a href="/to-mov" class="tool-item">
-								<span class="tool-icon">🎥</span>
-								<span class="tool-name">To MOV</span>
+							<a href="/to-mov" class="flex items-center p-4 bg-gray-50 hover:bg-green-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🎥</span>
+								<span class="font-medium">To MOV</span>
 							</a>
-							<a href="/to-webm" class="tool-item">
-								<span class="tool-icon">🌐</span>
-								<span class="tool-name">To WebM</span>
+							<a href="/to-webm" class="flex items-center p-4 bg-gray-50 hover:bg-green-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🌐</span>
+								<span class="font-medium">To WebM</span>
 							</a>
-							<a href="/to-gif" class="tool-item">
-								<span class="tool-icon">🎞️</span>
-								<span class="tool-name">To GIF</span>
+							<a href="/to-gif" class="flex items-center p-4 bg-gray-50 hover:bg-green-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🎞️</span>
+								<span class="font-medium">To GIF</span>
 							</a>
-							<a href="/to-mkv" class="tool-item">
-								<span class="tool-icon">📺</span>
-								<span class="tool-name">To MKV</span>
-							</a>
-						</div>
-					</div>
-
-					<div class="tool-category">
-						<h2>Compression & Quality</h2>
-						<div class="tools-list">
-							<a href="/compress" class="tool-item">
-								<span class="tool-icon">📦</span>
-								<span class="tool-name">Video Compressor</span>
-							</a>
-							<a href="/enhance" class="tool-item">
-								<span class="tool-icon">✨</span>
-								<span class="tool-name">Video Enhancer</span>
-							</a>
-							<a href="/stabilize" class="tool-item">
-								<span class="tool-icon">🎯</span>
-								<span class="tool-name">Video Stabilizer</span>
-							</a>
-							<a href="/upscale" class="tool-item">
-								<span class="tool-icon">🔍</span>
-								<span class="tool-name">Video Upscaler</span>
-							</a>
-							<a href="/denoise" class="tool-item">
-								<span class="tool-icon">🔇</span>
-								<span class="tool-name">Noise Reducer</span>
-							</a>
-							<a href="/repair" class="tool-item">
-								<span class="tool-icon">🔧</span>
-								<span class="tool-name">Video Repair</span>
+							<a href="/to-mkv" class="flex items-center p-4 bg-gray-50 hover:bg-green-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">📺</span>
+								<span class="font-medium">To MKV</span>
 							</a>
 						</div>
 					</div>
 
 					<div class="tool-category">
-						<h2>Audio & Subtitles</h2>
-						<div class="tools-list">
-							<a href="/extract-audio" class="tool-item">
-								<span class="tool-icon">🎵</span>
-								<span class="tool-name">Extract Audio</span>
+						<h2 class="text-3xl font-semibold text-gray-800 mb-8 border-b-4 border-purple-500 pb-4 text-center">Compression & Quality</h2>
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+							<a href="/compress" class="flex items-center p-4 bg-gray-50 hover:bg-purple-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">📦</span>
+								<span class="font-medium">Video Compressor</span>
 							</a>
-							<a href="/add-audio" class="tool-item">
-								<span class="tool-icon">🎧</span>
-								<span class="tool-name">Add Audio</span>
+							<a href="/enhance" class="flex items-center p-4 bg-gray-50 hover:bg-purple-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">✨</span>
+								<span class="font-medium">Video Enhancer</span>
 							</a>
-							<a href="/remove-audio" class="tool-item">
-								<span class="tool-icon">🔇</span>
-								<span class="tool-name">Remove Audio</span>
+							<a href="/stabilize" class="flex items-center p-4 bg-gray-50 hover:bg-purple-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🎯</span>
+								<span class="font-medium">Video Stabilizer</span>
 							</a>
-							<a href="/add-subtitles" class="tool-item">
-								<span class="tool-icon">💬</span>
-								<span class="tool-name">Add Subtitles</span>
+							<a href="/upscale" class="flex items-center p-4 bg-gray-50 hover:bg-purple-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🔍</span>
+								<span class="font-medium">Video Upscaler</span>
 							</a>
-							<a href="/volume" class="tool-item">
-								<span class="tool-icon">🔊</span>
-								<span class="tool-name">Volume Adjuster</span>
+							<a href="/denoise" class="flex items-center p-4 bg-gray-50 hover:bg-purple-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🔇</span>
+								<span class="font-medium">Noise Reducer</span>
 							</a>
-							<a href="/silence-remover" class="tool-item">
-								<span class="tool-icon">🤫</span>
-								<span class="tool-name">Silence Remover</span>
+							<a href="/repair" class="flex items-center p-4 bg-gray-50 hover:bg-purple-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🔧</span>
+								<span class="font-medium">Video Repair</span>
+							</a>
+						</div>
+					</div>
+
+					<div class="tool-category">
+						<h2 class="text-3xl font-semibold text-gray-800 mb-8 border-b-4 border-orange-500 pb-4 text-center">Audio & Subtitles</h2>
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+							<a href="/extract-audio" class="flex items-center p-4 bg-gray-50 hover:bg-orange-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🎵</span>
+								<span class="font-medium">Extract Audio</span>
+							</a>
+							<a href="/add-audio" class="flex items-center p-4 bg-gray-50 hover:bg-orange-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🎧</span>
+								<span class="font-medium">Add Audio</span>
+							</a>
+							<a href="/remove-audio" class="flex items-center p-4 bg-gray-50 hover:bg-orange-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🔇</span>
+								<span class="font-medium">Remove Audio</span>
+							</a>
+							<a href="/add-subtitles" class="flex items-center p-4 bg-gray-50 hover:bg-orange-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">💬</span>
+								<span class="font-medium">Add Subtitles</span>
+							</a>
+							<a href="/volume" class="flex items-center p-4 bg-gray-50 hover:bg-orange-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🔊</span>
+								<span class="font-medium">Volume Adjuster</span>
+							</a>
+							<a href="/silence-remover" class="flex items-center p-4 bg-gray-50 hover:bg-orange-500 hover:text-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+								<span class="text-xl mr-3">🤫</span>
+								<span class="font-medium">Silence Remover</span>
 							</a>
 						</div>
 					</div>
@@ -138,132 +138,3 @@ import Layout from '../layouts/Layout.astro';
 		</section>
 	</main>
 </Layout>
-
-<style>
-	* {
-		margin: 0;
-		padding: 0;
-		box-sizing: border-box;
-	}
-
-	body {
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-		line-height: 1.6;
-		color: #333;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		min-height: 100vh;
-	}
-
-	.container {
-		max-width: 1200px;
-		margin: 0 auto;
-		padding: 0 20px;
-	}
-
-	.hero {
-		text-align: center;
-		padding: 60px 0;
-		color: white;
-	}
-
-	.hero h1 {
-		font-size: 3.5rem;
-		font-weight: 700;
-		margin-bottom: 20px;
-		text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-	}
-
-	.slogan {
-		font-size: 1.3rem;
-		font-weight: 300;
-		max-width: 600px;
-		margin: 0 auto;
-		opacity: 0.95;
-	}
-
-	.tools-section {
-		background: white;
-		padding: 80px 0;
-		border-radius: 30px 30px 0 0;
-		margin-top: 40px;
-		box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
-	}
-
-	.tools-grid {
-		display: flex;
-		flex-direction: column;
-		gap: 60px;
-	}
-
-	.tool-category {
-		width: 100%;
-	}
-
-	.tool-category h2 {
-		font-size: 1.8rem;
-		color: #2c3e50;
-		margin-bottom: 30px;
-		border-bottom: 3px solid #667eea;
-		padding-bottom: 15px;
-		text-align: center;
-	}
-
-	.tools-list {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 20px;
-	}
-
-	.tool-item {
-		display: flex;
-		align-items: center;
-		padding: 15px 20px;
-		text-decoration: none;
-		color: #444;
-		background: #f8f9fa;
-		border-radius: 10px;
-		transition: all 0.3s ease;
-		border: 1px solid #e9ecef;
-	}
-
-	.tool-item:hover {
-		background: #667eea;
-		color: white;
-		transform: translateY(-2px);
-		box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-	}
-
-	.tool-icon {
-		font-size: 1.2rem;
-		margin-right: 12px;
-		min-width: 24px;
-	}
-
-	.tool-name {
-		font-weight: 500;
-	}
-
-	@media (max-width: 768px) {
-		.hero h1 {
-			font-size: 2.5rem;
-		}
-		
-		.slogan {
-			font-size: 1.1rem;
-		}
-		
-		.tools-list {
-			grid-template-columns: 1fr;
-		}
-		
-		.container {
-			padding: 0 15px;
-		}
-	}
-
-	@media (max-width: 992px) and (min-width: 769px) {
-		.tools-list {
-			grid-template-columns: repeat(2, 1fr);
-		}
-	}
-</style>
