@@ -150,10 +150,6 @@ const VideoTrimmer = () => {
 		const url = URL.createObjectURL(file);
 		setVideoUrl(url);
 		setCurrentView('trimming');
-		
-		// Hide quick help when video is loaded
-		const helpSection = document.getElementById('quick-help');
-		if (helpSection) helpSection.style.display = 'none';
 	};
 
 	// Handle video metadata loaded
@@ -499,7 +495,7 @@ const VideoTrimmer = () => {
 			</div>
 
 			<!-- Timeline Section -->
-			<div class="w-full">
+			<div class="w-full hidden md:block">
 				<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
 					<h3 class="font-semibold text-gray-900 mb-4">Timeline</h3>
 					
