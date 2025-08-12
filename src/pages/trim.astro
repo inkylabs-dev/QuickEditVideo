@@ -1,0 +1,72 @@
+---
+import Layout from '../layouts/Layout.astro';
+import VideoTrimmer from '../components/VideoTrimmer.astro';
+---
+
+<Layout>
+	<main class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen">
+		<!-- Hero Section -->
+		<header class="text-center py-16 text-white">
+			<div class="max-w-4xl mx-auto px-5">
+				<h1 class="text-4xl md:text-6xl font-bold mb-5 drop-shadow-lg">Video Trimmer</h1>
+				<p class="text-xl md:text-2xl font-light max-w-2xl mx-auto opacity-95">Trim and cut your videos with precision - Fast, Free & Professional</p>
+			</div>
+		</header>
+
+		<!-- Main Content Area -->
+		<section class="bg-white rounded-t-3xl mt-10 py-20 shadow-2xl">
+			<div class="max-w-4xl mx-auto px-5">
+				<!-- File Upload Section (handled by VideoTrimmer component) -->
+				<div class="mb-16">
+					<VideoTrimmer />
+				</div>
+
+				<!-- Feature Cards -->
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+					<div class="text-center p-6 bg-gray-50 rounded-xl">
+						<div class="text-4xl mb-4">✂️</div>
+						<h3 class="text-xl font-semibold text-gray-800 mb-2">Precise Trimming</h3>
+						<p class="text-gray-600">Cut your videos with frame-level precision using our intuitive timeline interface.</p>
+					</div>
+					<div class="text-center p-6 bg-gray-50 rounded-xl">
+						<div class="text-4xl mb-4">⚡</div>
+						<h3 class="text-xl font-semibold text-gray-800 mb-2">Fast Processing</h3>
+						<p class="text-gray-600">Browser-based processing with FFmpeg. Your files stay on your device.</p>
+					</div>
+					<div class="text-center p-6 bg-gray-50 rounded-xl">
+						<div class="text-4xl mb-4">🎯</div>
+						<h3 class="text-xl font-semibold text-gray-800 mb-2">Multiple Formats</h3>
+						<p class="text-gray-600">Support for MP4, WebM, AVI, MOV and many other popular video formats.</p>
+					</div>
+				</div>
+
+				<!-- Tutorial Section -->
+				<div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8">
+					<h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">How to Use Video Trimmer</h2>
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+						<div class="text-center">
+							<div class="bg-blue-500 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 text-xl font-bold">1</div>
+							<h4 class="font-semibold text-gray-800 mb-2">Upload Video</h4>
+							<p class="text-sm text-gray-600">Click or drag to select your video file from your computer.</p>
+						</div>
+						<div class="text-center">
+							<div class="bg-blue-500 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 text-xl font-bold">2</div>
+							<h4 class="font-semibold text-gray-800 mb-2">Set Trim Points</h4>
+							<p class="text-sm text-gray-600">Drag the handles on the timeline to select start and end points.</p>
+						</div>
+						<div class="text-center">
+							<div class="bg-blue-500 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 text-xl font-bold">3</div>
+							<h4 class="font-semibold text-gray-800 mb-2">Preview</h4>
+							<p class="text-sm text-gray-600">Watch the trimmed section to ensure it's exactly what you want.</p>
+						</div>
+						<div class="text-center">
+							<div class="bg-blue-500 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 text-xl font-bold">4</div>
+							<h4 class="font-semibold text-gray-800 mb-2">Download</h4>
+							<p class="text-sm text-gray-600">Save your trimmed video file to your device instantly.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</Layout>

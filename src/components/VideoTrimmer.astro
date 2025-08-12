@@ -1,0 +1,435 @@
+---
+// VideoTrimmer component - now using Preact and ffmpeg.wasm
+---
+
+<div id="video-trimmer-root"></div>
+
+<style>
+	.video-js {
+		width: 100% !important;
+		height: auto !important;
+	}
+	
+	#timeline-container {
+		user-select: none;
+	}
+	
+	#left-handle, #right-handle {
+		z-index: 10;
+	}
+	
+	#playhead {
+		z-index: 5;
+	}
+	
+	#trim-selection {
+		z-index: 1;
+	}
+</style>
+
+<script type="module">
+import { render } from 'https://esm.sh/preact@10.19.3';
+import { useState, useEffect, useRef } from 'https://esm.sh/preact@10.19.3/hooks';
+import { html } from 'https://esm.sh/htm@3.1.1/preact';
+
+const VideoTrimmer = () => {
+	const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'trimming'
+	const [selectedFile, setSelectedFile] = useState(null);
+	const [videoUrl, setVideoUrl] = useState('');
+	const [videoDuration, setVideoDuration] = useState(0);
+	const [startTime, setStartTime] = useState(0);
+	const [endTime, setEndTime] = useState(0);
+	const [startPos, setStartPos] = useState(0); // percentage
+	const [endPos, setEndPos] = useState(100); // percentage
+	const [isProcessing, setIsProcessing] = useState(false);
+	const [ffmpeg, setFfmpeg] = useState(null);
+	const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
+	const [isDragging, setIsDragging] = useState(false);
+	const [dragHandle, setDragHandle] = useState(null);
+	
+	const videoRef = useRef(null);
+	const timelineRef = useRef(null);
+	const fileInputRef = useRef(null);
+
+	// Initialize FFmpeg
+	useEffect(() => {
+		const loadFFmpeg = async () => {
+			try {
+				console.log('SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
+				
+				// Load FFmpeg scripts dynamically
+				if (!window.FFmpeg) {
+					// Load the FFmpeg script
+					await new Promise((resolve, reject) => {
+						const script = document.createElement('script');
+						script.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js';
+						script.onload = resolve;
+						script.onerror = reject;
+						document.head.appendChild(script);
+					});
+				}
+
+				if (!window.FFmpeg) {
+					throw new Error('FFmpeg failed to load from CDN');
+				}
+
+				const { createFFmpeg, fetchFile } = window.FFmpeg;
+				const ffmpegInstance = createFFmpeg({ 
+					log: true,
+					corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
+				});
+				
+				console.log('Loading FFmpeg core...');
+				await ffmpegInstance.load();
+				setFfmpeg(ffmpegInstance);
+				setFfmpegLoaded(true);
+				console.log('FFmpeg loaded successfully');
+			} catch (error) {
+				console.error('Failed to load FFmpeg:', error);
+				console.log('Make sure to restart the dev server after updating astro.config.mjs');
+			}
+		};
+		
+		loadFFmpeg();
+	}, []);
+
+	// Handle file selection
+	const handleFileSelect = (file) => {
+		if (!file || !file.type.startsWith('video/')) {
+			alert('Please select a valid video file.');
+			return;
+		}
+
+		setSelectedFile(file);
+		const url = URL.createObjectURL(file);
+		setVideoUrl(url);
+		setCurrentView('trimming');
+	};
+
+	// Handle video metadata loaded
+	const handleVideoLoaded = () => {
+		if (videoRef.current) {
+			const duration = videoRef.current.duration;
+			setVideoDuration(duration);
+			setEndTime(duration);
+			console.log('Video duration:', duration);
+		}
+	};
+
+	// Format time for display
+	const formatTime = (seconds) => {
+		const min = Math.floor(seconds / 60);
+		const sec = (seconds % 60).toFixed(1);
+		return `${min.toString().padStart(2, '0')}:${sec.padStart(4, '0')}`;
+	};
+
+	// Handle timeline drag
+	const handleMouseDown = (e, handle) => {
+		e.preventDefault();
+		setIsDragging(true);
+		setDragHandle(handle);
+		
+		const handleMouseMove = (e) => {
+			if (!timelineRef.current) return;
+			
+			const rect = timelineRef.current.getBoundingClientRect();
+			const x = e.clientX - rect.left;
+			const position = Math.max(0, Math.min(100, (x / rect.width) * 100));
+			
+			if (handle === 'left') {
+				const newStartPos = Math.min(position, endPos - 1);
+				const newStartTime = (newStartPos / 100) * videoDuration;
+				setStartPos(newStartPos);
+				setStartTime(newStartTime);
+				
+				// Seek video to start position
+				if (videoRef.current) {
+					videoRef.current.currentTime = newStartTime;
+				}
+			} else if (handle === 'right') {
+				const newEndPos = Math.max(position, startPos + 1);
+				const newEndTime = (newEndPos / 100) * videoDuration;
+				setEndPos(newEndPos);
+				setEndTime(newEndTime);
+				
+				// Seek video to end position
+				if (videoRef.current) {
+					videoRef.current.currentTime = newEndTime;
+				}
+			}
+		};
+		
+		const handleMouseUp = () => {
+			setIsDragging(false);
+			setDragHandle(null);
+			document.removeEventListener('mousemove', handleMouseMove);
+			document.removeEventListener('mouseup', handleMouseUp);
+		};
+		
+		document.addEventListener('mousemove', handleMouseMove);
+		document.addEventListener('mouseup', handleMouseUp);
+	};
+
+	// Trim video using FFmpeg
+	const trimVideo = async () => {
+		if (!ffmpeg || !ffmpegLoaded || !selectedFile) {
+			alert('FFmpeg not loaded or no file selected');
+			return;
+		}
+
+		setIsProcessing(true);
+
+		try {
+			const { fetchFile } = window.FFmpeg;
+			const inputFileName = 'input.' + selectedFile.name.split('.').pop();
+			const outputFileName = selectedFile.name.split('.')[0] + '_trimmed.mp4';
+
+			// Write input file to FFmpeg filesystem
+			ffmpeg.FS('writeFile', inputFileName, await fetchFile(selectedFile));
+
+			// Run FFmpeg command to trim video
+			await ffmpeg.run(
+				'-i', inputFileName,
+				'-ss', startTime.toString(),
+				'-t', (endTime - startTime).toString(),
+				'-c', 'copy', // Copy without re-encoding for speed
+				outputFileName
+			);
+
+			// Read output file
+			const data = ffmpeg.FS('readFile', outputFileName);
+			
+			// Create download link
+			const blob = new Blob([data.buffer], { type: 'video/mp4' });
+			const url = URL.createObjectURL(blob);
+			
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = outputFileName;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+
+			// Clean up FFmpeg files
+			ffmpeg.FS('unlink', inputFileName);
+			ffmpeg.FS('unlink', outputFileName);
+
+		} catch (error) {
+			console.error('Error trimming video:', error);
+			alert('Error processing video. Please try again.');
+		} finally {
+			setIsProcessing(false);
+		}
+	};
+
+	// Reset trim to full video
+	const resetTrim = () => {
+		setStartPos(0);
+		setEndPos(100);
+		setStartTime(0);
+		setEndTime(videoDuration);
+	};
+
+	// Play/Pause video
+	const togglePlayPause = () => {
+		if (videoRef.current) {
+			if (videoRef.current.paused) {
+				videoRef.current.play();
+			} else {
+				videoRef.current.pause();
+			}
+		}
+	};
+
+	if (currentView === 'landing') {
+		return html`
+			<div class="text-center">
+				<div 
+					class="border-2 border-dashed border-blue-300 rounded-xl p-12 bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer" 
+					onClick=${() => fileInputRef.current?.click()}
+					onDrop=${(e) => {
+						e.preventDefault();
+						const files = e.dataTransfer.files;
+						if (files.length > 0) handleFileSelect(files[0]);
+					}}
+					onDragOver=${(e) => e.preventDefault()}
+				>
+					<input 
+						type="file" 
+						accept="video/*" 
+						class="hidden"
+						ref=${fileInputRef}
+						onChange=${(e) => handleFileSelect(e.target.files[0])}
+					/>
+					<div class="text-6xl mb-4">📹</div>
+					<h3 class="text-2xl font-semibold text-gray-800 mb-2">Choose Video File</h3>
+					<p class="text-gray-600 mb-4">Click here or drag and drop your video file</p>
+					<button class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium transition-colors">
+						Choose File
+					</button>
+				</div>
+			</div>
+		`;
+	}
+
+	return html`
+		<div class="trim-app-state">
+			<header class="text-center py-8 text-white relative">
+				<div class="max-w-6xl mx-auto px-5">
+					<!-- Top right controls -->
+					<div class="absolute top-4 right-4 flex gap-2">
+						<button 
+							onClick=${resetTrim}
+							class="bg-white hover:bg-black text-black hover:text-white border-2 border-black rounded-lg px-3 py-2 transition-colors flex items-center gap-1"
+							title="Reset Trim"
+						>
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" />
+							</svg>
+							<span class="text-sm">Reset</span>
+						</button>
+						<button 
+							onClick=${() => setCurrentView('landing')}
+							class="bg-white hover:bg-black text-black hover:text-white border-2 border-black rounded-lg px-2 py-2 transition-colors"
+							title="Close"
+						>
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
+							</svg>
+						</button>
+					</div>
+					<p class="text-lg opacity-95">${selectedFile?.name || 'Processing your video...'}</p>
+				</div>
+			</header>
+
+			<section class="bg-white rounded-t-3xl mt-4 py-8 shadow-2xl min-h-screen">
+				<div class="max-w-6xl mx-auto px-5">
+					<!-- Video Player -->
+					<div class="mb-8">
+						<video 
+							ref=${videoRef}
+							class="w-full rounded-lg shadow-lg" 
+							controls 
+							preload="auto" 
+							width="800" 
+							height="450"
+							src=${videoUrl}
+							onLoadedMetadata=${handleVideoLoaded}
+						>
+							<p>Your browser does not support the video tag.</p>
+						</video>
+					</div>
+
+					<!-- Timeline -->
+					<div class="mb-8">
+						<div class="bg-gray-100 rounded-lg p-6">
+							<h3 class="text-xl font-semibold mb-4">Timeline Controls</h3>
+							<div class="relative">
+								<div 
+									ref=${timelineRef}
+									class="h-20 bg-gray-200 rounded-lg relative cursor-pointer"
+								>
+									<div class="absolute inset-0 pointer-events-none">
+										<div 
+											class="absolute top-0 bottom-0 bg-blue-500 bg-opacity-30"
+											style=${{ left: `${startPos}%`, width: `${endPos - startPos}%` }}
+										></div>
+									</div>
+									<div 
+										class="absolute top-0 bottom-0 w-3 bg-blue-500 cursor-ew-resize rounded-l-lg hover:bg-blue-600 transition-colors"
+										style=${{ left: `${startPos}%` }}
+										onMouseDown=${(e) => handleMouseDown(e, 'left')}
+									></div>
+									<div 
+										class="absolute top-0 bottom-0 w-3 bg-blue-500 cursor-ew-resize rounded-r-lg hover:bg-blue-600 transition-colors"
+										style=${{ left: `${endPos}%` }}
+										onMouseDown=${(e) => handleMouseDown(e, 'right')}
+									></div>
+								</div>
+								<div class="flex justify-between mt-2 text-sm text-gray-600">
+									<span>${formatTime(startTime)}</span>
+									<span>Duration: ${formatTime(videoDuration)}</span>
+									<span>${formatTime(endTime)}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Controls -->
+					<div class="flex flex-wrap items-center justify-between gap-4">
+						<!-- Left side: Play button -->
+						<div class="flex items-center gap-4">
+							<button 
+								onClick=${togglePlayPause}
+								class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+							>
+								Play/Pause
+							</button>
+							
+							<!-- Time inputs -->
+							<div class="flex items-center gap-2 text-sm">
+								<label class="text-gray-600">Start:</label>
+								<input 
+									type="number" 
+									step="0.1" 
+									min="0" 
+									max=${videoDuration}
+									value=${startTime.toFixed(1)}
+									onChange=${(e) => {
+										const newStartTime = parseFloat(e.target.value);
+										if (newStartTime >= 0 && newStartTime < endTime) {
+											setStartTime(newStartTime);
+											setStartPos((newStartTime / videoDuration) * 100);
+											if (videoRef.current) {
+												videoRef.current.currentTime = newStartTime;
+											}
+										}
+									}}
+									class="w-20 px-2 py-1 border border-gray-300 rounded text-center"
+								/>
+								<span class="text-gray-500">s</span>
+							</div>
+							
+							<div class="flex items-center gap-2 text-sm">
+								<label class="text-gray-600">End:</label>
+								<input 
+									type="number" 
+									step="0.1" 
+									min="0" 
+									max=${videoDuration}
+									value=${endTime.toFixed(1)}
+									onChange=${(e) => {
+										const newEndTime = parseFloat(e.target.value);
+										if (newEndTime > startTime && newEndTime <= videoDuration) {
+											setEndTime(newEndTime);
+											setEndPos((newEndTime / videoDuration) * 100);
+											if (videoRef.current) {
+												videoRef.current.currentTime = newEndTime;
+											}
+										}
+									}}
+									class="w-20 px-2 py-1 border border-gray-300 rounded text-center"
+								/>
+								<span class="text-gray-500">s</span>
+							</div>
+						</div>
+						
+						<!-- Right side: Save button -->
+						<button 
+							onClick=${trimVideo}
+							disabled=${isProcessing || !ffmpegLoaded}
+							class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+						>
+							${isProcessing ? '⏳ Processing...' : ffmpegLoaded ? '💾 Save Trimmed Video' : '⏳ Loading FFmpeg...'}
+						</button>
+					</div>
+				</div>
+			</section>
+		</div>
+	`;
+};
+
+// Render the component
+render(html`<${VideoTrimmer} />`, document.getElementById('video-trimmer-root'));
+</script>
