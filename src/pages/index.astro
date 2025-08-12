@@ -1,11 +1,269 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
 <Layout>
-	<Welcome />
+	<main>
+		<header class="hero">
+			<div class="container">
+				<h1>QuickEditVideo</h1>
+				<p class="slogan">Edit, Convert & Compress Videos Online - Fast, Free & Professional</p>
+			</div>
+		</header>
+
+		<section class="tools-section">
+			<div class="container">
+				<div class="tools-grid">
+					<div class="tool-category">
+						<h2>Video Editing</h2>
+						<div class="tools-list">
+							<a href="/trim" class="tool-item">
+								<span class="tool-icon">✂️</span>
+								<span class="tool-name">Video Trimmer</span>
+							</a>
+							<a href="/merge" class="tool-item">
+								<span class="tool-icon">🔗</span>
+								<span class="tool-name">Video Merger</span>
+							</a>
+							<a href="/resize" class="tool-item">
+								<span class="tool-icon">📏</span>
+								<span class="tool-name">Video Resizer</span>
+							</a>
+							<a href="/rotate" class="tool-item">
+								<span class="tool-icon">🔄</span>
+								<span class="tool-name">Video Rotator</span>
+							</a>
+							<a href="/crop" class="tool-item">
+								<span class="tool-icon">✂️</span>
+								<span class="tool-name">Video Cropper</span>
+							</a>
+							<a href="/speed" class="tool-item">
+								<span class="tool-icon">⚡</span>
+								<span class="tool-name">Speed Changer</span>
+							</a>
+						</div>
+					</div>
+
+					<div class="tool-category">
+						<h2>Video Converters</h2>
+						<div class="tools-list">
+							<a href="/to-mp4" class="tool-item">
+								<span class="tool-icon">🎬</span>
+								<span class="tool-name">To MP4</span>
+							</a>
+							<a href="/to-avi" class="tool-item">
+								<span class="tool-icon">📹</span>
+								<span class="tool-name">To AVI</span>
+							</a>
+							<a href="/to-mov" class="tool-item">
+								<span class="tool-icon">🎥</span>
+								<span class="tool-name">To MOV</span>
+							</a>
+							<a href="/to-webm" class="tool-item">
+								<span class="tool-icon">🌐</span>
+								<span class="tool-name">To WebM</span>
+							</a>
+							<a href="/to-gif" class="tool-item">
+								<span class="tool-icon">🎞️</span>
+								<span class="tool-name">To GIF</span>
+							</a>
+							<a href="/to-mkv" class="tool-item">
+								<span class="tool-icon">📺</span>
+								<span class="tool-name">To MKV</span>
+							</a>
+						</div>
+					</div>
+
+					<div class="tool-category">
+						<h2>Compression & Quality</h2>
+						<div class="tools-list">
+							<a href="/compress" class="tool-item">
+								<span class="tool-icon">📦</span>
+								<span class="tool-name">Video Compressor</span>
+							</a>
+							<a href="/enhance" class="tool-item">
+								<span class="tool-icon">✨</span>
+								<span class="tool-name">Video Enhancer</span>
+							</a>
+							<a href="/stabilize" class="tool-item">
+								<span class="tool-icon">🎯</span>
+								<span class="tool-name">Video Stabilizer</span>
+							</a>
+							<a href="/upscale" class="tool-item">
+								<span class="tool-icon">🔍</span>
+								<span class="tool-name">Video Upscaler</span>
+							</a>
+							<a href="/denoise" class="tool-item">
+								<span class="tool-icon">🔇</span>
+								<span class="tool-name">Noise Reducer</span>
+							</a>
+							<a href="/repair" class="tool-item">
+								<span class="tool-icon">🔧</span>
+								<span class="tool-name">Video Repair</span>
+							</a>
+						</div>
+					</div>
+
+					<div class="tool-category">
+						<h2>Audio & Subtitles</h2>
+						<div class="tools-list">
+							<a href="/extract-audio" class="tool-item">
+								<span class="tool-icon">🎵</span>
+								<span class="tool-name">Extract Audio</span>
+							</a>
+							<a href="/add-audio" class="tool-item">
+								<span class="tool-icon">🎧</span>
+								<span class="tool-name">Add Audio</span>
+							</a>
+							<a href="/remove-audio" class="tool-item">
+								<span class="tool-icon">🔇</span>
+								<span class="tool-name">Remove Audio</span>
+							</a>
+							<a href="/add-subtitles" class="tool-item">
+								<span class="tool-icon">💬</span>
+								<span class="tool-name">Add Subtitles</span>
+							</a>
+							<a href="/volume" class="tool-item">
+								<span class="tool-icon">🔊</span>
+								<span class="tool-name">Volume Adjuster</span>
+							</a>
+							<a href="/silence-remover" class="tool-item">
+								<span class="tool-icon">🤫</span>
+								<span class="tool-name">Silence Remover</span>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
 </Layout>
+
+<style>
+	* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
+
+	body {
+		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		line-height: 1.6;
+		color: #333;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		min-height: 100vh;
+	}
+
+	.container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 20px;
+	}
+
+	.hero {
+		text-align: center;
+		padding: 60px 0;
+		color: white;
+	}
+
+	.hero h1 {
+		font-size: 3.5rem;
+		font-weight: 700;
+		margin-bottom: 20px;
+		text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+	}
+
+	.slogan {
+		font-size: 1.3rem;
+		font-weight: 300;
+		max-width: 600px;
+		margin: 0 auto;
+		opacity: 0.95;
+	}
+
+	.tools-section {
+		background: white;
+		padding: 80px 0;
+		border-radius: 30px 30px 0 0;
+		margin-top: 40px;
+		box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+	}
+
+	.tools-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 60px;
+	}
+
+	.tool-category {
+		width: 100%;
+	}
+
+	.tool-category h2 {
+		font-size: 1.8rem;
+		color: #2c3e50;
+		margin-bottom: 30px;
+		border-bottom: 3px solid #667eea;
+		padding-bottom: 15px;
+		text-align: center;
+	}
+
+	.tools-list {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 20px;
+	}
+
+	.tool-item {
+		display: flex;
+		align-items: center;
+		padding: 15px 20px;
+		text-decoration: none;
+		color: #444;
+		background: #f8f9fa;
+		border-radius: 10px;
+		transition: all 0.3s ease;
+		border: 1px solid #e9ecef;
+	}
+
+	.tool-item:hover {
+		background: #667eea;
+		color: white;
+		transform: translateY(-2px);
+		box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+	}
+
+	.tool-icon {
+		font-size: 1.2rem;
+		margin-right: 12px;
+		min-width: 24px;
+	}
+
+	.tool-name {
+		font-weight: 500;
+	}
+
+	@media (max-width: 768px) {
+		.hero h1 {
+			font-size: 2.5rem;
+		}
+		
+		.slogan {
+			font-size: 1.1rem;
+		}
+		
+		.tools-list {
+			grid-template-columns: 1fr;
+		}
+		
+		.container {
+			padding: 0 15px;
+		}
+	}
+
+	@media (max-width: 992px) and (min-width: 769px) {
+		.tools-list {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+</style>
