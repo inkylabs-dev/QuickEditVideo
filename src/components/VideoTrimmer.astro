@@ -150,6 +150,11 @@ const VideoTrimmer = () => {
 		const url = URL.createObjectURL(file);
 		setVideoUrl(url);
 		setCurrentView('trimming');
+		
+		// Dispatch event to notify page about view change
+		document.dispatchEvent(new CustomEvent('videoTrimmerViewChange', {
+			detail: { currentView: 'trimming' }
+		}));
 	};
 
 	// Handle video metadata loaded
@@ -391,7 +396,13 @@ const VideoTrimmer = () => {
 									Reset
 								</button>
 								<button 
-									onClick=${() => setCurrentView('landing')}
+									onClick=${() => {
+										setCurrentView('landing');
+										// Dispatch event to notify page about view change
+										document.dispatchEvent(new CustomEvent('videoTrimmerViewChange', {
+											detail: { currentView: 'landing' }
+										}));
+									}}
 									class="text-gray-400 hover:text-gray-600"
 									title="Choose different video"
 								>
