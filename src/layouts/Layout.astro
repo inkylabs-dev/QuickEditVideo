@@ -2,21 +2,72 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>QuickEditVideo - Professional Video Tools Online</title>
+		<title>QuickEditVideo - Free Online Video Editor</title>
+		<meta name="description" content="Edit videos online for free! Trim, convert, compress & enhance videos in your browser. No uploads, no signups. Works with MP4, AVI, WebM. Start editing now!">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 	</head>
 	<body>
 		<slot />
 	</body>
 </html>
 
-<style>
+<style is:global>
+	* {
+		box-sizing: border-box;
+	}
+	
 	html,
 	body {
 		margin: 0;
 		width: 100%;
 		height: 100%;
+		font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+		line-height: 1.5;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+	
+	/* Focus styles for better accessibility */
+	button:focus-visible,
+	input:focus-visible,
+	a:focus-visible {
+		outline: 2px solid #3b82f6;
+		outline-offset: 2px;
+	}
+	
+	/* Smooth scrolling */
+	html {
+		scroll-behavior: smooth;
+	}
+	
+	/* Remove default button styles */
+	button {
+		border: none;
+		background: none;
+		font-family: inherit;
+		cursor: pointer;
+	}
+	
+	/* Custom scrollbar for webkit browsers */
+	::-webkit-scrollbar {
+		width: 6px;
+	}
+	
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	
+	::-webkit-scrollbar-thumb {
+		background: #d1d5db;
+		border-radius: 3px;
+	}
+	
+	::-webkit-scrollbar-thumb:hover {
+		background: #9ca3af;
 	}
 </style>
