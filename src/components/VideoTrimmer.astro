@@ -176,6 +176,12 @@ const VideoTrimmer = () => {
 		return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
 	};
 
+	const formatTimeWithDecimal = (seconds) => {
+		const min = Math.floor(seconds / 60);
+		const sec = (seconds % 60).toFixed(1);
+		return `${min.toString().padStart(2, '0')}:${sec.padStart(4, '0')}`;
+	};
+
 	const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 	// Handle timeline drag (mouse and touch)
@@ -330,7 +336,7 @@ const VideoTrimmer = () => {
 							<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
 						</svg>
 					</div>
-					<h3 class="text-xl font-semibold text-gray-900 mb-2">Upload your video</h3>
+					<h3 class="text-xl font-semibold text-gray-900 mb-2">Select your video</h3>
 					<p class="text-gray-600 mb-6">Drop a video file here or click to browse</p>
 					<div class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium transition-colors">
 						<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -373,7 +379,7 @@ const VideoTrimmer = () => {
 									${selectedFile?.name}
 								</div>
 								<div class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded whitespace-nowrap">
-									${formatTime(endTime - startTime)} selected
+									${formatTimeWithDecimal(endTime - startTime)} selected
 								</div>
 							</div>
 						</div>
@@ -431,6 +437,20 @@ const VideoTrimmer = () => {
 											setStartPos((newStartTime / videoDuration) * 100);
 										}
 									}}
+									onKeyDown=${(e) => {
+										if (e.key === 'Enter') {
+											const newStartTime = parseFloat(e.target.value);
+											if (newStartTime >= 0 && newStartTime < endTime && videoRef.current) {
+												videoRef.current.currentTime = newStartTime;
+											}
+										}
+									}}
+									onBlur=${(e) => {
+										const newStartTime = parseFloat(e.target.value);
+										if (newStartTime >= 0 && newStartTime < endTime && videoRef.current) {
+											videoRef.current.currentTime = newStartTime;
+										}
+									}}
 									class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
 								/>
 								<span class="ml-2 text-sm text-gray-500 flex-shrink-0">sec</span>
@@ -451,6 +471,20 @@ const VideoTrimmer = () => {
 										if (newEndTime > startTime && newEndTime <= videoDuration) {
 											setEndTime(newEndTime);
 											setEndPos((newEndTime / videoDuration) * 100);
+										}
+									}}
+									onKeyDown=${(e) => {
+										if (e.key === 'Enter') {
+											const newEndTime = parseFloat(e.target.value);
+											if (newEndTime > startTime && newEndTime <= videoDuration && videoRef.current) {
+												videoRef.current.currentTime = newEndTime;
+											}
+										}
+									}}
+									onBlur=${(e) => {
+										const newEndTime = parseFloat(e.target.value);
+										if (newEndTime > startTime && newEndTime <= videoDuration && videoRef.current) {
+											videoRef.current.currentTime = newEndTime;
 										}
 									}}
 									class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
