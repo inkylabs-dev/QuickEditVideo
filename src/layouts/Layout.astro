@@ -25,11 +25,13 @@
 	body {
 		margin: 0;
 		width: 100%;
+		max-width: 100%;
 		height: 100%;
 		font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
 		line-height: 1.5;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
+		overflow-x: hidden;
 	}
 	
 	/* Focus styles for better accessibility */
@@ -45,12 +47,20 @@
 		scroll-behavior: smooth;
 	}
 	
-	/* Remove default button styles */
-	button {
+	/* Remove default button styles, but preserve explicit borders */
+	button:not([class*="border"]) {
 		border: none;
+	}
+	
+	button {
 		background: none;
 		font-family: inherit;
 		cursor: pointer;
+	}
+	
+	/* Ensure Tailwind border classes work */
+	button[class*="border"] {
+		border-style: solid;
 	}
 	
 	/* Custom scrollbar for webkit browsers */

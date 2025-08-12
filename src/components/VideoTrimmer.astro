@@ -8,6 +8,7 @@
 	.timeline-handle {
 		cursor: ew-resize;
 		touch-action: pan-x;
+		min-height: 44px; /* Better touch target */
 	}
 	
 	.timeline-handle:hover {
@@ -20,7 +21,19 @@
 	
 	.video-container {
 		aspect-ratio: 16/9;
-		max-height: 70vh;
+		max-height: calc(100vh - 250px);
+		width: 100%;
+		height: 100%;
+	}
+	
+	.video-container-custom {
+		max-height: calc(100vh - 400px);
+	}
+	
+	@media (max-width: 768px) {
+		.video-container-custom {
+			max-height: 40vh;
+		}
 	}
 	
 	.progress-ring {
@@ -31,6 +44,24 @@
 		stroke-dasharray: 251.2;
 		stroke-dashoffset: 251.2;
 		transition: stroke-dashoffset 0.1s ease;
+	}
+
+	/* Prevent horizontal scroll */
+	* {
+		box-sizing: border-box;
+	}
+	
+	/* Better mobile touch handling */
+	@media (max-width: 640px) {
+		.timeline-handle {
+			width: 32px;
+			margin-left: -16px !important;
+		}
+		
+		.timeline-handle .w-1 {
+			width: 3px;
+			height: 32px;
+		}
 	}
 </style>
 
@@ -134,17 +165,21 @@ const VideoTrimmer = () => {
 
 	const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-	// Handle timeline drag
-	const handleMouseDown = (e, handle) => {
+	// Handle timeline drag (mouse and touch)
+	const handlePointerDown = (e, handle) => {
 		e.preventDefault();
 		setIsDragging(true);
 		setDragHandle(handle);
 		
-		const handleMouseMove = (e) => {
-			if (!timelineRef.current) return;
-			
+		const getPosition = (event) => {
+			if (!timelineRef.current) return 0;
 			const rect = timelineRef.current.getBoundingClientRect();
-			const position = clamp((e.clientX - rect.left) / rect.width * 100, 0, 100);
+			const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+			return clamp((clientX - rect.left) / rect.width * 100, 0, 100);
+		};
+		
+		const handlePointerMove = (e) => {
+			const position = getPosition(e);
 			
 			if (handle === 'start') {
 				const newPos = Math.min(position, endPos - 2);
@@ -161,15 +196,19 @@ const VideoTrimmer = () => {
 			}
 		};
 		
-		const handleMouseUp = () => {
+		const handlePointerUp = () => {
 			setIsDragging(false);
 			setDragHandle(null);
-			document.removeEventListener('mousemove', handleMouseMove);
-			document.removeEventListener('mouseup', handleMouseUp);
+			document.removeEventListener('mousemove', handlePointerMove);
+			document.removeEventListener('mouseup', handlePointerUp);
+			document.removeEventListener('touchmove', handlePointerMove);
+			document.removeEventListener('touchend', handlePointerUp);
 		};
 		
-		document.addEventListener('mousemove', handleMouseMove);
-		document.addEventListener('mouseup', handleMouseUp);
+		document.addEventListener('mousemove', handlePointerMove);
+		document.addEventListener('mouseup', handlePointerUp);
+		document.addEventListener('touchmove', handlePointerMove, { passive: false });
+		document.addEventListener('touchend', handlePointerUp);
 	};
 
 	// Trim and download video
@@ -241,7 +280,7 @@ const VideoTrimmer = () => {
 
 	if (currentView === 'landing') {
 		return html`
-			<div class="bg-white rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors">
+			<div class="bg-white rounded-lg border-4 border-dashed border-gray-900 hover:border-gray-900 transition-colors">
 				<div 
 					class="p-16 text-center cursor-pointer"
 					onClick=${() => fileInputRef.current?.click()}
@@ -269,7 +308,7 @@ const VideoTrimmer = () => {
 					</div>
 					<h3 class="text-xl font-semibold text-gray-900 mb-2">Upload your video</h3>
 					<p class="text-gray-600 mb-6">Drop a video file here or click to browse</p>
-					<div class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+					<div class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium transition-colors">
 						<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
 							<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
 						</svg>
@@ -282,188 +321,204 @@ const VideoTrimmer = () => {
 	}
 
 	return html`
-		<div class="space-y-6">
-			<!-- Video Player -->
-			<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-				<div class="video-container bg-black">
-					<video 
-						ref=${videoRef}
-						class="w-full h-full object-contain" 
-						controls 
-						preload="metadata"
-						src=${videoUrl}
-						onLoadedMetadata=${handleVideoLoaded}
-						onPlay=${() => setIsPlaying(true)}
-						onPause=${() => setIsPlaying(false)}
-					>
-						Your browser does not support the video tag.
-					</video>
-				</div>
-				
-				<!-- Video Info Bar -->
-				<div class="p-4 border-t border-gray-200">
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-3">
-							<div class="text-sm font-medium text-gray-900 truncate max-w-xs">
-								${selectedFile?.name}
-							</div>
-							<div class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-								${formatTime(endTime - startTime)} selected
+		<div class="space-y-6 p-4">
+			<!-- Video Player and Controls Row -->
+			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+				<!-- Video Section -->
+				<div class="lg:col-span-2">
+					<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+						<div class="video-container-custom bg-black">
+							<video 
+								ref=${videoRef}
+								class="w-full h-full object-contain" 
+								controls 
+								preload="metadata"
+								src=${videoUrl}
+								onLoadedMetadata=${handleVideoLoaded}
+								onPlay=${() => setIsPlaying(true)}
+								onPause=${() => setIsPlaying(false)}
+							>
+								Your browser does not support the video tag.
+							</video>
+						</div>
+						
+						<!-- Video Info Bar -->
+						<div class="p-3 border-t border-gray-200">
+							<div class="flex items-center gap-2">
+								<div class="text-sm font-medium text-gray-900 truncate max-w-[150px]">
+									${selectedFile?.name}
+								</div>
+								<div class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded whitespace-nowrap">
+									${formatTime(endTime - startTime)} selected
+								</div>
 							</div>
 						</div>
+					</div>
+				</div>
+
+				<!-- Controls Section -->
+				<div class="lg:col-span-1">
+					<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-full">
+						<div class="flex items-center justify-between mb-4">
+							<h3 class="font-semibold text-gray-900">Controls</h3>
+							<div class="flex items-center gap-2">
+								<button 
+									onClick=${resetTrim}
+									class="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+								>
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+										<path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+									</svg>
+									Reset
+								</button>
+								<button 
+									onClick=${() => setCurrentView('landing')}
+									class="text-gray-400 hover:text-gray-600"
+									title="Choose different video"
+								>
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+										<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+									</svg>
+								</button>
+							</div>
+						</div>
+
+					<!-- Time Controls -->
+					<div class="space-y-4 mb-6">
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-2">Start time</label>
+							<div class="flex items-center">
+								<input 
+									type="number" 
+									step="0.1" 
+									min="0" 
+									max=${endTime - 0.1}
+									value=${startTime.toFixed(1)}
+									onChange=${(e) => {
+										const newStartTime = parseFloat(e.target.value);
+										if (newStartTime >= 0 && newStartTime < endTime) {
+											setStartTime(newStartTime);
+											setStartPos((newStartTime / videoDuration) * 100);
+										}
+									}}
+									class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+								/>
+								<span class="ml-2 text-sm text-gray-500 flex-shrink-0">sec</span>
+							</div>
+						</div>
+						
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-2">End time</label>
+							<div class="flex items-center">
+								<input 
+									type="number" 
+									step="0.1" 
+									min=${startTime + 0.1}
+									max=${videoDuration}
+									value=${endTime.toFixed(1)}
+									onChange=${(e) => {
+										const newEndTime = parseFloat(e.target.value);
+										if (newEndTime > startTime && newEndTime <= videoDuration) {
+											setEndTime(newEndTime);
+											setEndPos((newEndTime / videoDuration) * 100);
+										}
+									}}
+									class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+								/>
+								<span class="ml-2 text-sm text-gray-500 flex-shrink-0">sec</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Action Buttons -->
+					<div class="space-y-3">
 						<button 
-							onClick=${() => setCurrentView('landing')}
-							class="text-gray-400 hover:text-gray-600"
-							title="Choose different video"
+							onClick=${togglePlayPause}
+							class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 transition-colors w-full justify-center"
 						>
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-								<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-							</svg>
+							${isPlaying ? 
+								html`<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M6,4V20H10V4H6M14,4V20H18V4H14Z"/>
+								</svg>` :
+								html`<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+								</svg>`
+							}
+							${isPlaying ? 'Pause' : 'Play'}
 						</button>
+						
+						<button 
+							onClick=${trimVideo}
+							disabled=${isProcessing || !ffmpegLoaded}
+							class="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
+						>
+							${isProcessing ? 
+								html`<div class="flex items-center gap-2">
+									<svg class="progress-ring w-4 h-4" viewBox="0 0 24 24">
+										<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"
+											style=${{ strokeDashoffset: 251.2 - (processingProgress / 100) * 251.2 }} />
+									</svg>
+									<span>Processing ${processingProgress}%</span>
+								</div>` :
+								ffmpegLoaded ? 
+									html`<div class="flex items-center gap-2">
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+											<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+										</svg>
+										Download
+									</div>` :
+									'Loading...'
+							}
+						</button>
+					</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- Timeline Control -->
-			<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-				<div class="flex items-center justify-between mb-4">
-					<h3 class="font-semibold text-gray-900">Trim Video</h3>
-					<button 
-						onClick=${resetTrim}
-						class="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-					>
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-							<path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
-						</svg>
-						Reset
-					</button>
-				</div>
-				
-				<!-- Timeline -->
-				<div class="relative mb-6">
-					<div 
-						ref=${timelineRef}
-						class="h-12 bg-gray-100 rounded-lg relative overflow-hidden"
-					>
-						<!-- Selection area -->
+			<!-- Timeline Section -->
+			<div class="w-full">
+				<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+					<h3 class="font-semibold text-gray-900 mb-4">Timeline</h3>
+					
+					<!-- Timeline -->
+					<div class="relative mb-4 mx-2">
 						<div 
-							class="absolute top-0 bottom-0 bg-blue-500 bg-opacity-20 border-t-2 border-b-2 border-blue-500"
-							style=${{ left: `${startPos}%`, width: `${endPos - startPos}%` }}
-						></div>
-						
-						<!-- Start handle -->
-						<div 
-							class="timeline-handle absolute top-0 bottom-0 w-4 bg-blue-600 hover:bg-blue-700 transition-colors flex items-center justify-center"
-							style=${{ left: `${startPos}%`, marginLeft: '-8px' }}
-							onMouseDown=${(e) => handleMouseDown(e, 'start')}
+							ref=${timelineRef}
+							class="h-16 bg-gray-100 rounded-lg relative overflow-hidden touch-pan-x"
 						>
-							<div class="w-1 h-6 bg-white rounded-full"></div>
+							<!-- Selection area -->
+							<div 
+								class="absolute top-0 bottom-0 bg-teal-500 bg-opacity-20 border-t-2 border-b-2 border-teal-500"
+								style=${{ left: `${startPos}%`, width: `${endPos - startPos}%` }}
+							></div>
+							
+							<!-- Start handle -->
+							<div 
+								class="timeline-handle absolute top-0 bottom-0 w-6 bg-white hover:bg-gray-50 border-2 border-gray-900 transition-colors flex items-center justify-center touch-manipulation"
+								style=${{ left: `${startPos}%`, marginLeft: '-12px' }}
+								onMouseDown=${(e) => handlePointerDown(e, 'start')}
+								onTouchStart=${(e) => handlePointerDown(e, 'start')}
+							>
+								<div class="w-1 h-8 bg-gray-900"></div>
+							</div>
+							
+							<!-- End handle -->
+							<div 
+								class="timeline-handle absolute top-0 bottom-0 w-6 bg-white hover:bg-gray-50 border-2 border-gray-900 transition-colors flex items-center justify-center touch-manipulation"
+								style=${{ left: `${endPos}%`, marginLeft: '-12px' }}
+								onMouseDown=${(e) => handlePointerDown(e, 'end')}
+								onTouchStart=${(e) => handlePointerDown(e, 'end')}
+							>
+								<div class="w-1 h-8 bg-gray-900"></div>
+							</div>
 						</div>
 						
-						<!-- End handle -->
-						<div 
-							class="timeline-handle absolute top-0 bottom-0 w-4 bg-blue-600 hover:bg-blue-700 transition-colors flex items-center justify-center"
-							style=${{ left: `${endPos}%`, marginLeft: '-8px' }}
-							onMouseDown=${(e) => handleMouseDown(e, 'end')}
-						>
-							<div class="w-1 h-6 bg-white rounded-full"></div>
+						<!-- Time indicators -->
+						<div class="flex justify-between mt-2 text-sm text-gray-500">
+							<span>0:00</span>
+							<span>${formatTime(videoDuration)}</span>
 						</div>
 					</div>
-					
-					<!-- Time indicators -->
-					<div class="flex justify-between mt-2 text-xs text-gray-500">
-						<span>0:00</span>
-						<span>${formatTime(videoDuration)}</span>
-					</div>
-				</div>
-
-				<!-- Time Controls -->
-				<div class="grid grid-cols-2 gap-4 mb-6">
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">Start time</label>
-						<div class="flex items-center">
-							<input 
-								type="number" 
-								step="0.1" 
-								min="0" 
-								max=${endTime - 0.1}
-								value=${startTime.toFixed(1)}
-								onChange=${(e) => {
-									const newStartTime = parseFloat(e.target.value);
-									if (newStartTime >= 0 && newStartTime < endTime) {
-										setStartTime(newStartTime);
-										setStartPos((newStartTime / videoDuration) * 100);
-									}
-								}}
-								class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-							/>
-							<span class="ml-2 text-sm text-gray-500">sec</span>
-						</div>
-					</div>
-					
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">End time</label>
-						<div class="flex items-center">
-							<input 
-								type="number" 
-								step="0.1" 
-								min=${startTime + 0.1}
-								max=${videoDuration}
-								value=${endTime.toFixed(1)}
-								onChange=${(e) => {
-									const newEndTime = parseFloat(e.target.value);
-									if (newEndTime > startTime && newEndTime <= videoDuration) {
-										setEndTime(newEndTime);
-										setEndPos((newEndTime / videoDuration) * 100);
-									}
-								}}
-								class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-							/>
-							<span class="ml-2 text-sm text-gray-500">sec</span>
-						</div>
-					</div>
-				</div>
-
-				<!-- Action Buttons -->
-				<div class="flex items-center justify-between">
-					<button 
-						onClick=${togglePlayPause}
-						class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-					>
-						${isPlaying ? 
-							html`<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-								<path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
-							</svg>` :
-							html`<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-								<path d="M6,4V20H10V4H6M14,4V20H18V4H14Z"/>
-							</svg>`
-						}
-						${isPlaying ? 'Pause' : 'Play'}
-					</button>
-					
-					<button 
-						onClick=${trimVideo}
-						disabled=${isProcessing || !ffmpegLoaded}
-						class="flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-sm"
-					>
-						${isProcessing ? 
-							html`<div class="flex items-center gap-2">
-								<svg class="progress-ring w-4 h-4" viewBox="0 0 24 24">
-									<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"
-										style=${{ strokeDashoffset: 251.2 - (processingProgress / 100) * 251.2 }} />
-								</svg>
-								<span>Processing ${processingProgress}%</span>
-							</div>` :
-							ffmpegLoaded ? 
-								html`<div class="flex items-center gap-2">
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-										<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-									</svg>
-									Download trimmed video
-								</div>` :
-								'Loading...'
-						}
-					</button>
 				</div>
 			</div>
 		</div>
