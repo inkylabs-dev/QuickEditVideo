@@ -125,12 +125,14 @@ const VideoTrimmer = () => {
 		}
 	};
 
-	// Format time for display
+	// Utility functions
 	const formatTime = (seconds) => {
 		const min = Math.floor(seconds / 60);
 		const sec = Math.floor(seconds % 60);
 		return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
 	};
+
+	const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 	// Handle timeline drag
 	const handleMouseDown = (e, handle) => {
@@ -142,27 +144,20 @@ const VideoTrimmer = () => {
 			if (!timelineRef.current) return;
 			
 			const rect = timelineRef.current.getBoundingClientRect();
-			const x = e.clientX - rect.left;
-			const position = Math.max(0, Math.min(100, (x / rect.width) * 100));
+			const position = clamp((e.clientX - rect.left) / rect.width * 100, 0, 100);
 			
 			if (handle === 'start') {
-				const newStartPos = Math.min(position, endPos - 2);
-				const newStartTime = (newStartPos / 100) * videoDuration;
-				setStartPos(newStartPos);
-				setStartTime(newStartTime);
-				
-				if (videoRef.current) {
-					videoRef.current.currentTime = newStartTime;
-				}
-			} else if (handle === 'end') {
-				const newEndPos = Math.max(position, startPos + 2);
-				const newEndTime = (newEndPos / 100) * videoDuration;
-				setEndPos(newEndPos);
-				setEndTime(newEndTime);
-				
-				if (videoRef.current) {
-					videoRef.current.currentTime = newEndTime;
-				}
+				const newPos = Math.min(position, endPos - 2);
+				const newTime = (newPos / 100) * videoDuration;
+				setStartPos(newPos);
+				setStartTime(newTime);
+				if (videoRef.current) videoRef.current.currentTime = newTime;
+			} else {
+				const newPos = Math.max(position, startPos + 2);
+				const newTime = (newPos / 100) * videoDuration;
+				setEndPos(newPos);
+				setEndTime(newTime);
+				if (videoRef.current) videoRef.current.currentTime = newTime;
 			}
 		};
 		
@@ -177,7 +172,7 @@ const VideoTrimmer = () => {
 		document.addEventListener('mouseup', handleMouseUp);
 	};
 
-	// Trim video using FFmpeg
+	// Trim and download video
 	const trimVideo = async () => {
 		if (!ffmpeg || !ffmpegLoaded || !selectedFile) return;
 
@@ -186,33 +181,33 @@ const VideoTrimmer = () => {
 
 		try {
 			const { fetchFile } = window.FFmpeg;
-			const inputFileName = 'input.' + selectedFile.name.split('.').pop();
-			const outputFileName = selectedFile.name.split('.')[0] + '_trimmed.mp4';
+			const ext = selectedFile.name.split('.').pop();
+			const inputFile = `input.${ext}`;
+			const outputFile = `${selectedFile.name.split('.')[0]}_trimmed.mp4`;
 
-			ffmpeg.FS('writeFile', inputFileName, await fetchFile(selectedFile));
+			ffmpeg.FS('writeFile', inputFile, await fetchFile(selectedFile));
 
 			await ffmpeg.run(
-				'-i', inputFileName,
+				'-i', inputFile,
 				'-ss', startTime.toString(),
 				'-t', (endTime - startTime).toString(),
 				'-c', 'copy',
-				outputFileName
+				outputFile
 			);
 
-			const data = ffmpeg.FS('readFile', outputFileName);
+			const data = ffmpeg.FS('readFile', outputFile);
 			const blob = new Blob([data.buffer], { type: 'video/mp4' });
-			const url = URL.createObjectURL(blob);
 			
+			// Download file
 			const a = document.createElement('a');
-			a.href = url;
-			a.download = outputFileName;
-			document.body.appendChild(a);
+			a.href = URL.createObjectURL(blob);
+			a.download = outputFile;
 			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
+			URL.revokeObjectURL(a.href);
 
-			ffmpeg.FS('unlink', inputFileName);
-			ffmpeg.FS('unlink', outputFileName);
+			// Cleanup
+			ffmpeg.FS('unlink', inputFile);
+			ffmpeg.FS('unlink', outputFile);
 
 		} catch (error) {
 			console.error('Error trimming video:', error);
