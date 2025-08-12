@@ -1,3 +1,27 @@
+---
+export interface Props {
+	title?: string;
+	description?: string;
+	keywords?: string;
+	ogTitle?: string;
+	ogDescription?: string;
+	ogImage?: string;
+	canonicalUrl?: string;
+}
+
+const {
+	title = "QuickEditVideo - Free Online Video Editor",
+	description = "Edit videos online for free! Trim, convert, compress & enhance videos in your browser. No uploads, no signups. Works with MP4, AVI, WebM. Start editing now!",
+	keywords = "video editor, video trimmer, online video editor, free video editor, video converter, trim video, cut video, edit video online, video compression",
+	ogTitle = title,
+	ogDescription = description,
+	ogImage = "/og-image.jpg",
+	canonicalUrl
+} = Astro.props;
+
+const currentUrl = canonicalUrl || Astro.url.href;
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
@@ -5,8 +29,63 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>QuickEditVideo - Free Online Video Editor</title>
-		<meta name="description" content="Edit videos online for free! Trim, convert, compress & enhance videos in your browser. No uploads, no signups. Works with MP4, AVI, WebM. Start editing now!">
+		
+		<!-- Primary Meta Tags -->
+		<title>{title}</title>
+		<meta name="title" content={title} />
+		<meta name="description" content={description} />
+		<meta name="keywords" content={keywords} />
+		<meta name="robots" content="index, follow" />
+		<meta name="language" content="English" />
+		<meta name="author" content="QuickEditVideo" />
+		
+		<!-- Canonical URL -->
+		{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={currentUrl} />
+		<meta property="og:title" content={ogTitle} />
+		<meta property="og:description" content={ogDescription} />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:site_name" content="QuickEditVideo" />
+		
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content={currentUrl} />
+		<meta property="twitter:title" content={ogTitle} />
+		<meta property="twitter:description" content={ogDescription} />
+		<meta property="twitter:image" content={ogImage} />
+		
+		<!-- Additional SEO -->
+		<meta name="theme-color" content="#0d9488" />
+		<meta name="msapplication-TileColor" content="#0d9488" />
+		<meta name="application-name" content="QuickEditVideo" />
+		
+		<!-- Structured Data -->
+		<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "WebApplication",
+			"name": "QuickEditVideo",
+			"description": "Free online video editor for trimming, converting, and compressing videos in your browser",
+			"url": "https://quickeditvideo.com",
+			"applicationCategory": "MultimediaApplication",
+			"operatingSystem": "Any",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			},
+			"featureList": [
+				"Video trimming",
+				"Video conversion",
+				"Video compression",
+				"Privacy-focused (no uploads)",
+				"Multiple format support"
+			]
+		}
+		</script>
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
