@@ -52,8 +52,8 @@ test.describe('Resize page', () => {
     // Check for resize-specific guide content
     await expect(page.locator('text=Quick Guide')).toBeVisible();
     await expect(page.locator('text=Upload Video')).toBeVisible();
-    await expect(page.locator('text=Resize')).toBeVisible();
-    await expect(page.locator('text=Download')).toBeVisible();
+    await expect(page.locator('text=Set Dimensions')).toBeVisible();
+    await expect(page.locator('text=Download Result')).toBeVisible();
   });
 
   test('should be responsive on mobile viewport', async ({ page }) => {
