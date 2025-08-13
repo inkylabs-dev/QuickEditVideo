@@ -760,7 +760,7 @@ const VideoCropper = () => {
                     min="1" 
                     max={originalWidth}
                     value={cropWidth}
-                    onChange={(e) => handleCropWidthChange(parseInt(e.target.value) || 0)}
+                    onChange={(e) => handleCropChange('width', parseInt(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>
@@ -772,7 +772,7 @@ const VideoCropper = () => {
                     min="1" 
                     max={originalHeight}
                     value={cropHeight}
-                    onChange={(e) => handleCropHeightChange(parseInt(e.target.value) || 0)}
+                    onChange={(e) => handleCropChange('height', parseInt(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>
@@ -786,7 +786,7 @@ const VideoCropper = () => {
                     min="0" 
                     max={originalWidth - cropWidth}
                     value={cropLeft}
-                    onChange={(e) => handleCropLeftChange(parseInt(e.target.value) || 0)}
+                    onChange={(e) => handleCropChange('left', parseInt(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>
@@ -798,7 +798,7 @@ const VideoCropper = () => {
                     min="0" 
                     max={originalHeight - cropHeight}
                     value={cropTop}
-                    onChange={(e) => handleCropTopChange(parseInt(e.target.value) || 0)}
+                    onChange={(e) => handleCropChange('top', parseInt(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>

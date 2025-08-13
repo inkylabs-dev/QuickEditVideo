@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync, statSync } from 'fs';
 
 test.describe('Crop page', () => {
   test('should load crop page successfully', async ({ page }) => {
@@ -172,5 +173,151 @@ test.describe('Crop page', () => {
     // Check canonical URL
     const canonicalLink = page.locator('link[rel="canonical"]');
     await expect(canonicalLink).toHaveAttribute('href', 'https://quickeditvideo.com/crop');
+  });
+
+  test('should crop video with 1:1 aspect ratio and download file', async ({ page }) => {
+    await page.goto('/crop');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    
+    // Upload the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
+    
+    // Wait for video to load and interface to change
+    await page.waitForSelector('video', { timeout: 15000 });
+    
+    // Wait for FFmpeg to load (indicated by download button being enabled)
+    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 30000 });
+    
+    // Set 1:1 aspect ratio
+    await page.click('button[title="1:1"]');
+    
+    // Set specific crop dimensions for 1:1 ratio
+    await page.fill('input[type="number"]:near(label:has-text("Width"))', '200');
+    await page.fill('input[type="number"]:near(label:has-text("Height"))', '200');
+    await page.fill('input[type="number"]:near(label:has-text("Left"))', '100');
+    await page.fill('input[type="number"]:near(label:has-text("Top"))', '50');
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "cropped"
+    expect(download.suggestedFilename()).toContain('cropped');
+  });
+
+  test('should crop video with rotation and download file', async ({ page }) => {
+    await page.goto('/crop');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    
+    // Upload the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
+    
+    // Wait for video to load and interface to change
+    await page.waitForSelector('video', { timeout: 15000 });
+    
+    // Wait for FFmpeg to load (indicated by download button being enabled)
+    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 30000 });
+    
+    // Set 16:9 aspect ratio
+    await page.click('button[title="16:9"]');
+    
+    // Set rotation to 45 degrees
+    const rotationSlider = page.locator('input[type="range"][min="-180"][max="180"]');
+    await rotationSlider.fill('45');
+    
+    // Set specific crop dimensions
+    await page.fill('input[type="number"]:near(label:has-text("Width"))', '320');
+    await page.fill('input[type="number"]:near(label:has-text("Height"))', '180');
+    await page.fill('input[type="number"]:near(label:has-text("Left"))', '80');
+    await page.fill('input[type="number"]:near(label:has-text("Top"))', '60');
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "cropped"
+    expect(download.suggestedFilename()).toContain('cropped');
+  });
+
+  test('should crop video with freeform dimensions and download file', async ({ page }) => {
+    await page.goto('/crop');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    
+    // Upload the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
+    
+    // Wait for video to load and interface to change
+    await page.waitForSelector('video', { timeout: 15000 });
+    
+    // Wait for FFmpeg to load (indicated by download button being enabled)
+    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 30000 });
+    
+    // Select freeform aspect ratio (should be default, but click to be sure)
+    await page.click('button[title="Freeform"]');
+    
+    // Set custom freeform dimensions
+    await page.fill('input[type="number"]:near(label:has-text("Width"))', '250');
+    await page.fill('input[type="number"]:near(label:has-text("Height"))', '150');
+    await page.fill('input[type="number"]:near(label:has-text("Left"))', '50');
+    await page.fill('input[type="number"]:near(label:has-text("Top"))', '75');
+    
+    // Set scale to 120%
+    const scaleSlider = page.locator('input[type="range"][min="10"][max="200"]');
+    await scaleSlider.fill('120');
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "cropped"
+    expect(download.suggestedFilename()).toContain('cropped');
   });
 });
