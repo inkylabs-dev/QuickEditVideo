@@ -86,6 +86,13 @@ const VideoCropper = () => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number; cropLeft: number; cropTop: number }>({ x: 0, y: 0, cropLeft: 0, cropTop: 0 });
   
+  // Resize state
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [resizeHandle, setResizeHandle] = useState<string>('');
+  const [resizeStart, setResizeStart] = useState<{ x: number; y: number; cropWidth: number; cropHeight: number; cropLeft: number; cropTop: number }>({ 
+    x: 0, y: 0, cropWidth: 0, cropHeight: 0, cropLeft: 0, cropTop: 0 
+  });
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -594,16 +601,245 @@ const VideoCropper = () => {
     setIsDragging(false);
   };
 
-  // Add global event listeners for drag and body class
+  // Resize handlers for corner dragging
+  const handleResizeStart = (e: JSX.TargetedMouseEvent<HTMLDivElement> | JSX.TargetedTouchEvent<HTMLDivElement>, handle: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    setIsResizing(true);
+    setResizeHandle(handle);
+    setResizeStart({
+      x: clientX,
+      y: clientY,
+      cropWidth: cropWidth,
+      cropHeight: cropHeight,
+      cropLeft: cropLeft,
+      cropTop: cropTop
+    });
+  };
+
+  const handleResizeMove = (e: MouseEvent | TouchEvent) => {
+    if (!isResizing || !videoRef.current) return;
+    
+    e.preventDefault();
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    const deltaX = clientX - resizeStart.x;
+    const deltaY = clientY - resizeStart.y;
+    
+    // Get video container dimensions to calculate the scale factor
+    const videoElement = videoRef.current;
+    const container = videoElement.parentElement;
+    if (!container) return;
+    
+    const containerRect = container.getBoundingClientRect();
+    const videoAspectRatio = originalWidth / originalHeight;
+    const containerAspectRatio = containerRect.width / containerRect.height;
+    
+    let displayedVideoWidth: number, displayedVideoHeight: number;
+    
+    if (videoAspectRatio > containerAspectRatio) {
+      displayedVideoWidth = containerRect.width;
+      displayedVideoHeight = containerRect.width / videoAspectRatio;
+    } else {
+      displayedVideoHeight = containerRect.height;
+      displayedVideoWidth = containerRect.height * videoAspectRatio;
+    }
+    
+    // Convert pixel movement to video coordinate movement
+    const scaleX = originalWidth / displayedVideoWidth;
+    const scaleY = originalHeight / displayedVideoHeight;
+    
+    const videoDeltaX = deltaX * scaleX;
+    const videoDeltaY = deltaY * scaleY;
+    
+    let newWidth = resizeStart.cropWidth;
+    let newHeight = resizeStart.cropHeight;
+    let newLeft = resizeStart.cropLeft;
+    let newTop = resizeStart.cropTop;
+    
+    // Calculate new dimensions based on which corner is being dragged
+    switch (resizeHandle) {
+      case 'bottom-right':
+        newWidth = resizeStart.cropWidth + videoDeltaX;
+        newHeight = resizeStart.cropHeight + videoDeltaY;
+        break;
+      case 'bottom-left':
+        newWidth = resizeStart.cropWidth - videoDeltaX;
+        newHeight = resizeStart.cropHeight + videoDeltaY;
+        newLeft = resizeStart.cropLeft + videoDeltaX;
+        break;
+      case 'top-right':
+        newWidth = resizeStart.cropWidth + videoDeltaX;
+        newHeight = resizeStart.cropHeight - videoDeltaY;
+        newTop = resizeStart.cropTop + videoDeltaY;
+        break;
+      case 'top-left':
+        newWidth = resizeStart.cropWidth - videoDeltaX;
+        newHeight = resizeStart.cropHeight - videoDeltaY;
+        newLeft = resizeStart.cropLeft + videoDeltaX;
+        newTop = resizeStart.cropTop + videoDeltaY;
+        break;
+    }
+    
+    // Apply minimum size constraints first
+    newWidth = Math.max(50, newWidth); // Minimum 50px width
+    newHeight = Math.max(50, newHeight); // Minimum 50px height
+    
+    // Apply aspect ratio constraints and boundary checks
+    const selectedRatio = aspectRatios.find(ar => ar.value === aspectRatio);
+    if (selectedRatio && selectedRatio.ratio !== null) {
+      const ratio = selectedRatio.ratio;
+      
+      // Determine which dimension to constrain based on which changed more
+      const widthChange = Math.abs(newWidth - resizeStart.cropWidth);
+      const heightChange = Math.abs(newHeight - resizeStart.cropHeight);
+      
+      let constrainedWidth = newWidth;
+      let constrainedHeight = newHeight;
+      let constrainedLeft = newLeft;
+      let constrainedTop = newTop;
+      
+      if (widthChange > heightChange) {
+        // Width changed more, calculate height from width to maintain ratio
+        constrainedHeight = constrainedWidth / ratio;
+        
+        // Adjust position for handles that affect left edge
+        if (resizeHandle === 'top-left' || resizeHandle === 'bottom-left') {
+          constrainedLeft = resizeStart.cropLeft + (resizeStart.cropWidth - constrainedWidth);
+        }
+        
+        // Adjust position for handles that affect top edge
+        if (resizeHandle === 'top-left' || resizeHandle === 'top-right') {
+          constrainedTop = resizeStart.cropTop + (resizeStart.cropHeight - constrainedHeight);
+        }
+      } else {
+        // Height changed more, calculate width from height to maintain ratio
+        constrainedWidth = constrainedHeight * ratio;
+        
+        // Adjust position for handles that affect left edge
+        if (resizeHandle === 'top-left' || resizeHandle === 'bottom-left') {
+          constrainedLeft = resizeStart.cropLeft + (resizeStart.cropWidth - constrainedWidth);
+        }
+        
+        // Adjust position for handles that affect top edge
+        if (resizeHandle === 'top-left' || resizeHandle === 'top-right') {
+          constrainedTop = resizeStart.cropTop + (resizeStart.cropHeight - constrainedHeight);
+        }
+      }
+      
+      // Check if the constrained dimensions would exceed boundaries
+      const wouldExceedRight = constrainedLeft + constrainedWidth > originalWidth;
+      const wouldExceedBottom = constrainedTop + constrainedHeight > originalHeight;
+      const wouldExceedLeft = constrainedLeft < 0;
+      const wouldExceedTop = constrainedTop < 0;
+      
+      // If any boundary would be exceeded, constrain to the maximum possible size that maintains aspect ratio
+      if (wouldExceedRight || wouldExceedBottom || wouldExceedLeft || wouldExceedTop) {
+        let maxWidth = originalWidth - Math.max(0, constrainedLeft);
+        let maxHeight = originalHeight - Math.max(0, constrainedTop);
+        
+        // For left/top edge handles, also consider the position constraints
+        if (resizeHandle === 'top-left' || resizeHandle === 'bottom-left') {
+          maxWidth = Math.min(maxWidth, resizeStart.cropLeft + resizeStart.cropWidth);
+        }
+        if (resizeHandle === 'top-left' || resizeHandle === 'top-right') {
+          maxHeight = Math.min(maxHeight, resizeStart.cropTop + resizeStart.cropHeight);
+        }
+        
+        // Calculate the maximum size that maintains aspect ratio
+        const maxWidthByHeight = maxHeight * ratio;
+        const maxHeightByWidth = maxWidth / ratio;
+        
+        if (maxWidthByHeight <= maxWidth) {
+          // Height is the limiting factor
+          constrainedWidth = maxWidthByHeight;
+          constrainedHeight = maxHeight;
+        } else {
+          // Width is the limiting factor
+          constrainedWidth = maxWidth;
+          constrainedHeight = maxHeightByWidth;
+        }
+        
+        // Recalculate positions based on constrained dimensions
+        if (resizeHandle === 'top-left' || resizeHandle === 'bottom-left') {
+          constrainedLeft = resizeStart.cropLeft + (resizeStart.cropWidth - constrainedWidth);
+        }
+        if (resizeHandle === 'top-left' || resizeHandle === 'top-right') {
+          constrainedTop = resizeStart.cropTop + (resizeStart.cropHeight - constrainedHeight);
+        }
+      }
+      
+      // Apply the constrained values
+      newWidth = constrainedWidth;
+      newHeight = constrainedHeight;
+      newLeft = constrainedLeft;
+      newTop = constrainedTop;
+    }
+    
+    // Final boundary constraints for freeform mode
+    newLeft = Math.max(0, Math.min(newLeft, originalWidth - newWidth));
+    newTop = Math.max(0, Math.min(newTop, originalHeight - newHeight));
+    newWidth = Math.min(newWidth, originalWidth - newLeft);
+    newHeight = Math.min(newHeight, originalHeight - newTop);
+    
+    // Update crop values
+    setCropWidth(Math.round(newWidth));
+    setCropHeight(Math.round(newHeight));
+    setCropLeft(Math.round(newLeft));
+    setCropTop(Math.round(newTop));
+    
+    // Update scale
+    setScale(calculateScale(newWidth, newHeight, originalWidth, originalHeight));
+  };
+
+  const handleResizeEnd = () => {
+    setIsResizing(false);
+    setResizeHandle('');
+  };
+
+  // Add global event listeners for drag and resize
   useEffect(() => {
-    if (isDragging) {
+    if (isDragging || isResizing) {
       // Add dragging class to prevent text selection
       document.body.classList.add('crop-dragging');
       
-      const handleMouseMove = (e: MouseEvent) => handleCropDragMove(e);
-      const handleMouseUp = () => handleCropDragEnd();
-      const handleTouchMove = (e: TouchEvent) => handleCropDragMove(e);
-      const handleTouchEnd = () => handleCropDragEnd();
+      const handleMouseMove = (e: MouseEvent) => {
+        if (isDragging) {
+          handleCropDragMove(e);
+        } else if (isResizing) {
+          handleResizeMove(e);
+        }
+      };
+      
+      const handleMouseUp = () => {
+        if (isDragging) {
+          handleCropDragEnd();
+        } else if (isResizing) {
+          handleResizeEnd();
+        }
+      };
+      
+      const handleTouchMove = (e: TouchEvent) => {
+        if (isDragging) {
+          handleCropDragMove(e);
+        } else if (isResizing) {
+          handleResizeMove(e);
+        }
+      };
+      
+      const handleTouchEnd = () => {
+        if (isDragging) {
+          handleCropDragEnd();
+        } else if (isResizing) {
+          handleResizeEnd();
+        }
+      };
       
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
@@ -618,7 +854,7 @@ const VideoCropper = () => {
         document.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [isDragging, dragStart, cropLeft, cropTop, cropWidth, cropHeight, originalWidth, originalHeight]);
+  }, [isDragging, isResizing, dragStart, resizeStart, cropLeft, cropTop, cropWidth, cropHeight, originalWidth, originalHeight, aspectRatio]);
 
   if (currentView === 'landing') {
     return (
@@ -701,33 +937,56 @@ const VideoCropper = () => {
                       {/* Draggable crop box border */}
                       <div 
                         className={`absolute border-2 border-teal-400 transition-all duration-200 pointer-events-auto ${
-                          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+                          isDragging ? 'cursor-grabbing' : isResizing ? 'cursor-grabbing' : 'cursor-grab'
                         } hover:border-teal-500`}
                         style={cropStyle}
                         onMouseDown={handleCropDragStart}
                         onTouchStart={handleCropDragStart}
                       >
-                        {/* Corner indicators */}
-                        <div className="absolute -top-1 -left-1 w-3 h-3 bg-teal-400 border border-white rounded-full pointer-events-none"></div>
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-teal-400 border border-white rounded-full pointer-events-none"></div>
-                        <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-teal-400 border border-white rounded-full pointer-events-none"></div>
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-teal-400 border border-white rounded-full pointer-events-none"></div>
+                        {/* Resizable corner handles */}
+                        <div 
+                          className="absolute -top-1 -left-1 w-4 h-4 bg-teal-400 border border-white rounded-full cursor-nw-resize pointer-events-auto hover:bg-teal-500 transition-colors"
+                          onMouseDown={(e) => handleResizeStart(e, 'top-left')}
+                          onTouchStart={(e) => handleResizeStart(e, 'top-left')}
+                        ></div>
+                        <div 
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-teal-400 border border-white rounded-full cursor-ne-resize pointer-events-auto hover:bg-teal-500 transition-colors"
+                          onMouseDown={(e) => handleResizeStart(e, 'top-right')}
+                          onTouchStart={(e) => handleResizeStart(e, 'top-right')}
+                        ></div>
+                        <div 
+                          className="absolute -bottom-1 -left-1 w-4 h-4 bg-teal-400 border border-white rounded-full cursor-sw-resize pointer-events-auto hover:bg-teal-500 transition-colors"
+                          onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
+                          onTouchStart={(e) => handleResizeStart(e, 'bottom-left')}
+                        ></div>
+                        <div 
+                          className="absolute -bottom-1 -right-1 w-4 h-4 bg-teal-400 border border-white rounded-full cursor-se-resize pointer-events-auto hover:bg-teal-500 transition-colors"
+                          onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
+                          onTouchStart={(e) => handleResizeStart(e, 'bottom-right')}
+                        ></div>
                         
-                        {/* Center label with drag hint */}
+                        {/* Center label with drag/resize hint */}
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-teal-600 text-white px-2 py-1 rounded text-xs font-medium pointer-events-none flex items-center gap-1">
                           {isDragging ? (
                             <>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M13,6V11H18V7.75L22.25,12L18,16.25V13H13V18H16.25L12,22.25L7.75,18H11V13H6V16.25L1.75,12L6,7.75V11H11V6H7.75L12,1.75L16.25,6H13Z"/>
                               </svg>
-                              Dragging
+                              Moving
+                            </>
+                          ) : isResizing ? (
+                            <>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M10,21V19H6.41L10.91,14.5L9.5,13.09L5,17.59V14H3V21H10M14.5,10.91L19,6.41V10H21V3H14V5H17.59L13.09,9.5L14.5,10.91Z"/>
+                              </svg>
+                              Resizing
                             </>
                           ) : (
                             <>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M13,6V11H18V7.75L22.25,12L18,16.25V13H13V18H16.25L12,22.25L7.75,18H11V13H6V16.25L1.75,12L6,7.75V11H11V6H7.75L12,1.75L16.25,6H13Z"/>
                               </svg>
-                              Drag to move
+                              Drag to move or resize corners
                             </>
                           )}
                         </div>
