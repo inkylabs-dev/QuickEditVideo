@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import VideoTrimmer from '../components/VideoTrimmer.astro';
+import VideoTrimmer from '../components/VideoTrimmer.tsx';
 ---
 
 <Layout
@@ -23,7 +23,7 @@ import VideoTrimmer from '../components/VideoTrimmer.astro';
 		<!-- Main Video Editor -->
 		<section class="p-4 md:p-6 w-full">
 			<div class="max-w-6xl mx-auto w-full">
-				<VideoTrimmer />
+				<VideoTrimmer client:load />
 			</div>
 		</section>
 
@@ -279,4 +279,65 @@ import VideoTrimmer from '../components/VideoTrimmer.astro';
 			});
 		});
 	</script>
+
+	<style>
+		.timeline-handle {
+			cursor: ew-resize;
+			touch-action: pan-x;
+			min-height: 44px; /* Better touch target */
+		}
+		
+		.timeline-handle:hover {
+			transform: scaleY(1.1);
+		}
+		
+		.timeline-handle:active {
+			transform: scaleY(1.2);
+		}
+		
+		.video-container {
+			aspect-ratio: 16/9;
+			max-height: calc(100vh - 250px);
+			width: 100%;
+			height: 100%;
+		}
+		
+		.video-container-custom {
+			max-height: calc(100vh - 400px);
+		}
+		
+		@media (max-width: 768px) {
+			.video-container-custom {
+				max-height: 40vh;
+			}
+		}
+		
+		.progress-ring {
+			transform: rotate(-90deg);
+		}
+		
+		.progress-ring circle {
+			stroke-dasharray: 251.2;
+			stroke-dashoffset: 251.2;
+			transition: stroke-dashoffset 0.1s ease;
+		}
+
+		/* Prevent horizontal scroll */
+		* {
+			box-sizing: border-box;
+		}
+		
+		/* Better mobile touch handling */
+		@media (max-width: 640px) {
+			.timeline-handle {
+				width: 32px;
+				margin-left: -16px !important;
+			}
+			
+			.timeline-handle .w-1 {
+				width: 3px;
+				height: 32px;
+			}
+		}
+	</style>
 </Layout>
