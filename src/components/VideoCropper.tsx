@@ -653,18 +653,47 @@ const VideoCropper = () => {
             {/* Aspect Ratio Selection */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Aspect Ratio</label>
-              <div className="grid grid-cols-2 gap-1">
+              <div className="flex gap-3 overflow-x-auto pb-8 scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
                 {aspectRatios.map(ar => (
                   <button
                     key={ar.value}
                     onClick={() => handleAspectRatioChange(ar.value)}
-                    className={`px-3 py-2 text-sm font-medium border-2 transition-all rounded ${
+                    className={`flex-shrink-0 w-16 h-16 border-2 transition-all rounded-lg flex items-center justify-center relative ${
                       aspectRatio === ar.value 
-                        ? 'border-teal-600 bg-teal-600 text-white' 
-                        : 'border-gray-200 bg-white text-gray-900 hover:border-teal-600 hover:bg-teal-50'
+                        ? 'border-teal-600 bg-teal-50' 
+                        : 'border-gray-200 bg-white hover:border-teal-300 hover:bg-gray-50'
                     }`}
+                    title={ar.label}
                   >
-                    {ar.label}
+                    {ar.value === 'freeform' ? (
+                      // Four corner lines for freeform
+                      <div className="relative w-8 h-8">
+                        {/* Top-left corner */}
+                        <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-gray-400"></div>
+                        {/* Top-right corner */}
+                        <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-gray-400"></div>
+                        {/* Bottom-left corner */}
+                        <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-gray-400"></div>
+                        {/* Bottom-right corner */}
+                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-gray-400"></div>
+                      </div>
+                    ) : (
+                      // Visual aspect ratio box
+                      <div 
+                        className={`border-2 ${aspectRatio === ar.value ? 'border-teal-600' : 'border-gray-400'}`}
+                        style={{
+                          width: ar.ratio && ar.ratio > 1 ? '24px' : `${24 * (ar.ratio || 1)}px`,
+                          height: ar.ratio && ar.ratio < 1 ? '24px' : `${24 / (ar.ratio || 1)}px`,
+                          maxWidth: '24px',
+                          maxHeight: '24px'
+                        }}
+                      ></div>
+                    )}
+                    
+                    {/* Label below the visual */}
+                    <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-600 whitespace-nowrap">
+                      {ar.label}
+                    </div>
                   </button>
                 ))}
               </div>
