@@ -1,29 +1,29 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import VideoResizer from '../components/VideoResizer.tsx';
+import VideoCropper from '../components/VideoCropper.tsx';
 ---
 
 <Layout
-	title="Video Resizer - Resize Videos Online Free | QuickEditVideo"
-	description="Resize videos online with precision! Scale videos, change dimensions while maintaining aspect ratio. Works with MP4, WebM, AVI, MOV files. No uploads, no sign-up."
-	keywords="video resizer, resize video online, scale video, video dimension changer, free video resizer, MP4 resizer, WebM resizer, AVI resizer, MOV resizer, online video editor"
-	ogTitle="Free Online Video Resizer - Scale Videos with Precision"
-	ogDescription="Professional video resizing tool. Scale videos and change dimensions while maintaining aspect ratio. Works with all major formats. No uploads required - completely private and secure."
-	canonicalUrl="https://quickeditvideo.com/resize"
+	title="Video Cropper - Crop Videos Online Free | QuickEditVideo"
+	description="Crop videos online with precision! Trim video dimensions, select aspect ratios, and rotate before cropping. Works with MP4, WebM, AVI, MOV files. No uploads, no sign-up."
+	keywords="video cropper, crop video online, video trim, aspect ratio, video rotation, free video cropper, MP4 cropper, WebM cropper, AVI cropper, MOV cropper, online video editor"
+	ogTitle="Free Online Video Cropper - Crop Videos with Precision"
+	ogDescription="Professional video cropping tool. Crop videos with custom dimensions and aspect ratios. Rotate before cropping. Works with all major formats. No uploads required - completely private and secure."
+	canonicalUrl="https://quickeditvideo.com/crop"
 >
 	<main class="min-h-screen bg-gray-50">
 		<!-- Page Header -->
 		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
 			<div class="max-w-6xl mx-auto px-4 md:px-6">
-				<h1 class="text-3xl font-bold text-gray-900">Video Resizer</h1>
-				<p class="text-gray-600 mt-2">Resize videos while maintaining aspect ratio</p>
+				<h1 class="text-3xl font-bold text-gray-900">Video Cropper</h1>
+				<p class="text-gray-600 mt-2">Crop videos with precision and custom aspect ratios</p>
 			</div>
 		</div>
 
 		<!-- Main Video Editor -->
 		<section class="p-4 md:p-6 w-full">
 			<div class="max-w-6xl mx-auto w-full">
-				<VideoResizer client:load />
+				<VideoCropper client:load />
 			</div>
 		</section>
 
@@ -47,16 +47,17 @@ import VideoResizer from '../components/VideoResizer.tsx';
 						<p class="text-sm text-gray-600">Upload your video file (supports MP4, WebM, AVI, MOV)</p>
 					</div>
 
-					<!-- Step 2: Resize -->
+					<!-- Step 2: Crop -->
 					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
 						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
 							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
-								<path d="M8 3H5C3.89 3 3 3.89 3 5V8M21 8V5C21 3.89 20.11 3 19 3H16M16 21H19C20.11 21 21 20.11 21 19V16M3 16V19C3 20.11 3.89 21 5 21H8"/>
+								<path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/>
+								<path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/>
 							</svg>
 						</div>
 						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">2</div>
-						<h4 class="font-semibold text-gray-900 mb-2">Set Dimensions</h4>
-						<p class="text-sm text-gray-600">Use scale slider or set width/height manually</p>
+						<h4 class="font-semibold text-gray-900 mb-2">Set Crop Area</h4>
+						<p class="text-sm text-gray-600">Choose aspect ratio, drag to position, and adjust crop dimensions</p>
 					</div>
 
 					<!-- Step 3: Download -->
@@ -70,7 +71,7 @@ import VideoResizer from '../components/VideoResizer.tsx';
 						</div>
 						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">3</div>
 						<h4 class="font-semibold text-gray-900 mb-2">Download Result</h4>
-						<p class="text-sm text-gray-600">Preview your resized video and download it</p>
+						<p class="text-sm text-gray-600">Preview your cropped video and download it</p>
 					</div>
 				</div>
 			</div>
@@ -81,23 +82,23 @@ import VideoResizer from '../components/VideoResizer.tsx';
 			<div class="max-w-4xl mx-auto">
 				<!-- Introduction -->
 				<div class="mb-16">
-					<h2 class="text-3xl font-bold text-gray-900 mb-6">The Video Resizer That Keeps Things Simple</h2>
+					<h2 class="text-3xl font-bold text-gray-900 mb-6">The Video Cropper That Gets It Right</h2>
 					<div class="prose prose-lg max-w-none text-gray-700 space-y-4">
 						<p>
-							Need to resize a video for social media, your website, or to reduce file size? Stop wrestling with complex video editing software. Whether you're scaling down a 4K video for faster loading or upscaling footage for a presentation, resizing should be straightforward.
+							Need to crop a video for social media, presentations, or to focus on specific content? Stop struggling with complicated video editing software. Whether you're creating square videos for Instagram, vertical videos for TikTok, or custom dimensions for your website, cropping should be effortless.
 						</p>
 						<p>
-							That's exactly why we built this tool. No downloads, no accounts, no monthly subscriptions. Just drag your video file, adjust the scale or set your desired dimensions, and download your perfectly resized video. Your video never leaves your device, so your privacy stays intact.
+							That's exactly why we built this tool. No downloads, no accounts, no monthly subscriptions. Just drag your video file, select your aspect ratio, adjust the crop area, and download your perfectly cropped video. Your video never leaves your device, so your privacy stays intact.
 						</p>
 						<p>
-							If you can move a slider, you can master this tool in under 30 seconds. Because your time matters more than learning another complicated interface.
+							With preset aspect ratios and rotation support, you'll master this tool in under a minute. Because your content creation workflow shouldn't be slowed down by complicated interfaces.
 						</p>
 					</div>
 				</div>
 
 				<!-- How It Works -->
 				<div class="mb-16">
-					<h3 class="text-2xl font-semibold text-gray-900 mb-6">How Our Video Resizer Works</h3>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">How Our Video Cropper Works</h3>
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 						<div>
 							<h4 class="text-lg font-medium text-gray-900 mb-3">Upload & Process Locally</h4>
@@ -106,21 +107,21 @@ import VideoResizer from '../components/VideoResizer.tsx';
 							</p>
 						</div>
 						<div>
-							<h4 class="text-lg font-medium text-gray-900 mb-3">Smart Aspect Ratio</h4>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Smart Aspect Ratios</h4>
 							<p class="text-gray-600 mb-4">
-								Set a scale percentage or enter specific width/height. Our tool automatically maintains aspect ratio to prevent distorted videos.
+								Choose from preset aspect ratios like 1:1 for Instagram, 16:9 for YouTube, 9:16 for TikTok, or go freeform for custom dimensions.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Precise Control</h4>
+							<p class="text-gray-600 mb-4">
+								Drag the crop area to position it, drag corner handles to resize, or set exact dimensions and coordinates. Rotate your video first if needed, then crop to get the perfect frame.
 							</p>
 						</div>
 						<div>
 							<h4 class="text-lg font-medium text-gray-900 mb-3">Instant Download</h4>
 							<p class="text-gray-600 mb-4">
-								Hit download and get your resized video in the same format as your original. High-quality scaling with no watermarks.
-							</p>
-						</div>
-						<div>
-							<h4 class="text-lg font-medium text-gray-900 mb-3">Universal Compatibility</h4>
-							<p class="text-gray-600 mb-4">
-								Works with MP4, WebM, AVI, MOV, and more. Use it on any device with a modern browser—desktop, tablet, or mobile.
+								Hit download and get your cropped video in the same format as your original. High-quality processing with no watermarks.
 							</p>
 						</div>
 					</div>
@@ -128,7 +129,7 @@ import VideoResizer from '../components/VideoResizer.tsx';
 
 				<!-- Why Choose This Tool -->
 				<div class="mb-16">
-					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Why Choose Our Video Resizer?</h3>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Why Choose Our Video Cropper?</h3>
 					<div class="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 							<div class="flex items-start gap-3">
@@ -161,7 +162,7 @@ import VideoResizer from '../components/VideoResizer.tsx';
 								</div>
 								<div>
 									<h4 class="font-medium text-gray-900 mb-1">Maintains Quality</h4>
-									<p class="text-sm text-gray-600">High-quality scaling algorithms preserve video clarity.</p>
+									<p class="text-sm text-gray-600">High-quality cropping algorithms preserve video clarity.</p>
 								</div>
 							</div>
 							<div class="flex items-start gap-3">
@@ -182,8 +183,8 @@ import VideoResizer from '../components/VideoResizer.tsx';
 									</svg>
 								</div>
 								<div>
-									<h4 class="font-medium text-gray-900 mb-1">Keeps Your Original</h4>
-									<p class="text-sm text-gray-600">Downloads a new resized copy. Your original file stays untouched.</p>
+									<h4 class="font-medium text-gray-900 mb-1">Smart Aspect Ratios</h4>
+									<p class="text-sm text-gray-600">Preset ratios for all major platforms plus custom freeform cropping.</p>
 								</div>
 							</div>
 							<div class="flex items-start gap-3">
@@ -193,8 +194,8 @@ import VideoResizer from '../components/VideoResizer.tsx';
 									</svg>
 								</div>
 								<div>
-									<h4 class="font-medium text-gray-900 mb-1">No Installation</h4>
-									<p class="text-sm text-gray-600">Works instantly in your browser. No downloads or setup required.</p>
+									<h4 class="font-medium text-gray-900 mb-1">Rotation Support</h4>
+									<p class="text-sm text-gray-600">Rotate your video before cropping for perfect orientation.</p>
 								</div>
 							</div>
 						</div>
@@ -216,23 +217,23 @@ import VideoResizer from '../components/VideoResizer.tsx';
 						</div>
 						
 						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-							<h4 class="font-semibold text-gray-900 mb-2">Will resizing reduce my video quality?</h4>
-							<p class="text-gray-600">We use high-quality scaling algorithms to maintain the best possible quality. While some quality changes are inevitable when scaling (especially upscaling), our tool minimizes quality loss.</p>
+							<h4 class="font-semibold text-gray-900 mb-2">What aspect ratios are supported?</h4>
+							<p class="text-gray-600">We support popular aspect ratios like 1:1 (Instagram square), 16:9 (YouTube/widescreen), 9:16 (TikTok/vertical), plus 5:4, 4:5, 4:3, 3:4, 3:2, 2:3, and freeform for custom dimensions.</p>
 						</div>
 						
 						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-							<h4 class="font-semibold text-gray-900 mb-2">How do I maintain aspect ratio?</h4>
-							<p class="text-gray-600">The tool automatically maintains aspect ratio. When you set width, height is calculated automatically, and vice versa. Use the scale slider for proportional resizing.</p>
+							<h4 class="font-semibold text-gray-900 mb-2">Can I rotate videos before cropping?</h4>
+							<p class="text-gray-600">Yes! Use the rotation slider to rotate your video anywhere from -180° to +180° before applying the crop. This ensures perfect orientation for your final video.</p>
 						</div>
 						
 						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
 							<h4 class="font-semibold text-gray-900 mb-2">What video formats are supported?</h4>
-							<p class="text-gray-600">We support all major video formats including MP4, WebM, AVI, MOV, MKV, and more. If your browser can play it, we can resize it.</p>
+							<p class="text-gray-600">We support all major video formats including MP4, WebM, AVI, MOV, MKV, and more. If your browser can play it, we can crop it.</p>
 						</div>
 						
 						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-							<h4 class="font-semibold text-gray-900 mb-2">Can I upscale videos?</h4>
-							<p class="text-gray-600">Yes! You can scale videos up to 200% or set larger dimensions. Keep in mind that upscaling won't add detail that wasn't in the original video.</p>
+							<h4 class="font-semibold text-gray-900 mb-2">Will cropping reduce my video quality?</h4>
+							<p class="text-gray-600">Cropping doesn't reduce quality since we're just selecting a portion of the original video. The selected area maintains the original resolution and quality.</p>
 						</div>
 						
 						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
@@ -242,7 +243,7 @@ import VideoResizer from '../components/VideoResizer.tsx';
 						
 						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
 							<h4 class="font-semibold text-gray-900 mb-2">Do I need to create an account?</h4>
-							<p class="text-gray-600">Nope! Just visit the page and start resizing. No registration, no email required, no personal information collected.</p>
+							<p class="text-gray-600">Nope! Just visit the page and start cropping. No registration, no email required, no personal information collected.</p>
 						</div>
 					</div>
 				</div>
@@ -250,79 +251,8 @@ import VideoResizer from '../components/VideoResizer.tsx';
 		</section>
 	</main>
 
-	<script>
-		// Listen for events from VideoResizer component to hide/show header
-		document.addEventListener('DOMContentLoaded', function() {
-			const pageHeader = document.getElementById('page-header');
-			
-			// Function to toggle header visibility
-			function toggleHeader(show) {
-				if (pageHeader) {
-					if (show) {
-						pageHeader.style.display = 'block';
-						pageHeader.style.opacity = '1';
-						pageHeader.style.transform = 'translateY(0)';
-					} else {
-						pageHeader.style.opacity = '0';
-						pageHeader.style.transform = 'translateY(-10px)';
-						setTimeout(() => {
-							pageHeader.style.display = 'none';
-						}, 300);
-					}
-				}
-			}
-			
-			// Listen for custom events from VideoResizer
-			document.addEventListener('videoResizerViewChange', function(event) {
-				const isLandingView = event.detail.currentView === 'landing';
-				toggleHeader(isLandingView);
-			});
-		});
-	</script>
-
 	<style>
-		.video-container {
-			aspect-ratio: 16/9;
-			max-height: calc(100vh - 250px);
-			width: 100%;
-			height: 100%;
-		}
-		
-		.video-container-custom {
-			max-height: calc(100vh - 400px);
-		}
-		
-		@media (max-width: 768px) {
-			.video-container-custom {
-				max-height: 40vh;
-			}
-		}
-		
-		.progress-ring {
-			transform: rotate(-90deg);
-		}
-		
-		.progress-ring circle {
-			stroke-dasharray: 251.2;
-			stroke-dashoffset: 251.2;
-			transition: stroke-dashoffset 0.1s ease;
-		}
-
-		/* Prevent horizontal scroll */
-		* {
-			box-sizing: border-box;
-		}
-		
-		/* Range slider styles */
-		.range-slider {
-			-webkit-appearance: none;
-			appearance: none;
-			height: 8px;
-			border-radius: 4px;
-			background: #e5e7eb;
-			outline: none;
-		}
-		
+		/* Range slider browser-specific styling - cannot be replaced with Tailwind */
 		.range-slider::-webkit-slider-thumb {
 			-webkit-appearance: none;
 			appearance: none;
@@ -344,5 +274,53 @@ import VideoResizer from '../components/VideoResizer.tsx';
 			border: 2px solid white;
 			box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 		}
+
+		/* Prevent text selection during dragging */
+		.crop-dragging {
+			user-select: none;
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+		}
+
+		/* Smooth transition for crop overlay */
+		.crop-overlay {
+			transition: all 0.1s ease-out;
+		}
+
+		/* Prevent horizontal scroll */
+		* {
+			box-sizing: border-box;
+		}
 	</style>
+
+	<script>
+		// Listen for events from VideoCropper component to hide/show header
+		document.addEventListener('DOMContentLoaded', function() {
+			const pageHeader = document.getElementById('page-header');
+			
+			// Function to toggle header visibility
+			function toggleHeader(show) {
+				if (pageHeader) {
+					if (show) {
+						pageHeader.style.display = 'block';
+						pageHeader.style.opacity = '1';
+						pageHeader.style.transform = 'translateY(0)';
+					} else {
+						pageHeader.style.opacity = '0';
+						pageHeader.style.transform = 'translateY(-10px)';
+						setTimeout(() => {
+							pageHeader.style.display = 'none';
+						}, 300);
+					}
+				}
+			}
+			
+			// Listen for custom events from VideoCropper
+			document.addEventListener('videoCropperViewChange', function(event) {
+				const isLandingView = event.detail.currentView === 'landing';
+				toggleHeader(isLandingView);
+			});
+		});
+	</script>
 </Layout>

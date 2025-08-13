@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync, statSync } from 'fs';
 
 test.describe('Resize page', () => {
   test('should load resize page successfully', async ({ page }) => {
@@ -40,6 +41,63 @@ test.describe('Resize page', () => {
     // but we can verify the structure is present
     const mainContent = page.locator('main');
     await expect(mainContent).toBeVisible();
+  });
+
+  test('should upload test video and show resizing interface', async ({ page }) => {
+    await page.goto('/resize');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    
+    // Check that upload area is present
+    await expect(page.locator('text=Select your video')).toBeVisible();
+    await expect(page.locator('text=Drop a video file here or click to browse')).toBeVisible();
+    await expect(page.locator('text=Choose file')).toBeVisible();
+    
+    // Upload the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
+    
+    // Wait for video to load and interface to change
+    await page.waitForSelector('video', { timeout: 15000 });
+    
+    // Check that video element is present and has src
+    const video = page.locator('video');
+    await expect(video).toBeVisible();
+    await expect(video).toHaveAttribute('src', /blob:/);
+    
+    // Check that page header is hidden (should happen when video loads)
+    const pageHeader = page.locator('#page-header');
+    await expect(pageHeader).not.toBeVisible();
+    
+    // Check that resize controls are visible
+    await expect(page.locator('text=Resize Controls')).toBeVisible();
+    await expect(page.locator('label', { hasText: 'Scale' }).filter({ has: page.locator('~ div input[type="range"]') })).toBeVisible();
+    await expect(page.locator('label', { hasText: 'Width' }).filter({ has: page.locator('~ div input[type="number"]') })).toBeVisible();
+    await expect(page.locator('label', { hasText: 'Height' }).filter({ has: page.locator('~ div input[type="number"]') })).toBeVisible();
+    
+    // Check that scale slider is present
+    const scaleSlider = page.locator('input[type="range"]');
+    await expect(scaleSlider).toBeVisible();
+    
+    // Check that dimension inputs are present
+    const widthInput = page.locator('input[type="number"]').first();
+    const heightInput = page.locator('input[type="number"]').last();
+    await expect(widthInput).toBeVisible();
+    await expect(heightInput).toBeVisible();
+    
+    // Check that play/pause button is visible
+    await expect(page.locator('button', { hasText: /Play|Pause/ })).toBeVisible();
+    
+    // Check that download button is visible
+    await expect(page.locator('button', { hasText: 'Download' })).toBeVisible();
+    
+    // Check that resize information section is visible
+    const resizeInfoSection = page.locator('.bg-white.rounded-lg.shadow-sm.border.border-gray-200.p-4:has(h3:text("Resize Information"))');
+    await expect(resizeInfoSection).toBeVisible();
+    await expect(resizeInfoSection.locator('text=Original')).toBeVisible();
+    await expect(resizeInfoSection.locator('text=New Size')).toBeVisible();
+    await expect(resizeInfoSection.locator('text=Scale Factor')).toBeVisible();
   });
 
   test('should have resize-specific quick guide content', async ({ page }) => {
@@ -127,5 +185,128 @@ test.describe('Resize page', () => {
     const main = page.locator('main');
     const sections = main.locator('> section, > div');
     await expect(sections.first()).toBeVisible();
+  });
+
+  test('should resize video by scale and download file', async ({ page }) => {
+    await page.goto('/resize');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    
+    // Upload the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
+    
+    // Wait for video to load and interface to change
+    await page.waitForSelector('video', { timeout: 15000 });
+    
+    // Wait for FFmpeg to load (indicated by download button being enabled)
+    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 30000 });
+    
+    // Set scale to 50% using the scale slider
+    const scaleSlider = page.locator('input[type="range"]');
+    await scaleSlider.fill('50');
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "resized"
+    expect(download.suggestedFilename()).toContain('resized');
+  });
+
+  test('should resize video by scale factor 75% and download file', async ({ page }) => {
+    await page.goto('/resize');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    
+    // Upload the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
+    
+    // Wait for video to load and interface to change
+    await page.waitForSelector('video', { timeout: 15000 });
+    
+    // Wait for FFmpeg to load (indicated by download button being enabled)
+    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 30000 });
+    
+    // Set scale to 75% using the scale slider
+    const scaleSlider = page.locator('input[type="range"]');
+    await scaleSlider.fill('75');
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "resized"
+    expect(download.suggestedFilename()).toContain('resized');
+  });
+
+  test('should resize video with upscale factor and download file', async ({ page }) => {
+    await page.goto('/resize');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    
+    // Upload the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
+    
+    // Wait for video to load and interface to change
+    await page.waitForSelector('video', { timeout: 15000 });
+    
+    // Wait for FFmpeg to load (indicated by download button being enabled)
+    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 30000 });
+    
+    // Set scale to 150% (upscale)
+    const scaleSlider = page.locator('input[type="range"]');
+    await scaleSlider.fill('150');
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "resized"
+    expect(download.suggestedFilename()).toContain('resized');
   });
 });
