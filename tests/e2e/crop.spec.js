@@ -114,6 +114,44 @@ test.describe('Crop page', () => {
     await expect(page.locator('text=Supports MP4, WebM, AVI, MOV and more')).toBeVisible();
   });
 
+  test('should upload test video and show cropping interface', async ({ page }) => {
+    await page.goto('/crop');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    
+    // Upload the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
+    
+    // Wait for video to load and interface to change
+    await page.waitForSelector('video', { timeout: 15000 });
+    
+    // Check that video element is present and has src
+    const video = page.locator('video');
+    await expect(video).toBeVisible();
+    await expect(video).toHaveAttribute('src', /blob:/);
+    
+    // Check that page header is hidden (should happen when video loads)
+    const pageHeader = page.locator('#page-header');
+    await expect(pageHeader).not.toBeVisible();
+    
+    // Check that aspect ratio selector is now visible
+    await expect(page.locator('label', { hasText: 'Aspect Ratio' }).filter({ has: page.locator('~ div') })).toBeVisible();
+    await expect(page.locator('button[title="Freeform"]')).toBeVisible();
+    
+    // Check that crop controls are visible
+    await expect(page.locator('h3', { hasText: 'Crop Controls' })).toBeVisible();
+    await expect(page.locator('label', { hasText: 'Width' }).filter({ has: page.locator('~ input[type="number"]') })).toBeVisible();
+    await expect(page.locator('label', { hasText: 'Height' }).filter({ has: page.locator('~ input[type="number"]') })).toBeVisible();
+    
+    // Check that rotation control is visible
+    await expect(page.locator('label', { hasText: 'Rotation' }).filter({ has: page.locator('~ div input[type="range"]') })).toBeVisible();
+    
+    // Check that download button is visible
+    await expect(page.locator('button', { hasText: 'Download' })).toBeVisible();
+  });
+
   test('should hide page header when video is loaded', async ({ page }) => {
     await page.goto('/crop');
     
