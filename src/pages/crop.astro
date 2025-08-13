@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import VideoCropper from '../components/VideoCropper.astro';
+import VideoCropper from '../components/VideoCropper.tsx';
 ---
 
 <Layout
@@ -23,7 +23,7 @@ import VideoCropper from '../components/VideoCropper.astro';
 		<!-- Main Video Editor -->
 		<section class="p-4 md:p-6 w-full">
 			<div class="max-w-6xl mx-auto w-full">
-				<VideoCropper />
+				<VideoCropper client:load />
 			</div>
 		</section>
 
@@ -250,6 +250,31 @@ import VideoCropper from '../components/VideoCropper.astro';
 			</div>
 		</section>
 	</main>
+
+	<style>
+		/* Range slider browser-specific styling - cannot be replaced with Tailwind */
+		.range-slider::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			background: #0d9488;
+			cursor: pointer;
+			border: 2px solid white;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+		}
+		
+		.range-slider::-moz-range-thumb {
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			background: #0d9488;
+			cursor: pointer;
+			border: 2px solid white;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+		}
+	</style>
 
 	<script>
 		// Listen for events from VideoCropper component to hide/show header
