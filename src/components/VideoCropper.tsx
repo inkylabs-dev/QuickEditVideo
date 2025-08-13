@@ -414,7 +414,6 @@ const VideoCropper = () => {
               <video 
                 ref={videoRef}
                 className="w-full h-full object-contain" 
-                controls 
                 preload="metadata"
                 src={videoUrl}
                 onLoadedMetadata={handleVideoLoaded}
