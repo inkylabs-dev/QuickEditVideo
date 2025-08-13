@@ -8,6 +8,7 @@ This is an Astro starter project for the Quick Edit Video application.
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run astro` - Run Astro CLI commands
+- `npm run test:e2e` - Run end-to-end tests
 
 ## Project Structure
 

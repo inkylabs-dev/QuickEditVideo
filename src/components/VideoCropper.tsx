@@ -7,6 +7,56 @@ interface AspectRatio {
   ratio: number | null;
 }
 
+// Utility functions for aspect ratio calculations
+const INITIAL_CROP_FACTOR = 0.8;
+
+const calculateAspectRatioDimensions = (
+  aspectRatio: string, 
+  aspectRatios: AspectRatio[], 
+  baseWidth: number, 
+  baseHeight: number
+) => {
+  const selectedRatio = aspectRatios.find(ar => ar.value === aspectRatio);
+  
+  if (!selectedRatio || selectedRatio.ratio === null) {
+    return { width: baseWidth, height: baseHeight };
+  }
+
+  const ratio = selectedRatio.ratio;
+  const currentRatio = baseWidth / baseHeight;
+  
+  if (Math.abs(currentRatio - ratio) > 0.01) {
+    if (currentRatio > ratio) {
+      return { width: Math.round(baseHeight * ratio), height: baseHeight };
+    } else {
+      return { width: baseWidth, height: Math.round(baseWidth / ratio) };
+    }
+  }
+  
+  return { width: baseWidth, height: baseHeight };
+};
+
+const constrainDimensions = (
+  width: number, 
+  height: number, 
+  maxWidth: number, 
+  maxHeight: number,
+  left: number = 0,
+  top: number = 0
+) => {
+  const constrainedWidth = Math.min(width, maxWidth - left);
+  const constrainedHeight = Math.min(height, maxHeight - top);
+  return { width: constrainedWidth, height: constrainedHeight };
+};
+
+const calculateScale = (currentWidth: number, currentHeight: number, originalWidth: number, originalHeight: number) => {
+  const initialWidth = Math.round(originalWidth * INITIAL_CROP_FACTOR);
+  const initialHeight = Math.round(originalHeight * INITIAL_CROP_FACTOR);
+  const widthScale = (currentWidth / initialWidth) * 100;
+  const heightScale = (currentHeight / initialHeight) * 100;
+  return Math.round(Math.min(widthScale, heightScale));
+};
+
 const VideoCropper = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'cropping'>('landing');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -131,8 +181,8 @@ const VideoCropper = () => {
       setOriginalHeight(height);
       
       // Initialize crop to center 80% of video
-      const initialWidth = Math.round(width * 0.8);
-      const initialHeight = Math.round(height * 0.8);
+      const initialWidth = Math.round(width * INITIAL_CROP_FACTOR);
+      const initialHeight = Math.round(height * INITIAL_CROP_FACTOR);
       setCropWidth(initialWidth);
       setCropHeight(initialHeight);
       setCropLeft(Math.round((width - initialWidth) / 2));
@@ -148,26 +198,16 @@ const VideoCropper = () => {
     return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // Handle aspect ratio change
+  // Handle aspect ratio change - simplified with utility functions
   const handleAspectRatioChange = (newRatio: string) => {
     setAspectRatio(newRatio);
     
     const selectedRatio = aspectRatios.find(ar => ar.value === newRatio);
     if (selectedRatio && selectedRatio.ratio !== null) {
-      // Calculate maximum possible dimensions for this aspect ratio
-      let maxWidth: number, maxHeight: number;
-      
-      // Try filling to full width first
-      const widthBasedHeight = Math.round(originalWidth / selectedRatio.ratio);
-      if (widthBasedHeight <= originalHeight) {
-        // Width-constrained: use full width
-        maxWidth = originalWidth;
-        maxHeight = widthBasedHeight;
-      } else {
-        // Height-constrained: use full height
-        maxHeight = originalHeight;
-        maxWidth = Math.round(originalHeight * selectedRatio.ratio);
-      }
+      // Calculate maximum dimensions that fit the video with this aspect ratio
+      const { width: maxWidth, height: maxHeight } = calculateAspectRatioDimensions(
+        newRatio, aspectRatios, originalWidth, originalHeight
+      );
       
       // Center the crop area
       const newCropLeft = Math.round((originalWidth - maxWidth) / 2);
@@ -180,113 +220,88 @@ const VideoCropper = () => {
     }
   };
 
-  // Calculate scale based on current crop dimensions relative to initial 80% size
-  const calculateScale = (width: number, height: number): number => {
-    if (!originalWidth || !originalHeight) return 100;
-    const initialWidth = Math.round(originalWidth * 0.8);
-    const initialHeight = Math.round(originalHeight * 0.8);
-    const widthScale = (width / initialWidth) * 100;
-    const heightScale = (height / initialHeight) * 100;
-    return Math.round((widthScale + heightScale) / 2);
-  };
-
-  // Handle scale change - scales both dimensions proportionally
+  // Handle scale change - simplified with utility functions
   const handleScaleChange = (newScale: number) => {
     setScale(newScale);
     
     if (!originalWidth || !originalHeight) return;
     
-    const initialWidth = Math.round(originalWidth * 0.8);
-    const initialHeight = Math.round(originalHeight * 0.8);
+    const initialWidth = Math.round(originalWidth * INITIAL_CROP_FACTOR);
+    const initialHeight = Math.round(originalHeight * INITIAL_CROP_FACTOR);
     const scaleFactor = newScale / 100;
     
     let newWidth = Math.round(initialWidth * scaleFactor);
     let newHeight = Math.round(initialHeight * scaleFactor);
     
-    // Apply aspect ratio constraints if needed
-    const selectedRatio = aspectRatios.find(ar => ar.value === aspectRatio);
-    if (selectedRatio && selectedRatio.ratio !== null) {
-      // Maintain aspect ratio when scaling
-      const currentRatio = newWidth / newHeight;
-      if (Math.abs(currentRatio - selectedRatio.ratio) > 0.01) {
-        if (currentRatio > selectedRatio.ratio) {
-          newWidth = Math.round(newHeight * selectedRatio.ratio);
+    // Apply aspect ratio constraints
+    const dimensions = calculateAspectRatioDimensions(aspectRatio, aspectRatios, newWidth, newHeight);
+    
+    // Constrain to video boundaries
+    const constrained = constrainDimensions(
+      dimensions.width, dimensions.height, originalWidth, originalHeight, cropLeft, cropTop
+    );
+    
+    setCropWidth(constrained.width);
+    setCropHeight(constrained.height);
+  };
+
+  // Generic crop change handler - consolidates repetitive logic
+  const handleCropChange = (dimension: 'width' | 'height' | 'left' | 'top', value: number) => {
+    const setters = {
+      width: setCropWidth,
+      height: setCropHeight,
+      left: setCropLeft,
+      top: setCropTop
+    };
+
+    const bounds = {
+      width: { min: 1, max: originalWidth - cropLeft },
+      height: { min: 1, max: originalHeight - cropTop },
+      left: { min: 0, max: originalWidth - cropWidth },
+      top: { min: 0, max: originalHeight - cropHeight }
+    };
+
+    // Validate bounds
+    if (value < bounds[dimension].min || value > bounds[dimension].max) return;
+
+    // Update the dimension
+    setters[dimension](value);
+
+    // Handle aspect ratio constraints for width/height changes
+    if (dimension === 'width' || dimension === 'height') {
+      const selectedRatio = aspectRatios.find(ar => ar.value === aspectRatio);
+      if (selectedRatio && selectedRatio.ratio !== null) {
+        if (dimension === 'width') {
+          const newHeight = Math.round(value / selectedRatio.ratio);
+          const constrainedHeight = Math.min(newHeight, originalHeight - cropTop);
+          setCropHeight(constrainedHeight);
+          setScale(calculateScale(value, constrainedHeight, originalWidth, originalHeight));
         } else {
-          newHeight = Math.round(newWidth / selectedRatio.ratio);
+          const newWidth = Math.round(value * selectedRatio.ratio);
+          const constrainedWidth = Math.min(newWidth, originalWidth - cropLeft);
+          setCropWidth(constrainedWidth);
+          setScale(calculateScale(constrainedWidth, value, originalWidth, originalHeight));
         }
+      } else {
+        // Update scale for freeform
+        const finalWidth = dimension === 'width' ? value : cropWidth;
+        const finalHeight = dimension === 'height' ? value : cropHeight;
+        setScale(calculateScale(finalWidth, finalHeight, originalWidth, originalHeight));
       }
-    }
-    
-    // Ensure dimensions don't exceed boundaries
-    const maxWidth = originalWidth - cropLeft;
-    const maxHeight = originalHeight - cropTop;
-    newWidth = Math.min(newWidth, maxWidth);
-    newHeight = Math.min(newHeight, maxHeight);
-    
-    setCropWidth(newWidth);
-    setCropHeight(newHeight);
-  };
-
-  // Handle crop dimension changes
-  const handleCropWidthChange = (width: number) => {
-    if (width > 0 && width <= originalWidth - cropLeft) {
-      setCropWidth(width);
-      
-      let finalHeight = cropHeight;
-      const selectedRatio = aspectRatios.find(ar => ar.value === aspectRatio);
-      if (selectedRatio && selectedRatio.ratio !== null) {
-        const newHeight = Math.round(width / selectedRatio.ratio);
-        const maxHeight = originalHeight - cropTop;
-        finalHeight = Math.min(newHeight, maxHeight);
-        setCropHeight(finalHeight);
-      }
-      
-      // Update scale based on new dimensions
-      setScale(calculateScale(width, finalHeight));
-    }
-  };
-
-  const handleCropHeightChange = (height: number) => {
-    if (height > 0 && height <= originalHeight - cropTop) {
-      setCropHeight(height);
-      
-      let finalWidth = cropWidth;
-      const selectedRatio = aspectRatios.find(ar => ar.value === aspectRatio);
-      if (selectedRatio && selectedRatio.ratio !== null) {
-        const newWidth = Math.round(height * selectedRatio.ratio);
-        const maxWidth = originalWidth - cropLeft;
-        finalWidth = Math.min(newWidth, maxWidth);
-        setCropWidth(finalWidth);
-      }
-      
-      // Update scale based on new dimensions
-      setScale(calculateScale(finalWidth, height));
-    }
-  };
-
-  const handleCropLeftChange = (left: number) => {
-    if (left >= 0 && left + cropWidth <= originalWidth) {
-      setCropLeft(left);
-    }
-  };
-
-  const handleCropTopChange = (top: number) => {
-    if (top >= 0 && top + cropHeight <= originalHeight) {
-      setCropTop(top);
     }
   };
 
   // Reset crop to center 80%
   const resetCrop = () => {
-    const initialWidth = Math.round(originalWidth * 0.8);
-    const initialHeight = Math.round(originalHeight * 0.8);
+    const initialWidth = Math.round(originalWidth * INITIAL_CROP_FACTOR);
+    const initialHeight = Math.round(originalHeight * INITIAL_CROP_FACTOR);
     setCropWidth(initialWidth);
     setCropHeight(initialHeight);
     setCropLeft(Math.round((originalWidth - initialWidth) / 2));
     setCropTop(Math.round((originalHeight - initialHeight) / 2));
     setAspectRatio('freeform');
     setRotation(0);
-    setScale(100); // Reset scale to 100%
+    setScale(100);
   };
 
   // Crop and download video
