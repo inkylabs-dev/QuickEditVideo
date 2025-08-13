@@ -410,7 +410,7 @@ const VideoCropper = () => {
         {/* Video Section */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="relative bg-black max-h-[calc(100vh-400px)] md:max-h-[calc(100vh-400px)] max-md:max-h-[40vh]">
+            <div className="relative bg-black w-full">
               <video 
                 ref={videoRef}
                 className="w-full h-full object-contain" 
@@ -424,45 +424,31 @@ const VideoCropper = () => {
               </video>
               
               {/* Crop Overlay */}
-              <div key={overlayKey} className="absolute inset-0 pointer-events-none">
+              <div key={overlayKey} className="absolute inset-0 pointer-events-none z-10">
                 {(() => {
                   const cropStyle = getCropOverlayStyle();
+                  const clipPath = `polygon(
+                    0% 0%, 
+                    0% 100%, 
+                    ${cropStyle.left} 100%, 
+                    ${cropStyle.left} ${cropStyle.top}, 
+                    calc(${cropStyle.left} + ${cropStyle.width}) ${cropStyle.top}, 
+                    calc(${cropStyle.left} + ${cropStyle.width}) calc(${cropStyle.top} + ${cropStyle.height}), 
+                    ${cropStyle.left} calc(${cropStyle.top} + ${cropStyle.height}), 
+                    ${cropStyle.left} 100%, 
+                    100% 100%, 
+                    100% 0%
+                  )`;
+                  
                   return (
                     <>
-                      {/* Dark overlay for non-cropped areas - split into 4 sections */}
-                      {/* Top section */}
-                      <div className="absolute bg-black bg-opacity-50" style={{
-                        left: '0%',
-                        top: '0%',
-                        width: '100%',
-                        height: cropStyle.top
-                      }}></div>
+                      {/* Dark overlay with cut-out for crop area */}
+                      <div 
+                        className="absolute inset-0 bg-black bg-opacity-50"
+                        style={{ clipPath }}
+                      ></div>
                       
-                      {/* Bottom section */}
-                      <div className="absolute bg-black bg-opacity-50" style={{
-                        left: '0%',
-                        top: `calc(${cropStyle.top} + ${cropStyle.height})`,
-                        width: '100%',
-                        height: `calc(100% - ${cropStyle.top} - ${cropStyle.height})`
-                      }}></div>
-                      
-                      {/* Left section */}
-                      <div className="absolute bg-black bg-opacity-50" style={{
-                        left: '0%',
-                        top: cropStyle.top,
-                        width: cropStyle.left,
-                        height: cropStyle.height
-                      }}></div>
-                      
-                      {/* Right section */}
-                      <div className="absolute bg-black bg-opacity-50" style={{
-                        left: `calc(${cropStyle.left} + ${cropStyle.width})`,
-                        top: cropStyle.top,
-                        width: `calc(100% - ${cropStyle.left} - ${cropStyle.width})`,
-                        height: cropStyle.height
-                      }}></div>
-                      
-                      {/* Teal crop box border only */}
+                      {/* Teal crop box border */}
                       <div 
                         className="absolute border-2 border-teal-400 transition-all duration-200"
                         style={cropStyle}
@@ -485,7 +471,7 @@ const VideoCropper = () => {
             </div>
             
             {/* Video Info Bar */}
-            <div className="p-3 border-t border-gray-200">
+            <div className="p-3 border-t border-gray-200 bg-white relative z-20">
               <div className="flex items-center gap-2">
                 <div className="text-sm font-medium text-gray-900 truncate max-w-[150px]">
                   {selectedFile?.name}
