@@ -22,6 +22,7 @@ const VideoCropper = () => {
   const [cropLeft, setCropLeft] = useState<number>(0);
   const [cropTop, setCropTop] = useState<number>(0);
   const [rotation, setRotation] = useState<number>(0);
+  const [scale, setScale] = useState<number>(100);
   
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingProgress, setProcessingProgress] = useState<number>(0);
@@ -136,6 +137,7 @@ const VideoCropper = () => {
       setCropHeight(initialHeight);
       setCropLeft(Math.round((width - initialWidth) / 2));
       setCropTop(Math.round((height - initialHeight) / 2));
+      setScale(100); // Initialize scale to 100%
     }
   };
 
@@ -178,17 +180,69 @@ const VideoCropper = () => {
     }
   };
 
+  // Calculate scale based on current crop dimensions relative to initial 80% size
+  const calculateScale = (width: number, height: number): number => {
+    if (!originalWidth || !originalHeight) return 100;
+    const initialWidth = Math.round(originalWidth * 0.8);
+    const initialHeight = Math.round(originalHeight * 0.8);
+    const widthScale = (width / initialWidth) * 100;
+    const heightScale = (height / initialHeight) * 100;
+    return Math.round((widthScale + heightScale) / 2);
+  };
+
+  // Handle scale change - scales both dimensions proportionally
+  const handleScaleChange = (newScale: number) => {
+    setScale(newScale);
+    
+    if (!originalWidth || !originalHeight) return;
+    
+    const initialWidth = Math.round(originalWidth * 0.8);
+    const initialHeight = Math.round(originalHeight * 0.8);
+    const scaleFactor = newScale / 100;
+    
+    let newWidth = Math.round(initialWidth * scaleFactor);
+    let newHeight = Math.round(initialHeight * scaleFactor);
+    
+    // Apply aspect ratio constraints if needed
+    const selectedRatio = aspectRatios.find(ar => ar.value === aspectRatio);
+    if (selectedRatio && selectedRatio.ratio !== null) {
+      // Maintain aspect ratio when scaling
+      const currentRatio = newWidth / newHeight;
+      if (Math.abs(currentRatio - selectedRatio.ratio) > 0.01) {
+        if (currentRatio > selectedRatio.ratio) {
+          newWidth = Math.round(newHeight * selectedRatio.ratio);
+        } else {
+          newHeight = Math.round(newWidth / selectedRatio.ratio);
+        }
+      }
+    }
+    
+    // Ensure dimensions don't exceed boundaries
+    const maxWidth = originalWidth - cropLeft;
+    const maxHeight = originalHeight - cropTop;
+    newWidth = Math.min(newWidth, maxWidth);
+    newHeight = Math.min(newHeight, maxHeight);
+    
+    setCropWidth(newWidth);
+    setCropHeight(newHeight);
+  };
+
   // Handle crop dimension changes
   const handleCropWidthChange = (width: number) => {
     if (width > 0 && width <= originalWidth - cropLeft) {
       setCropWidth(width);
       
+      let finalHeight = cropHeight;
       const selectedRatio = aspectRatios.find(ar => ar.value === aspectRatio);
       if (selectedRatio && selectedRatio.ratio !== null) {
         const newHeight = Math.round(width / selectedRatio.ratio);
         const maxHeight = originalHeight - cropTop;
-        setCropHeight(Math.min(newHeight, maxHeight));
+        finalHeight = Math.min(newHeight, maxHeight);
+        setCropHeight(finalHeight);
       }
+      
+      // Update scale based on new dimensions
+      setScale(calculateScale(width, finalHeight));
     }
   };
 
@@ -196,12 +250,17 @@ const VideoCropper = () => {
     if (height > 0 && height <= originalHeight - cropTop) {
       setCropHeight(height);
       
+      let finalWidth = cropWidth;
       const selectedRatio = aspectRatios.find(ar => ar.value === aspectRatio);
       if (selectedRatio && selectedRatio.ratio !== null) {
         const newWidth = Math.round(height * selectedRatio.ratio);
         const maxWidth = originalWidth - cropLeft;
-        setCropWidth(Math.min(newWidth, maxWidth));
+        finalWidth = Math.min(newWidth, maxWidth);
+        setCropWidth(finalWidth);
       }
+      
+      // Update scale based on new dimensions
+      setScale(calculateScale(finalWidth, height));
     }
   };
 
@@ -227,6 +286,7 @@ const VideoCropper = () => {
     setCropTop(Math.round((originalHeight - initialHeight) / 2));
     setAspectRatio('freeform');
     setRotation(0);
+    setScale(100); // Reset scale to 100%
   };
 
   // Crop and download video
@@ -244,6 +304,17 @@ const VideoCropper = () => {
 
       ffmpeg.FS('writeFile', inputFile, await fetchFile(selectedFile));
 
+      // Validate crop parameters
+      if (cropWidth <= 0 || cropHeight <= 0) {
+        throw new Error('Invalid crop dimensions');
+      }
+      if (cropLeft < 0 || cropTop < 0) {
+        throw new Error('Invalid crop position');
+      }
+      if (cropLeft + cropWidth > originalWidth || cropTop + cropHeight > originalHeight) {
+        throw new Error('Crop area exceeds video boundaries');
+      }
+
       // Get MIME type for the output format
       const getMimeType = (fmt: string): string => {
         switch (fmt) {
@@ -255,23 +326,77 @@ const VideoCropper = () => {
         }
       };
 
-      // Build FFmpeg command with rotation and crop
+      // Build FFmpeg command for rotated crop area
       let filterChain = '';
       
       if (rotation !== 0) {
-        // Convert rotation to radians for FFmpeg
+        // For rotated crop: rotate video first, then crop from rotated video
+        // This extracts the tilted area as it appears in the original video
         const radians = (rotation * Math.PI) / 180;
-        filterChain = `rotate=${radians}:fillcolor=black:ow=rotw(${radians}):oh=roth(${radians}),`;
+        
+        // Calculate video center
+        const centerX = originalWidth / 2;
+        const centerY = originalHeight / 2;
+        
+        // Calculate crop area center  
+        const cropCenterX = cropLeft + cropWidth / 2;
+        const cropCenterY = cropTop + cropHeight / 2;
+        
+        // Transform crop coordinates for rotated video
+        // When we rotate the video, the crop area position changes
+        const cos = Math.cos(-radians); // negative because we rotate video opposite direction
+        const sin = Math.sin(-radians);
+        
+        // Translate to origin, rotate, translate back
+        const relativeX = cropCenterX - centerX;
+        const relativeY = cropCenterY - centerY;
+        
+        const rotatedX = relativeX * cos - relativeY * sin;
+        const rotatedY = relativeX * sin + relativeY * cos;
+        
+        const newCropCenterX = rotatedX + centerX;
+        const newCropCenterY = rotatedY + centerY;
+        
+        // Calculate new crop position (top-left corner)
+        const newCropLeft = Math.round(newCropCenterX - cropWidth / 2);
+        const newCropTop = Math.round(newCropCenterY - cropHeight / 2);
+        
+        // Rotate the entire video first
+        filterChain = `rotate=${radians}:fillcolor=black:out_w=${originalWidth}:out_h=${originalHeight}`;
+        
+        // Then crop from the rotated video using transformed coordinates
+        filterChain += `,crop=${cropWidth}:${cropHeight}:${newCropLeft}:${newCropTop}`;
+        
+        console.log('Transformed crop coordinates:', { 
+          original: { cropLeft, cropTop, cropCenterX, cropCenterY },
+          rotated: { newCropLeft, newCropTop, newCropCenterX, newCropCenterY }
+        });
+      } else {
+        // No rotation, just crop normally
+        filterChain = `crop=${cropWidth}:${cropHeight}:${cropLeft}:${cropTop}`;
       }
-      
-      filterChain += `crop=${cropWidth}:${cropHeight}:${cropLeft}:${cropTop}`;
 
-      await ffmpeg.run(
-        '-i', inputFile,
-        '-vf', filterChain,
-        '-c:a', 'copy', // Copy audio without re-encoding
-        outputFile
-      );
+      console.log('FFmpeg filter chain:', filterChain);
+      console.log('Crop parameters:', { cropWidth, cropHeight, cropLeft, cropTop, rotation });
+
+      try {
+        await ffmpeg.run(
+          '-i', inputFile,
+          '-vf', filterChain,
+          '-c:a', 'copy', // Copy audio without re-encoding
+          outputFile
+        );
+      } catch (ffmpegError) {
+        console.error('FFmpeg processing error:', ffmpegError);
+        
+        // Try without audio copy if that was the issue
+        console.log('Retrying without audio copy...');
+        await ffmpeg.run(
+          '-i', inputFile,
+          '-vf', filterChain,
+          outputFile
+        );
+      }
 
       const data = ffmpeg.FS('readFile', outputFile);
       const blob = new Blob([data.buffer], { type: getMimeType(originalFormat) });
@@ -323,29 +448,42 @@ const VideoCropper = () => {
     const videoElement = videoRef.current;
     const videoRect = videoElement.getBoundingClientRect();
 
-    // Calculate the actual displayed video dimensions (accounting for object-contain)
+    // Get the container dimensions (the parent div of the video)
+    const container = videoElement.parentElement;
+    if (!container) {
+      return {
+        left: '20%',
+        top: '20%',
+        width: '60%',
+        height: '60%'
+      };
+    }
+    const containerRect = container.getBoundingClientRect();
+
+    // Calculate the actual displayed video dimensions based on container, not rotated video
+    // This ensures consistent sizing regardless of rotation
     const videoAspectRatio = originalWidth / originalHeight;
-    const containerAspectRatio = videoRect.width / videoRect.height;
+    const containerAspectRatio = containerRect.width / containerRect.height;
 
     let displayedVideoWidth: number, displayedVideoHeight: number, offsetX = 0, offsetY = 0;
 
     if (videoAspectRatio > containerAspectRatio) {
       // Video is wider, fit to width
-      displayedVideoWidth = videoRect.width;
-      displayedVideoHeight = videoRect.width / videoAspectRatio;
-      offsetY = (videoRect.height - displayedVideoHeight) / 2;
+      displayedVideoWidth = containerRect.width;
+      displayedVideoHeight = containerRect.width / videoAspectRatio;
+      offsetY = (containerRect.height - displayedVideoHeight) / 2;
     } else {
       // Video is taller, fit to height
-      displayedVideoHeight = videoRect.height;
-      displayedVideoWidth = videoRect.height * videoAspectRatio;
-      offsetX = (videoRect.width - displayedVideoWidth) / 2;
+      displayedVideoHeight = containerRect.height;
+      displayedVideoWidth = containerRect.height * videoAspectRatio;
+      offsetX = (containerRect.width - displayedVideoWidth) / 2;
     }
 
-    // Calculate crop box position and size as percentages
-    const cropLeftPercent = ((cropLeft / originalWidth) * displayedVideoWidth + offsetX) / videoRect.width * 100;
-    const cropTopPercent = ((cropTop / originalHeight) * displayedVideoHeight + offsetY) / videoRect.height * 100;
-    const cropWidthPercent = (cropWidth / originalWidth) * (displayedVideoWidth / videoRect.width) * 100;
-    const cropHeightPercent = (cropHeight / originalHeight) * (displayedVideoHeight / videoRect.height) * 100;
+    // Calculate crop box position and size as percentages relative to container
+    const cropLeftPercent = ((cropLeft / originalWidth) * displayedVideoWidth + offsetX) / containerRect.width * 100;
+    const cropTopPercent = ((cropTop / originalHeight) * displayedVideoHeight + offsetY) / containerRect.height * 100;
+    const cropWidthPercent = (cropWidth / originalWidth) * (displayedVideoWidth / containerRect.width) * 100;
+    const cropHeightPercent = (cropHeight / originalHeight) * (displayedVideoHeight / containerRect.height) * 100;
 
     return {
       left: `${cropLeftPercent}%`,
@@ -414,6 +552,10 @@ const VideoCropper = () => {
               <video 
                 ref={videoRef}
                 className="w-full h-full object-contain" 
+                style={{
+                  transform: `rotate(${rotation}deg)`,
+                  transformOrigin: 'center center'
+                }}
                 preload="metadata"
                 src={videoUrl}
                 onLoadedMetadata={handleVideoLoaded}
@@ -427,28 +569,19 @@ const VideoCropper = () => {
               <div key={overlayKey} className="absolute inset-0 pointer-events-none z-10">
                 {(() => {
                   const cropStyle = getCropOverlayStyle();
-                  const clipPath = `polygon(
-                    0% 0%, 
-                    0% 100%, 
-                    ${cropStyle.left} 100%, 
-                    ${cropStyle.left} ${cropStyle.top}, 
-                    calc(${cropStyle.left} + ${cropStyle.width}) ${cropStyle.top}, 
-                    calc(${cropStyle.left} + ${cropStyle.width}) calc(${cropStyle.top} + ${cropStyle.height}), 
-                    ${cropStyle.left} calc(${cropStyle.top} + ${cropStyle.height}), 
-                    ${cropStyle.left} 100%, 
-                    100% 100%, 
-                    100% 0%
-                  )`;
                   
                   return (
                     <>
-                      {/* Dark overlay with cut-out for crop area */}
+                      {/* Fixed crop area with large shadow to create overlay effect */}
                       <div 
-                        className="absolute inset-0 bg-black bg-opacity-50"
-                        style={{ clipPath }}
+                        className="absolute bg-transparent"
+                        style={{
+                          ...cropStyle,
+                          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)'
+                        }}
                       ></div>
                       
-                      {/* Teal crop box border */}
+                      {/* Teal crop box border - stays fixed */}
                       <div 
                         className="absolute border-2 border-teal-400 transition-all duration-200"
                         style={cropStyle}
@@ -547,10 +680,29 @@ const VideoCropper = () => {
                   max="180" 
                   step="1"
                   value={rotation}
+                  onInput={(e) => setRotation(parseInt(e.target.value))}
                   onChange={(e) => setRotation(parseInt(e.target.value))}
                   className="flex-1 h-2 bg-gray-300 rounded appearance-none outline-none range-slider"
                 />
                 <div className="text-sm font-medium text-gray-900 min-w-[50px]">{rotation}°</div>
+              </div>
+            </div>
+
+            {/* Scale Control */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Scale</label>
+              <div className="flex items-center gap-3">
+                <input 
+                  type="range" 
+                  min="10" 
+                  max="200" 
+                  step="1"
+                  value={scale}
+                  onInput={(e) => handleScaleChange(parseInt(e.target.value))}
+                  onChange={(e) => handleScaleChange(parseInt(e.target.value))}
+                  className="flex-1 h-2 bg-gray-300 rounded appearance-none outline-none range-slider"
+                />
+                <div className="text-sm font-medium text-gray-900 min-w-[50px]">{scale}%</div>
               </div>
             </div>
 
