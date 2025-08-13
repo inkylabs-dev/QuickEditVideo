@@ -82,6 +82,10 @@ const VideoCropper = () => {
   const [originalFormat, setOriginalFormat] = useState<string>('mp4');
   const [overlayKey, setOverlayKey] = useState<number>(0);
   
+  // Drag state
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number; cropLeft: number; cropTop: number }>({ x: 0, y: 0, cropLeft: 0, cropTop: 0 });
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -518,6 +522,104 @@ const VideoCropper = () => {
     e.preventDefault();
   };
 
+  // Drag handlers for crop area positioning
+  const handleCropDragStart = (e: JSX.TargetedMouseEvent<HTMLDivElement> | JSX.TargetedTouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    setIsDragging(true);
+    setDragStart({
+      x: clientX,
+      y: clientY,
+      cropLeft: cropLeft,
+      cropTop: cropTop
+    });
+  };
+
+  const handleCropDragMove = (e: MouseEvent | TouchEvent) => {
+    if (!isDragging || !videoRef.current) return;
+    
+    e.preventDefault();
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    const deltaX = clientX - dragStart.x;
+    const deltaY = clientY - dragStart.y;
+    
+    // Get video container dimensions to calculate the scale factor
+    const videoElement = videoRef.current;
+    const container = videoElement.parentElement;
+    if (!container) return;
+    
+    const containerRect = container.getBoundingClientRect();
+    const videoAspectRatio = originalWidth / originalHeight;
+    const containerAspectRatio = containerRect.width / containerRect.height;
+    
+    let displayedVideoWidth: number, displayedVideoHeight: number;
+    
+    if (videoAspectRatio > containerAspectRatio) {
+      // Video is wider, fit to width
+      displayedVideoWidth = containerRect.width;
+      displayedVideoHeight = containerRect.width / videoAspectRatio;
+    } else {
+      // Video is taller, fit to height
+      displayedVideoHeight = containerRect.height;
+      displayedVideoWidth = containerRect.height * videoAspectRatio;
+    }
+    
+    // Convert pixel movement to video coordinate movement
+    const scaleX = originalWidth / displayedVideoWidth;
+    const scaleY = originalHeight / displayedVideoHeight;
+    
+    const videoDeltaX = deltaX * scaleX;
+    const videoDeltaY = deltaY * scaleY;
+    
+    // Calculate new position
+    const newLeft = Math.round(dragStart.cropLeft + videoDeltaX);
+    const newTop = Math.round(dragStart.cropTop + videoDeltaY);
+    
+    // Constrain to video boundaries
+    const constrainedLeft = Math.max(0, Math.min(newLeft, originalWidth - cropWidth));
+    const constrainedTop = Math.max(0, Math.min(newTop, originalHeight - cropHeight));
+    
+    setCropLeft(constrainedLeft);
+    setCropTop(constrainedTop);
+  };
+
+  const handleCropDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Add global event listeners for drag and body class
+  useEffect(() => {
+    if (isDragging) {
+      // Add dragging class to prevent text selection
+      document.body.classList.add('crop-dragging');
+      
+      const handleMouseMove = (e: MouseEvent) => handleCropDragMove(e);
+      const handleMouseUp = () => handleCropDragEnd();
+      const handleTouchMove = (e: TouchEvent) => handleCropDragMove(e);
+      const handleTouchEnd = () => handleCropDragEnd();
+      
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', handleTouchEnd);
+      
+      return () => {
+        document.body.classList.remove('crop-dragging');
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [isDragging, dragStart, cropLeft, cropTop, cropWidth, cropHeight, originalWidth, originalHeight]);
+
   if (currentView === 'landing') {
     return (
       <div className="bg-white rounded-lg border-4 border-dashed border-gray-900 hover:border-gray-900 transition-colors">
@@ -596,20 +698,38 @@ const VideoCropper = () => {
                         }}
                       ></div>
                       
-                      {/* Teal crop box border - stays fixed */}
+                      {/* Draggable crop box border */}
                       <div 
-                        className="absolute border-2 border-teal-400 transition-all duration-200"
+                        className={`absolute border-2 border-teal-400 transition-all duration-200 pointer-events-auto ${
+                          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+                        } hover:border-teal-500`}
                         style={cropStyle}
+                        onMouseDown={handleCropDragStart}
+                        onTouchStart={handleCropDragStart}
                       >
                         {/* Corner indicators */}
-                        <div className="absolute -top-1 -left-1 w-3 h-3 bg-teal-400 border border-white rounded-full"></div>
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-teal-400 border border-white rounded-full"></div>
-                        <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-teal-400 border border-white rounded-full"></div>
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-teal-400 border border-white rounded-full"></div>
+                        <div className="absolute -top-1 -left-1 w-3 h-3 bg-teal-400 border border-white rounded-full pointer-events-none"></div>
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-teal-400 border border-white rounded-full pointer-events-none"></div>
+                        <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-teal-400 border border-white rounded-full pointer-events-none"></div>
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-teal-400 border border-white rounded-full pointer-events-none"></div>
                         
-                        {/* Center label */}
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-teal-600 text-white px-2 py-1 rounded text-xs font-medium">
-                          Crop Area
+                        {/* Center label with drag hint */}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-teal-600 text-white px-2 py-1 rounded text-xs font-medium pointer-events-none flex items-center gap-1">
+                          {isDragging ? (
+                            <>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M13,6V11H18V7.75L22.25,12L18,16.25V13H13V18H16.25L12,22.25L7.75,18H11V13H6V16.25L1.75,12L6,7.75V11H11V6H7.75L12,1.75L16.25,6H13Z"/>
+                              </svg>
+                              Dragging
+                            </>
+                          ) : (
+                            <>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M13,6V11H18V7.75L22.25,12L18,16.25V13H13V18H16.25L12,22.25L7.75,18H11V13H6V16.25L1.75,12L6,7.75V11H11V6H7.75L12,1.75L16.25,6H13Z"/>
+                              </svg>
+                              Drag to move
+                            </>
+                          )}
                         </div>
                       </div>
                     </>

@@ -47,7 +47,7 @@ test.describe('Crop page', () => {
     
     // Check step descriptions
     await expect(page.locator('text=Upload your video file (supports MP4, WebM, AVI, MOV)')).toBeVisible();
-    await expect(page.locator('text=Choose aspect ratio and adjust crop dimensions')).toBeVisible();
+    await expect(page.locator('text=Choose aspect ratio, drag to position, and adjust crop dimensions')).toBeVisible();
     await expect(page.locator('text=Preview your cropped video and download it')).toBeVisible();
   });
 
