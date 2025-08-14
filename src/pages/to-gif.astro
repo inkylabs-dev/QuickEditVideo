@@ -1,0 +1,240 @@
+---
+import Layout from '../layouts/Layout.astro';
+import VideoConverter from '../components/VideoConverter.tsx';
+---
+
+<Layout
+	title="Convert to GIF - Free Online Video to GIF Converter | QuickEditVideo"
+	description="Convert videos to GIF format online for free! Transform MP4, AVI, MOV, MKV to animated GIF. No uploads, no sign-up. Privacy-focused video conversion that works in your browser."
+	keywords="convert to GIF, video to GIF, GIF converter, MP4 to GIF, AVI to GIF, MOV to GIF, MKV to GIF, animated GIF, free video converter, online video converter"
+	ogTitle="Free Online Video to GIF Converter - Convert Any Video to GIF"
+	ogDescription="Convert any video format to animated GIF with our free online converter. Supports MP4, AVI, MOV, MKV and more. No uploads required - completely private and secure."
+	canonicalUrl="https://quickeditvideo.com/to-gif"
+>
+	<main class="min-h-screen bg-gray-50">
+		<!-- Page Header -->
+		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
+			<div class="max-w-6xl mx-auto px-4 md:px-6">
+				<h1 class="text-3xl font-bold text-gray-900">Convert to GIF</h1>
+				<p class="text-gray-600 mt-2">Transform any video into an animated GIF</p>
+			</div>
+		</div>
+
+		<!-- Main Video Converter -->
+		<section class="p-4 md:p-6 w-full">
+			<div class="max-w-6xl mx-auto w-full">
+				<VideoConverter client:load targetFormat="gif" targetFormatName="GIF" />
+			</div>
+		</section>
+
+		<!-- Quick Help -->
+		<section id="quick-help" class="px-4 md:px-6 pb-16">
+			<div class="max-w-6xl mx-auto">
+				<h3 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Quick Guide</h3>
+				
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<!-- Step 1: Upload -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-orange-600">
+								<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+								<polyline points="14,2 14,8 20,8"/>
+								<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">1</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Upload Video</h4>
+						<p class="text-sm text-gray-600">Upload your video file (supports MP4, AVI, MOV, MKV and more)</p>
+					</div>
+
+					<!-- Step 2: Convert -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-orange-600">
+								<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+								<circle cx="8.5" cy="8.5" r="1.5"/>
+								<polyline points="21,15 16,10 5,21"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">2</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Auto Convert</h4>
+						<p class="text-sm text-gray-600">Click convert and our tool will create an animated GIF</p>
+					</div>
+
+					<!-- Step 3: Download -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-orange-600">
+								<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+								<polyline points="7,10 12,15 17,10"/>
+								<line x1="12" y1="15" x2="12" y2="3"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">3</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Download GIF</h4>
+						<p class="text-sm text-gray-600">Download your animated GIF ready for sharing</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Content Section for SEO -->
+		<section class="bg-gray-50 py-16 px-4 md:px-6">
+			<div class="max-w-4xl mx-auto">
+				<!-- Introduction -->
+				<div class="mb-16">
+					<h2 class="text-3xl font-bold text-gray-900 mb-6">Convert Any Video to Animated GIF</h2>
+					<div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+						<p>
+							Transform your videos into animated GIFs perfect for social media, messaging, and web content. Our video to GIF converter creates optimized animated images that capture the essence of your video content in a shareable format.
+						</p>
+						<p>
+							Our secure converter processes everything locally in your browser. No uploads to external servers means your videos stay private while you create engaging animated GIFs for any purpose.
+						</p>
+					</div>
+				</div>
+
+				<!-- Why Convert to GIF? -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Why Convert to GIF?</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Universal Compatibility</h4>
+							<p class="text-gray-600 mb-4">
+								GIFs work everywhere - social media platforms, messaging apps, websites, and email. No special plugins or players required.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Perfect for Sharing</h4>
+							<p class="text-gray-600 mb-4">
+								Ideal for reactions, memes, demonstrations, and highlights. GIFs are the internet's favorite way to share short animated content.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Looping Animation</h4>
+							<p class="text-gray-600 mb-4">
+								Automatically loops forever, making it perfect for capturing repetitive actions, reactions, or creating eye-catching content.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Compact Size</h4>
+							<p class="text-gray-600 mb-4">
+								Smaller file sizes than video formats while maintaining the animated content, perfect for quick loading and easy sharing.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Tips for Better GIFs -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Tips for Better GIFs</h3>
+					<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<h4 class="font-medium text-gray-900 mb-2">Keep it Short</h4>
+								<p class="text-sm text-gray-600">Shorter clips (2-6 seconds) work best for GIFs and result in smaller file sizes.</p>
+							</div>
+							<div>
+								<h4 class="font-medium text-gray-900 mb-2">Choose Clear Subjects</h4>
+								<p class="text-sm text-gray-600">GIFs work best with clear, focused content rather than complex scenes with lots of movement.</p>
+							</div>
+							<div>
+								<h4 class="font-medium text-gray-900 mb-2">Consider the Loop</h4>
+								<p class="text-sm text-gray-600">Choose clips that loop naturally or have a clear beginning and end for seamless repetition.</p>
+							</div>
+							<div>
+								<h4 class="font-medium text-gray-900 mb-2">Optimize for Context</h4>
+								<p class="text-sm text-gray-600">Think about where you'll use the GIF - social media, presentations, or web content each have different optimal sizes.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Supported Formats -->
+				<div>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Supported Input Formats</h3>
+					<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+						<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">MP4</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">AVI</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">MOV</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">MKV</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">WebM</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">WMV</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">FLV</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">And more</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		// Listen for events from VideoConverter component to hide/show header
+		document.addEventListener('DOMContentLoaded', function() {
+			const pageHeader = document.getElementById('page-header');
+			
+			// Function to toggle header visibility
+			function toggleHeader(show) {
+				if (pageHeader) {
+					if (show) {
+						pageHeader.style.display = 'block';
+						pageHeader.style.opacity = '1';
+						pageHeader.style.transform = 'translateY(0)';
+					} else {
+						pageHeader.style.opacity = '0';
+						pageHeader.style.transform = 'translateY(-10px)';
+						setTimeout(() => {
+							pageHeader.style.display = 'none';
+						}, 300);
+					}
+				}
+			}
+			
+			// Listen for custom events from VideoConverter
+			document.addEventListener('videoConverterViewChange', function(event) {
+				const isLandingView = event.detail.currentView === 'landing';
+				toggleHeader(isLandingView);
+			});
+		});
+	</script>
+
+	<style>
+		.video-container-custom {
+			max-height: calc(100vh - 400px);
+		}
+		
+		@media (max-width: 768px) {
+			.video-container-custom {
+				max-height: 40vh;
+			}
+		}
+		
+		.progress-ring {
+			transform: rotate(-90deg);
+		}
+		
+		.progress-ring circle {
+			stroke-dasharray: 251.2;
+			stroke-dashoffset: 251.2;
+			transition: stroke-dashoffset 0.1s ease;
+		}
+	</style>
+</Layout>

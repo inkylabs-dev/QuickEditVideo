@@ -1,0 +1,214 @@
+---
+import Layout from '../layouts/Layout.astro';
+import VideoConverter from '../components/VideoConverter.tsx';
+---
+
+<Layout
+	title="Convert to MP4 - Free Online Video Converter | QuickEditVideo"
+	description="Convert videos to MP4 format online for free! Transform AVI, MOV, MKV, WebM to MP4. No uploads, no sign-up. Privacy-focused video conversion that works in your browser."
+	keywords="convert to MP4, video converter, MP4 converter, AVI to MP4, MOV to MP4, MKV to MP4, WebM to MP4, free video converter, online video converter"
+	ogTitle="Free Online MP4 Video Converter - Convert Any Video to MP4"
+	ogDescription="Convert any video format to MP4 with our free online converter. Supports AVI, MOV, MKV, WebM and more. No uploads required - completely private and secure."
+	canonicalUrl="https://quickeditvideo.com/to-mp4"
+>
+	<main class="min-h-screen bg-gray-50">
+		<!-- Page Header -->
+		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
+			<div class="max-w-6xl mx-auto px-4 md:px-6">
+				<h1 class="text-3xl font-bold text-gray-900">Convert to MP4</h1>
+				<p class="text-gray-600 mt-2">Transform any video format to MP4 with high quality</p>
+			</div>
+		</div>
+
+		<!-- Main Video Converter -->
+		<section class="p-4 md:p-6 w-full">
+			<div class="max-w-6xl mx-auto w-full">
+				<VideoConverter client:load targetFormat="mp4" targetFormatName="MP4" />
+			</div>
+		</section>
+
+		<!-- Quick Help -->
+		<section id="quick-help" class="px-4 md:px-6 pb-16">
+			<div class="max-w-6xl mx-auto">
+				<h3 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Quick Guide</h3>
+				
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<!-- Step 1: Upload -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-orange-600">
+								<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+								<polyline points="14,2 14,8 20,8"/>
+								<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">1</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Upload Video</h4>
+						<p class="text-sm text-gray-600">Upload your video file (supports AVI, MOV, MKV, WebM and more)</p>
+					</div>
+
+					<!-- Step 2: Convert -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-orange-600">
+								<path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"/>
+								<path d="M12 6V12L16 14"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">2</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Auto Convert</h4>
+						<p class="text-sm text-gray-600">Click convert and our tool will transform your video to MP4</p>
+					</div>
+
+					<!-- Step 3: Download -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-orange-600">
+								<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+								<polyline points="7,10 12,15 17,10"/>
+								<line x1="12" y1="15" x2="12" y2="3"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">3</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Download MP4</h4>
+						<p class="text-sm text-gray-600">Download your converted MP4 video with preserved quality</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Content Section for SEO -->
+		<section class="bg-gray-50 py-16 px-4 md:px-6">
+			<div class="max-w-4xl mx-auto">
+				<!-- Introduction -->
+				<div class="mb-16">
+					<h2 class="text-3xl font-bold text-gray-900 mb-6">Convert Any Video to MP4 Format</h2>
+					<div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+						<p>
+							MP4 is the most widely supported video format across all devices and platforms. Whether you have an AVI file from an old camcorder, a MOV file from your iPhone, or any other video format, converting to MP4 ensures maximum compatibility.
+						</p>
+						<p>
+							Our free online MP4 converter works entirely in your browser using advanced WebAssembly technology. No uploads to servers, no waiting in queues, and no privacy concerns. Your videos stay on your device throughout the entire conversion process.
+						</p>
+					</div>
+				</div>
+
+				<!-- Why MP4? -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Why Convert to MP4?</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Universal Compatibility</h4>
+							<p class="text-gray-600 mb-4">
+								MP4 works on virtually every device, operating system, and media player. From smartphones to smart TVs, MP4 is your safe bet for playback anywhere.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Excellent Compression</h4>
+							<p class="text-gray-600 mb-4">
+								MP4 uses advanced compression techniques to maintain high video quality while keeping file sizes manageable for sharing and storage.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Web-Optimized</h4>
+							<p class="text-gray-600 mb-4">
+								Perfect for uploading to social media platforms, video streaming services, and embedding in websites with fast loading times.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Professional Standard</h4>
+							<p class="text-gray-600 mb-4">
+								MP4 is the industry standard for video content, ensuring your files work seamlessly in professional editing software.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Supported Formats -->
+				<div>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Supported Input Formats</h3>
+					<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+						<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">AVI</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">MOV</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">MKV</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">WebM</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">WMV</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">FLV</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">3GP</span>
+							</div>
+							<div class="text-center p-3 bg-gray-50 rounded-lg">
+								<span class="font-medium text-gray-900">And more</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		// Listen for events from VideoConverter component to hide/show header
+		document.addEventListener('DOMContentLoaded', function() {
+			const pageHeader = document.getElementById('page-header');
+			
+			// Function to toggle header visibility
+			function toggleHeader(show) {
+				if (pageHeader) {
+					if (show) {
+						pageHeader.style.display = 'block';
+						pageHeader.style.opacity = '1';
+						pageHeader.style.transform = 'translateY(0)';
+					} else {
+						pageHeader.style.opacity = '0';
+						pageHeader.style.transform = 'translateY(-10px)';
+						setTimeout(() => {
+							pageHeader.style.display = 'none';
+						}, 300);
+					}
+				}
+			}
+			
+			// Listen for custom events from VideoConverter
+			document.addEventListener('videoConverterViewChange', function(event) {
+				const isLandingView = event.detail.currentView === 'landing';
+				toggleHeader(isLandingView);
+			});
+		});
+	</script>
+
+	<style>
+		.video-container-custom {
+			max-height: calc(100vh - 400px);
+		}
+		
+		@media (max-width: 768px) {
+			.video-container-custom {
+				max-height: 40vh;
+			}
+		}
+		
+		.progress-ring {
+			transform: rotate(-90deg);
+		}
+		
+		.progress-ring circle {
+			stroke-dasharray: 251.2;
+			stroke-dashoffset: 251.2;
+			transition: stroke-dashoffset 0.1s ease;
+		}
+	</style>
+</Layout>
