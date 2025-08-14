@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { JSX } from 'preact';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 interface VideoClip {
 	id: string;
@@ -14,6 +16,163 @@ interface VideoClip {
 	thumbnail?: string;
 }
 
+// DnD Item Types
+const ItemTypes = {
+	CLIP: 'clip',
+};
+
+// Draggable Clip Item Component
+interface DraggableClipItemProps {
+	clip: VideoClip;
+	index: number;
+	moveClip: (fromIndex: number, toIndex: number) => void;
+	removeClip: (clipId: string) => void;
+	updateClipDuration: (clipId: string, newDuration: number) => void;
+	formatTime: (seconds: number) => string;
+}
+
+const DraggableClipItem = ({ clip, index, moveClip, removeClip, updateClipDuration, formatTime }: DraggableClipItemProps) => {
+	const ref = useRef<HTMLDivElement>(null);
+	
+	const [{ isDragging }, drag] = useDrag({
+		type: ItemTypes.CLIP,
+		item: () => ({ index, id: clip.id }),
+		collect: (monitor) => ({
+			isDragging: monitor.isDragging(),
+		}),
+	});
+
+	const [{ isOver }, drop] = useDrop({
+		accept: ItemTypes.CLIP,
+		drop(item: { index: number; id: string }) {
+			console.log(`Drop: moving from ${item.index} to ${index}`);
+			if (item.index !== index) {
+				moveClip(item.index, index);
+			}
+		},
+		hover(item: { index: number; id: string }, monitor) {
+			if (!ref.current || !monitor.isOver({ shallow: true })) return;
+			
+			const dragIndex = item.index;
+			const hoverIndex = index;
+			
+			if (dragIndex === hoverIndex) return;
+
+			// Get the client rect to determine the hoverClientY
+			const hoverBoundingRect = ref.current.getBoundingClientRect();
+			const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+			const clientOffset = monitor.getClientOffset();
+			
+			if (!clientOffset) return;
+			
+			const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+			// Only perform the move when the mouse has crossed half of the items height
+			if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+			if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
+
+			moveClip(dragIndex, hoverIndex);
+			item.index = hoverIndex;
+		},
+		collect: (monitor) => ({
+			isOver: monitor.isOver(),
+		}),
+	});
+
+	// Connect drag and drop refs
+	drag(drop(ref));
+
+	return (
+		<div 
+			ref={ref}
+			className={`clip-item p-3 border border-gray-200 rounded-lg cursor-move hover:border-gray-300 transition-colors ${
+				isDragging ? 'opacity-50 scale-105' : ''
+			} ${isOver ? 'border-teal-400 bg-teal-50' : ''}`}
+		>
+			<div className="flex gap-3">
+				{/* Video Thumbnail */}
+				<div className="w-16 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+					{clip.thumbnail ? (
+						<img 
+							src={clip.thumbnail} 
+							alt={clip.name}
+							className="w-full h-full object-cover"
+						/>
+					) : (
+						<div className="w-full h-full flex items-center justify-center">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+								<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+								<polyline points="14,2 14,8 20,8"/>
+								<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
+							</svg>
+						</div>
+					)}
+				</div>
+				
+				{/* Clip Info */}
+				<div className="flex-1 min-w-0">
+					<div className="text-sm font-medium text-gray-900 truncate" title={clip.name}>
+						{clip.name}
+					</div>
+					<div className="text-xs text-gray-500 mt-1">
+						{clip.width}×{clip.height}
+					</div>
+					<div className="text-xs text-gray-500">
+						{formatTime(clip.duration)} → {formatTime(clip.customDuration)}
+					</div>
+					{clip.customDuration > clip.duration && (
+						<div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+							<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+							</svg>
+							Loop ×{Math.ceil(clip.customDuration / clip.duration)}
+						</div>
+					)}
+				</div>
+				
+				{/* Remove Button */}
+				<button 
+					onClick={() => removeClip(clip.id)}
+					className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0"
+					title="Remove clip"
+				>
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+						<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+					</svg>
+				</button>
+			</div>
+			
+			{/* Duration Controls */}
+			<div className="mt-3 pt-3 border-t border-gray-100">
+				<div className="flex items-center gap-2">
+					<span className="text-xs text-gray-600 whitespace-nowrap">Duration:</span>
+					<input 
+						type="range"
+						min="0.1"
+						max={Math.max(clip.duration * 3, 60)}
+						step="0.1"
+						value={clip.customDuration}
+						onChange={(e) => updateClipDuration(clip.id, parseFloat(e.target.value))}
+						className="duration-slider flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+						style={{ 
+							'--value': `${(clip.customDuration / Math.max(clip.duration * 3, 60)) * 100}%` 
+						} as any}
+					/>
+					<input 
+						type="number"
+						min="0.1"
+						step="0.1"
+						value={clip.customDuration.toFixed(1)}
+						onChange={(e) => updateClipDuration(clip.id, parseFloat(e.target.value))}
+						className="w-14 px-1 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+					/>
+					<span className="text-xs text-gray-500">s</span>
+				</div>
+			</div>
+		</div>
+	);
+};
+
 const VideoMerger = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'editing'>('landing');
 	const [clips, setClips] = useState<VideoClip[]>([]);
@@ -26,8 +185,6 @@ const VideoMerger = () => {
 	const [globalWidth, setGlobalWidth] = useState<number>(0);
 	const [globalHeight, setGlobalHeight] = useState<number>(0);
 	const [useGlobalDimensions, setUseGlobalDimensions] = useState<boolean>(false);
-	const [draggedClip, setDraggedClip] = useState<string | null>(null);
-	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 	const [rightPanelTab, setRightPanelTab] = useState<'clips' | 'settings'>('clips');
 	
 	const videoRef = useRef<HTMLVideoElement>(null);
@@ -73,11 +230,7 @@ const VideoMerger = () => {
 				const { createFFmpeg, fetchFile } = (window as any).FFmpeg;
 				const ffmpegInstance = createFFmpeg({ 
 					log: true,
-					progress: ({ ratio }: { ratio: number }) => {
-						if (ratio > 0) {
-							setProcessingProgress(Math.round(ratio * 100));
-						}
-					},
+					// Disable automatic progress - we'll manage it manually
 					corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
 				});
 				
@@ -158,42 +311,20 @@ const VideoMerger = () => {
 		}
 	};
 
-	// Handle drag and drop reordering
-	const handleDragStart = (e: DragEvent, clipId: string) => {
-		setDraggedClip(clipId);
-		if (e.dataTransfer) {
-			e.dataTransfer.effectAllowed = 'move';
-		}
-	};
+	// Handle drag and drop reordering with react-dnd
+	const moveClip = useCallback((fromIndex: number, toIndex: number) => {
+		if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+		if (fromIndex >= clips.length || toIndex >= clips.length) return;
 
-	const handleDragOver = (e: DragEvent, index: number) => {
-		e.preventDefault();
-		setDragOverIndex(index);
-		if (e.dataTransfer) {
-			e.dataTransfer.dropEffect = 'move';
-		}
-	};
-
-	const handleDragLeave = () => {
-		setDragOverIndex(null);
-	};
-
-	const handleDrop = (e: DragEvent, dropIndex: number) => {
-		e.preventDefault();
-		setDragOverIndex(null);
+		console.log(`Moving clip from index ${fromIndex} to ${toIndex}`);
 		
-		if (!draggedClip) return;
-
-		const draggedIndex = clips.findIndex(clip => clip.id === draggedClip);
-		if (draggedIndex === -1 || draggedIndex === dropIndex) return;
-
-		const newClips = [...clips];
-		const [draggedItem] = newClips.splice(draggedIndex, 1);
-		newClips.splice(dropIndex, 0, draggedItem);
-		
-		setClips(newClips);
-		setDraggedClip(null);
-	};
+		setClips(prevClips => {
+			const newClips = [...prevClips];
+			const [draggedItem] = newClips.splice(fromIndex, 1);
+			newClips.splice(toIndex, 0, draggedItem);
+			return newClips;
+		});
+	}, [clips.length]);
 
 	// Update clip duration
 	const updateClipDuration = (clipId: string, newDuration: number) => {
@@ -271,12 +402,17 @@ const VideoMerger = () => {
 			
 			// Process each clip
 			const processedFiles: string[] = [];
+			const totalSteps = clips.length + 1; // clips processing + final concatenation
 			
 			for (let i = 0; i < clips.length; i++) {
 				const clip = clips[i];
 				const inputExt = clip.file.name.split('.').pop();
 				const inputFile = `input_${i}.${inputExt}`;
 				const outputFile = `processed_${i}.mp4`;
+				
+				// Update progress for this step
+				const baseProgress = Math.round((i / totalSteps) * 100);
+				setProcessingProgress(baseProgress);
 				
 				// Write input file
 				ffmpeg.FS('writeFile', inputFile, await fetchFile(clip.file));
@@ -310,6 +446,10 @@ const VideoMerger = () => {
 					);
 				}
 				
+				// Update progress after processing this clip
+				const stepProgress = Math.round(((i + 1) / totalSteps) * 100);
+				setProcessingProgress(stepProgress);
+				
 				processedFiles.push(outputFile);
 				ffmpeg.FS('unlink', inputFile);
 			}
@@ -321,6 +461,10 @@ const VideoMerger = () => {
 			
 			ffmpeg.FS('writeFile', 'concat.txt', new TextEncoder().encode(concatContent));
 			
+			// Update progress before final concatenation
+			const concatProgress = Math.round((clips.length / totalSteps) * 100);
+			setProcessingProgress(concatProgress);
+			
 			// Concatenate all processed videos
 			const finalOutput = 'merged_video.mp4';
 			await ffmpeg.run(
@@ -330,6 +474,9 @@ const VideoMerger = () => {
 				'-c', 'copy',
 				finalOutput
 			);
+			
+			// Set to 100% completion
+			setProcessingProgress(100);
 			
 			// Download the result
 			const data = ffmpeg.FS('readFile', finalOutput);
@@ -399,7 +546,8 @@ const VideoMerger = () => {
 	}
 
 	return (
-		<div className="space-y-6 p-4">
+		<DndProvider backend={HTML5Backend}>
+			<div className="space-y-6 p-4">
 			{/* Video Preview and Controls Row */}
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				{/* Video Preview Section */}
@@ -488,98 +636,15 @@ const VideoMerger = () => {
 										</div>
 									) : (
 										clips.map((clip, index) => (
-											<div 
+											<DraggableClipItem 
 												key={clip.id}
-												draggable
-												onDragStart={(e) => handleDragStart(e, clip.id)}
-												onDragOver={(e) => handleDragOver(e, index)}
-												onDragLeave={handleDragLeave}
-												onDrop={(e) => handleDrop(e, index)}
-												className={`clip-item p-3 border border-gray-200 rounded-lg cursor-move hover:border-gray-300 transition-colors ${
-													draggedClip === clip.id ? 'dragging opacity-50' : ''
-												} ${dragOverIndex === index ? 'drag-over' : ''}`}
-											>
-												<div className="flex gap-3">
-													{/* Video Thumbnail */}
-													<div className="w-16 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-														{clip.thumbnail ? (
-															<img 
-																src={clip.thumbnail} 
-																alt={clip.name}
-																className="w-full h-full object-cover"
-															/>
-														) : (
-															<div className="w-full h-full flex items-center justify-center">
-																<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-																	<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-																	<polyline points="14,2 14,8 20,8"/>
-																	<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
-																</svg>
-															</div>
-														)}
-													</div>
-													
-													{/* Clip Info */}
-													<div className="flex-1 min-w-0">
-														<div className="text-sm font-medium text-gray-900 truncate" title={clip.name}>
-															{clip.name}
-														</div>
-														<div className="text-xs text-gray-500 mt-1">
-															{clip.width}×{clip.height}
-														</div>
-														<div className="text-xs text-gray-500">
-															{formatTime(clip.duration)} → {formatTime(clip.customDuration)}
-														</div>
-														{clip.customDuration > clip.duration && (
-															<div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-																<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-																	<path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
-																</svg>
-																Loop ×{Math.ceil(clip.customDuration / clip.duration)}
-															</div>
-														)}
-													</div>
-													
-													{/* Remove Button */}
-													<button 
-														onClick={() => removeClip(clip.id)}
-														className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0"
-														title="Remove clip"
-													>
-														<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-															<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-														</svg>
-													</button>
-												</div>
-												
-												{/* Duration Controls */}
-												<div className="mt-3 pt-3 border-t border-gray-100">
-													<div className="flex items-center gap-2">
-														<span className="text-xs text-gray-600 whitespace-nowrap">Duration:</span>
-														<input 
-															type="range"
-															min="0.1"
-															max={Math.max(clip.duration * 3, 60)}
-															step="0.1"
-															value={clip.customDuration}
-															onChange={(e) => updateClipDuration(clip.id, parseFloat(e.target.value))}
-															className="duration-slider flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-															style={{ 
-																'--value': `${(clip.customDuration / Math.max(clip.duration * 3, 60)) * 100}%` 
-															} as any}
-														/>
-														<input 
-															type="number"
-															min="0.1"
-															step="0.1"
-															value={clip.customDuration.toFixed(1)}
-															onChange={(e) => updateClipDuration(clip.id, parseFloat(e.target.value))}
-															className="w-14 px-1 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
-														/>
-														<span className="text-xs text-gray-500">s</span>
-													</div>
-												</div>
-											</div>
+												clip={clip}
+												index={index}
+												moveClip={moveClip}
+												removeClip={removeClip}
+												updateClipDuration={updateClipDuration}
+												formatTime={formatTime}
+/>
 										))
 									)}
 								</div>
@@ -747,7 +812,8 @@ const VideoMerger = () => {
 				ref={fileInputRef}
 				onChange={(e) => handleFileSelect(e.target.files)}
 			/>
-		</div>
+			</div>
+		</DndProvider>
 	);
 };
 
