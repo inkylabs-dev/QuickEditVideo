@@ -7,13 +7,19 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "playwright test --reporter=line",
+    "test": "vitest run && playwright test --reporter=line",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:unit:ui": "vitest --ui",
     "test:e2e": "playwright test --reporter=line",
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@astrojs/preact": "^4.1.0",
     "@astrojs/tailwind": "^6.0.2",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.2",
+    "@preact/signals": "^2.2.1",
     "astro": "^5.12.9",
     "mp4box": "^1.4.7",
     "preact": "^10.27.0",
@@ -23,6 +29,16 @@
     "video.js": "^8.23.4"
   },
   "devDependencies": {
-    "@playwright/test": "^1.54.2"
+    "@playwright/test": "^1.54.2",
+    "@testing-library/jest-dom": "^6.7.0",
+    "@testing-library/preact": "^3.2.4",
+    "@testing-library/react": "^16.3.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/ui": "^3.2.4",
+    "happy-dom": "^18.0.1",
+    "jsdom": "^26.1.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "vitest": "^3.2.4"
   }
 }
