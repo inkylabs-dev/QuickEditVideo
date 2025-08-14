@@ -16,9 +16,77 @@ interface VideoClip {
 	thumbnail?: string;
 }
 
-// DnD Item Types
-const ItemTypes = {
-	CLIP: 'clip',
+// Constants
+const CONSTANTS = {
+	DND_TYPE: 'clip',
+	FFMPEG: {
+		SCRIPT_URL: 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js',
+		CORE_PATH: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
+		THUMBNAIL_TIME: 0.1,
+		JPEG_QUALITY: 0.8,
+	},
+	DIMENSIONS: {
+		MAX_WIDTH: 3840,
+		MAX_HEIGHT: 2160,
+		MIN_DURATION: 0.1,
+	},
+	SUPPORTED_FORMATS: ['mp4', 'mov', 'mkv', 'avi', 'webm'],
+} as const;
+
+// Utility functions
+const formatTime = (seconds: number): string => {
+	const min = Math.floor(seconds / 60);
+	const sec = Math.floor(seconds % 60);
+	return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+};
+
+const generateClipId = (): string => `${Date.now()}-${Math.random()}`;
+
+const detectVideoFormat = (fileName: string): string => {
+	const extension = fileName.split('.').pop()?.toLowerCase() || '';
+	return CONSTANTS.SUPPORTED_FORMATS.includes(extension) ? extension : 'mp4';
+};
+
+const generateThumbnail = (videoUrl: string): Promise<string> => {
+	return new Promise((resolve) => {
+		const video = document.createElement('video');
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+		
+		video.onloadeddata = () => {
+			video.currentTime = CONSTANTS.FFMPEG.THUMBNAIL_TIME;
+		};
+		
+		video.onseeked = () => {
+			canvas.width = video.videoWidth;
+			canvas.height = video.videoHeight;
+			ctx?.drawImage(video, 0, 0);
+			resolve(canvas.toDataURL('image/jpeg', CONSTANTS.FFMPEG.JPEG_QUALITY));
+		};
+		
+		video.src = videoUrl;
+	});
+};
+
+const loadFFmpegScript = (): Promise<void> => {
+	return new Promise((resolve, reject) => {
+		if ((window as any).FFmpeg) return resolve();
+		
+		const script = document.createElement('script');
+		script.src = CONSTANTS.FFMPEG.SCRIPT_URL;
+		script.onload = () => resolve();
+		script.onerror = reject;
+		document.head.appendChild(script);
+	});
+};
+
+const createVideoElement = (file: File): Promise<{ video: HTMLVideoElement; url: string }> => {
+	return new Promise((resolve) => {
+		const url = URL.createObjectURL(file);
+		const video = document.createElement('video');
+		video.src = url;
+		video.onloadedmetadata = () => resolve({ video, url });
+	});
 };
 
 // Draggable Clip Item Component
@@ -35,7 +103,7 @@ const DraggableClipItem = ({ clip, index, moveClip, removeClip, updateClipDurati
 	const ref = useRef<HTMLDivElement>(null);
 	
 	const [{ isDragging }, drag] = useDrag({
-		type: ItemTypes.CLIP,
+		type: CONSTANTS.DND_TYPE,
 		item: () => ({ index, id: clip.id }),
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),
@@ -43,7 +111,7 @@ const DraggableClipItem = ({ clip, index, moveClip, removeClip, updateClipDurati
 	});
 
 	const [{ isOver }, drop] = useDrop({
-		accept: ItemTypes.CLIP,
+		accept: CONSTANTS.DND_TYPE,
 		drop(item: { index: number; id: string }) {
 			console.log(`Drop: moving from ${item.index} to ${index}`);
 			if (item.index !== index) {
@@ -173,138 +241,106 @@ const DraggableClipItem = ({ clip, index, moveClip, removeClip, updateClipDurati
 	);
 };
 
+// State interfaces
+interface AppState {
+	currentView: 'landing' | 'editing';
+	rightPanelTab: 'clips' | 'settings';
+}
+
+interface PlaybackState {
+	isPlaying: boolean;
+	currentClipIndex: number;
+}
+
+interface ProcessingState {
+	isProcessing: boolean;
+	progress: number;
+}
+
+interface FFmpegState {
+	instance: any;
+	loaded: boolean;
+}
+
+interface DimensionsState {
+	width: number;
+	height: number;
+	useCustom: boolean;
+}
+
 const VideoMerger = () => {
-	const [currentView, setCurrentView] = useState<'landing' | 'editing'>('landing');
+	// Simplified state management
 	const [clips, setClips] = useState<VideoClip[]>([]);
-	const [isProcessing, setIsProcessing] = useState<boolean>(false);
-	const [processingProgress, setProcessingProgress] = useState<number>(0);
-	const [ffmpeg, setFfmpeg] = useState<any>(null);
-	const [ffmpegLoaded, setFfmpegLoaded] = useState<boolean>(false);
-	const [isPlaying, setIsPlaying] = useState<boolean>(false);
-	const [currentClipIndex, setCurrentClipIndex] = useState<number>(0);
-	const [globalWidth, setGlobalWidth] = useState<number>(0);
-	const [globalHeight, setGlobalHeight] = useState<number>(0);
-	const [useGlobalDimensions, setUseGlobalDimensions] = useState<boolean>(false);
-	const [rightPanelTab, setRightPanelTab] = useState<'clips' | 'settings'>('clips');
+	const [appState, setAppState] = useState<AppState>({ currentView: 'landing', rightPanelTab: 'clips' });
+	const [playbackState, setPlaybackState] = useState<PlaybackState>({ isPlaying: false, currentClipIndex: 0 });
+	const [processingState, setProcessingState] = useState<ProcessingState>({ isProcessing: false, progress: 0 });
+	const [ffmpegState, setFFmpegState] = useState<FFmpegState>({ instance: null, loaded: false });
+	const [dimensionsState, setDimensionsState] = useState<DimensionsState>({ width: 0, height: 0, useCustom: false });
 	
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	// Generate thumbnail from video first frame
-	const generateThumbnail = (videoUrl: string): Promise<string> => {
-		return new Promise((resolve) => {
-			const video = document.createElement('video');
-			const canvas = document.createElement('canvas');
-			const ctx = canvas.getContext('2d');
-			
-			video.onloadeddata = () => {
-				video.currentTime = 0.1; // Seek to 0.1s to avoid black frame
-			};
-			
-			video.onseeked = () => {
-				canvas.width = video.videoWidth;
-				canvas.height = video.videoHeight;
-				ctx?.drawImage(video, 0, 0);
-				const thumbnail = canvas.toDataURL('image/jpeg', 0.8);
-				resolve(thumbnail);
-			};
-			
-			video.src = videoUrl;
-		});
-	};
-
 	// Initialize FFmpeg
 	useEffect(() => {
-		const loadFFmpeg = async () => {
+		const initializeFFmpeg = async () => {
 			try {
-				if (!(window as any).FFmpeg) {
-					await new Promise((resolve, reject) => {
-						const script = document.createElement('script');
-						script.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js';
-						script.onload = resolve;
-						script.onerror = reject;
-						document.head.appendChild(script);
-					});
-				}
-
-				const { createFFmpeg, fetchFile } = (window as any).FFmpeg;
-				const ffmpegInstance = createFFmpeg({ 
+				await loadFFmpegScript();
+				
+				const { createFFmpeg } = (window as any).FFmpeg;
+				const instance = createFFmpeg({ 
 					log: true,
-					// Disable automatic progress - we'll manage it manually
-					corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
+					corePath: CONSTANTS.FFMPEG.CORE_PATH,
 				});
 				
-				await ffmpegInstance.load();
-				setFfmpeg(ffmpegInstance);
-				setFfmpegLoaded(true);
+				await instance.load();
+				setFFmpegState({ instance, loaded: true });
 			} catch (error) {
 				console.error('Failed to load FFmpeg:', error);
 			}
 		};
 		
-		loadFFmpeg();
+		initializeFFmpeg();
 	}, []);
 
-	// Handle file selection (single or multiple)
+	const createClipFromFile = async (file: File): Promise<VideoClip> => {
+		const { video, url } = await createVideoElement(file);
+		const thumbnail = await generateThumbnail(url);
+		
+		return {
+			id: generateClipId(),
+			file,
+			url,
+			duration: video.duration,
+			customDuration: video.duration,
+			name: file.name,
+			format: detectVideoFormat(file.name),
+			width: video.videoWidth,
+			height: video.videoHeight,
+			thumbnail,
+		};
+	};
+
 	const handleFileSelect = async (files: FileList | null) => {
-		if (!files || files.length === 0) return;
+		if (!files?.length) return;
 
 		const videoFiles = Array.from(files).filter(file => file.type.startsWith('video/'));
-		if (videoFiles.length === 0) {
+		if (!videoFiles.length) {
 			alert('Please select valid video files.');
 			return;
 		}
 
-		const newClips: VideoClip[] = [];
-
-		for (const file of videoFiles) {
-			const url = URL.createObjectURL(file);
-			const video = document.createElement('video');
-			video.src = url;
-			
-			await new Promise(async (resolve) => {
-				video.onloadedmetadata = async () => {
-					const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
-					const detectedFormat = fileExtension === 'mov' ? 'mov' : 
-										  fileExtension === 'mkv' ? 'mkv' :
-										  fileExtension === 'avi' ? 'avi' :
-										  fileExtension === 'webm' ? 'webm' :
-										  'mp4';
-
-					// Generate thumbnail
-					const thumbnail = await generateThumbnail(url);
-
-					const clip: VideoClip = {
-						id: `${Date.now()}-${Math.random()}`,
-						file,
-						url,
-						duration: video.duration,
-						customDuration: video.duration,
-						name: file.name,
-						format: detectedFormat,
-						width: video.videoWidth,
-						height: video.videoHeight,
-						thumbnail,
-					};
-
-					newClips.push(clip);
-					
-					// Set global dimensions from first video if not set
-					if (newClips.length === 1 && !useGlobalDimensions) {
-						setGlobalWidth(video.videoWidth);
-						setGlobalHeight(video.videoHeight);
-					}
-					
-					resolve(null);
-				};
-			});
+		const newClips = await Promise.all(videoFiles.map(createClipFromFile));
+		
+		// Set dimensions from first video if not using custom dimensions
+		if (newClips.length && !dimensionsState.useCustom) {
+			const { width, height } = newClips[0];
+			setDimensionsState(prev => ({ ...prev, width, height }));
 		}
 
-		setClips(prevClips => [...prevClips, ...newClips]);
+		setClips(prev => [...prev, ...newClips]);
 		
-		if (clips.length === 0 && newClips.length > 0) {
-			setCurrentView('editing');
-			// Dispatch event to notify page about view change
+		if (!clips.length && newClips.length) {
+			setAppState(prev => ({ ...prev, currentView: 'editing' }));
 			document.dispatchEvent(new CustomEvent('videoMergerViewChange', {
 				detail: { currentView: 'editing' }
 			}));
@@ -326,23 +362,21 @@ const VideoMerger = () => {
 		});
 	}, [clips.length]);
 
-	// Update clip duration
 	const updateClipDuration = (clipId: string, newDuration: number) => {
 		setClips(prevClips =>
 			prevClips.map(clip =>
 				clip.id === clipId
-					? { ...clip, customDuration: Math.max(0.1, newDuration) }
+					? { ...clip, customDuration: Math.max(CONSTANTS.DIMENSIONS.MIN_DURATION, newDuration) }
 					: clip
 			)
 		);
 	};
 
-	// Remove clip
 	const removeClip = (clipId: string) => {
 		setClips(prevClips => {
 			const newClips = prevClips.filter(clip => clip.id !== clipId);
-			if (newClips.length === 0) {
-				setCurrentView('landing');
+			if (!newClips.length) {
+				setAppState(prev => ({ ...prev, currentView: 'landing' }));
 				document.dispatchEvent(new CustomEvent('videoMergerViewChange', {
 					detail: { currentView: 'landing' }
 				}));
@@ -351,158 +385,120 @@ const VideoMerger = () => {
 		});
 	};
 
-	// Format time utility
-	const formatTime = (seconds: number): string => {
-		const min = Math.floor(seconds / 60);
-		const sec = Math.floor(seconds % 60);
-		return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-	};
+	const getTotalDuration = (): number => 
+		clips.reduce((total, clip) => total + clip.customDuration, 0);
 
-	// Calculate total duration
-	const getTotalDuration = (): number => {
-		return clips.reduce((total, clip) => total + clip.customDuration, 0);
-	};
-
-	// Handle video play with sequential playback
 	const handleVideoEnded = () => {
+		const { currentClipIndex } = playbackState;
 		if (currentClipIndex < clips.length - 1) {
-			setCurrentClipIndex(currentClipIndex + 1);
+			setPlaybackState(prev => ({ ...prev, currentClipIndex: currentClipIndex + 1 }));
 		} else {
-			setIsPlaying(false);
-			setCurrentClipIndex(0);
+			setPlaybackState({ isPlaying: false, currentClipIndex: 0 });
 		}
 	};
 
-	// Play/Pause functionality
 	const togglePlayPause = () => {
-		if (videoRef.current) {
-			if (videoRef.current.paused) {
-				videoRef.current.play();
-				setIsPlaying(true);
-			} else {
-				videoRef.current.pause();
-				setIsPlaying(false);
-			}
+		if (!videoRef.current) return;
+		
+		const video = videoRef.current;
+		const willPlay = video.paused;
+		
+		if (willPlay) {
+			video.play();
+		} else {
+			video.pause();
 		}
+		
+		setPlaybackState(prev => ({ ...prev, isPlaying: willPlay }));
 	};
 
-	// Merge videos using FFmpeg
-	const mergeVideos = async () => {
-		if (!ffmpeg || !ffmpegLoaded || clips.length === 0) return;
+	const processClip = async (clip: VideoClip, index: number, outputDimensions: { width: number; height: number }) => {
+		const { fetchFile } = (window as any).FFmpeg;
+		const { instance } = ffmpegState;
+		
+		const inputExt = clip.file.name.split('.').pop();
+		const inputFile = `input_${index}.${inputExt}`;
+		const outputFile = `processed_${index}.mp4`;
+		
+		// Write input file
+		instance.FS('writeFile', inputFile, await fetchFile(clip.file));
+		
+		const needsLooping = clip.customDuration > clip.duration;
+		const args = [
+			...(needsLooping ? ['-stream_loop', (Math.ceil(clip.customDuration / clip.duration) - 1).toString()] : []),
+			'-i', inputFile,
+			'-t', clip.customDuration.toString(),
+			'-vf', `scale=${outputDimensions.width}:${outputDimensions.height}`,
+			'-c:v', 'libx264',
+			'-c:a', 'aac',
+			'-y',
+			outputFile
+		];
+		
+		await instance.run(...args);
+		instance.FS('unlink', inputFile);
+		
+		return outputFile;
+	};
 
-		setIsProcessing(true);
-		setProcessingProgress(0);
+	const mergeVideos = async () => {
+		const { instance, loaded } = ffmpegState;
+		if (!instance || !loaded || !clips.length) return;
+
+		setProcessingState({ isProcessing: true, progress: 0 });
 
 		try {
-			const { fetchFile } = (window as any).FFmpeg;
+			const outputDimensions = dimensionsState.useCustom 
+				? { width: dimensionsState.width, height: dimensionsState.height }
+				: { width: clips[0].width, height: clips[0].height };
 			
-			// Determine output dimensions
-			const outputWidth = useGlobalDimensions ? globalWidth : clips[0].width;
-			const outputHeight = useGlobalDimensions ? globalHeight : clips[0].height;
+			const totalSteps = clips.length + 1;
+			const processedFiles: string[] = [];
 			
 			// Process each clip
-			const processedFiles: string[] = [];
-			const totalSteps = clips.length + 1; // clips processing + final concatenation
-			
 			for (let i = 0; i < clips.length; i++) {
-				const clip = clips[i];
-				const inputExt = clip.file.name.split('.').pop();
-				const inputFile = `input_${i}.${inputExt}`;
-				const outputFile = `processed_${i}.mp4`;
+				const progress = Math.round((i / totalSteps) * 100);
+				setProcessingState(prev => ({ ...prev, progress }));
 				
-				// Update progress for this step
-				const baseProgress = Math.round((i / totalSteps) * 100);
-				setProcessingProgress(baseProgress);
-				
-				// Write input file
-				ffmpeg.FS('writeFile', inputFile, await fetchFile(clip.file));
-				
-				// Calculate if looping is needed
-				const needsLooping = clip.customDuration > clip.duration;
-				
-				if (needsLooping) {
-					// Create looped version
-					const loopCount = Math.ceil(clip.customDuration / clip.duration);
-					await ffmpeg.run(
-						'-stream_loop', (loopCount - 1).toString(),
-						'-i', inputFile,
-						'-t', clip.customDuration.toString(),
-						'-vf', `scale=${outputWidth}:${outputHeight}`,
-						'-c:v', 'libx264',
-						'-c:a', 'aac',
-						'-y',
-						outputFile
-					);
-				} else {
-					// Just resize and trim
-					await ffmpeg.run(
-						'-i', inputFile,
-						'-t', clip.customDuration.toString(),
-						'-vf', `scale=${outputWidth}:${outputHeight}`,
-						'-c:v', 'libx264',
-						'-c:a', 'aac',
-						'-y',
-						outputFile
-					);
-				}
-				
-				// Update progress after processing this clip
-				const stepProgress = Math.round(((i + 1) / totalSteps) * 100);
-				setProcessingProgress(stepProgress);
-				
+				const outputFile = await processClip(clips[i], i, outputDimensions);
 				processedFiles.push(outputFile);
-				ffmpeg.FS('unlink', inputFile);
+				
+				const completedProgress = Math.round(((i + 1) / totalSteps) * 100);
+				setProcessingState(prev => ({ ...prev, progress: completedProgress }));
 			}
 			
-			// Create concat file
-			const concatContent = processedFiles
-				.map(file => `file '${file}'`)
-				.join('\n');
+			// Create and execute concatenation
+			const concatContent = processedFiles.map(file => `file '${file}'`).join('\n');
+			instance.FS('writeFile', 'concat.txt', new TextEncoder().encode(concatContent));
 			
-			ffmpeg.FS('writeFile', 'concat.txt', new TextEncoder().encode(concatContent));
+			await instance.run('-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', 'merged_video.mp4');
+			setProcessingState(prev => ({ ...prev, progress: 100 }));
 			
-			// Update progress before final concatenation
-			const concatProgress = Math.round((clips.length / totalSteps) * 100);
-			setProcessingProgress(concatProgress);
-			
-			// Concatenate all processed videos
-			const finalOutput = 'merged_video.mp4';
-			await ffmpeg.run(
-				'-f', 'concat',
-				'-safe', '0',
-				'-i', 'concat.txt',
-				'-c', 'copy',
-				finalOutput
-			);
-			
-			// Set to 100% completion
-			setProcessingProgress(100);
-			
-			// Download the result
-			const data = ffmpeg.FS('readFile', finalOutput);
+			// Download result
+			const data = instance.FS('readFile', 'merged_video.mp4');
 			const blob = new Blob([data.buffer], { type: 'video/mp4' });
+			const url = URL.createObjectURL(blob);
 			
-			const a = document.createElement('a');
-			a.href = URL.createObjectURL(blob);
-			a.download = 'merged_video.mp4';
-			a.click();
-			URL.revokeObjectURL(a.href);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = 'merged_video.mp4';
+			link.click();
+			URL.revokeObjectURL(url);
 			
 			// Cleanup
-			processedFiles.forEach(file => ffmpeg.FS('unlink', file));
-			ffmpeg.FS('unlink', 'concat.txt');
-			ffmpeg.FS('unlink', finalOutput);
+			[...processedFiles, 'concat.txt', 'merged_video.mp4'].forEach(file => 
+				instance.FS('unlink', file)
+			);
 			
 		} catch (error) {
 			console.error('Error merging videos:', error);
 			alert('Error processing videos. Please try again.');
 		} finally {
-			setIsProcessing(false);
-			setProcessingProgress(0);
+			setProcessingState({ isProcessing: false, progress: 0 });
 		}
 	};
 
-	if (currentView === 'landing') {
+	if (appState.currentView === 'landing') {
 		return (
 			<div className="bg-white rounded-lg border-4 border-dashed border-gray-900 hover:border-gray-900 transition-colors">
 				<div 
@@ -560,10 +556,10 @@ const VideoMerger = () => {
 									className="w-full h-full object-contain" 
 									controls 
 									preload="metadata"
-									src={clips[currentClipIndex]?.url}
+									src={clips[playbackState.currentClipIndex]?.url}
 									onEnded={handleVideoEnded}
-									onPlay={() => setIsPlaying(true)}
-									onPause={() => setIsPlaying(false)}
+									onPlay={() => setPlaybackState(prev => ({ ...prev, isPlaying: true }))}
+									onPause={() => setPlaybackState(prev => ({ ...prev, isPlaying: false }))}
 								>
 									Your browser does not support the video tag.
 								</video>
@@ -575,7 +571,7 @@ const VideoMerger = () => {
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-2">
 									<div className="text-sm font-medium text-gray-900">
-										Preview ({currentClipIndex + 1}/{clips.length})
+										Preview ({playbackState.currentClipIndex + 1}/{clips.length})
 									</div>
 									<div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded whitespace-nowrap">
 										{formatTime(getTotalDuration())} total
@@ -583,7 +579,7 @@ const VideoMerger = () => {
 								</div>
 								{clips.length > 0 && (
 									<div className="text-xs text-gray-500">
-										Playing: {clips[currentClipIndex]?.name}
+										Playing: {clips[playbackState.currentClipIndex]?.name}
 									</div>
 								)}
 							</div>
@@ -598,9 +594,9 @@ const VideoMerger = () => {
 						<div className="border-b border-gray-200">
 							<div className="flex">
 								<button 
-									onClick={() => setRightPanelTab('clips')}
+									onClick={() => setAppState(prev => ({ ...prev, rightPanelTab: 'clips' }))}
 									className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-										rightPanelTab === 'clips' 
+										appState.rightPanelTab === 'clips' 
 											? 'border-teal-500 text-teal-600 bg-teal-50' 
 											: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 									}`}
@@ -608,9 +604,9 @@ const VideoMerger = () => {
 									Clips ({clips.length})
 								</button>
 								<button 
-									onClick={() => setRightPanelTab('settings')}
+									onClick={() => setAppState(prev => ({ ...prev, rightPanelTab: 'settings' }))}
 									className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-										rightPanelTab === 'settings' 
+										appState.rightPanelTab === 'settings' 
 											? 'border-teal-500 text-teal-600 bg-teal-50' 
 											: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 									}`}
@@ -622,7 +618,7 @@ const VideoMerger = () => {
 
 						{/* Tab Content */}
 						<div className="p-4 h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-							{rightPanelTab === 'clips' ? (
+							{appState.rightPanelTab === 'clips' ? (
 								/* Clips Tab */
 								<div className="space-y-3">
 									{clips.length === 0 ? (
@@ -655,7 +651,7 @@ const VideoMerger = () => {
 										<h3 className="font-semibold text-gray-900">Project Settings</h3>
 										<button 
 											onClick={() => {
-												setCurrentView('landing');
+												setAppState(prev => ({ ...prev, currentView: 'landing' }));
 												setClips([]);
 												document.dispatchEvent(new CustomEvent('videoMergerViewChange', {
 													detail: { currentView: 'landing' }
@@ -676,24 +672,24 @@ const VideoMerger = () => {
 											<label className="flex items-center gap-2 text-sm font-medium text-gray-700">
 												<input 
 													type="checkbox"
-													checked={useGlobalDimensions}
-													onChange={(e) => setUseGlobalDimensions((e.target as HTMLInputElement).checked)}
+													checked={dimensionsState.useCustom}
+													onChange={(e) => setDimensionsState(prev => ({ ...prev, useCustom: (e.target as HTMLInputElement).checked }))}
 													className="rounded"
 												/>
 												Custom dimensions
 											</label>
 										</div>
 										
-										{useGlobalDimensions && (
+										{dimensionsState.useCustom && (
 											<div className="grid grid-cols-2 gap-2">
 												<div>
 													<label className="block text-xs text-gray-600 mb-1">Width</label>
 													<input 
 														type="number" 
 														min="1" 
-														max="3840"
-														value={globalWidth}
-														onChange={(e) => setGlobalWidth(parseInt(e.target.value) || 0)}
+														max={CONSTANTS.DIMENSIONS.MAX_WIDTH}
+														value={dimensionsState.width}
+														onChange={(e) => setDimensionsState(prev => ({ ...prev, width: parseInt(e.target.value) || 0 }))}
 														className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
 													/>
 												</div>
@@ -702,16 +698,16 @@ const VideoMerger = () => {
 													<input 
 														type="number" 
 														min="1" 
-														max="2160"
-														value={globalHeight}
-														onChange={(e) => setGlobalHeight(parseInt(e.target.value) || 0)}
+														max={CONSTANTS.DIMENSIONS.MAX_HEIGHT}
+														value={dimensionsState.height}
+														onChange={(e) => setDimensionsState(prev => ({ ...prev, height: parseInt(e.target.value) || 0 }))}
 														className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
 													/>
 												</div>
 											</div>
 										)}
 										
-										{!useGlobalDimensions && clips.length > 0 && (
+										{!dimensionsState.useCustom && clips.length > 0 && (
 											<div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
 												Using first video dimensions: {clips[0].width}×{clips[0].height}
 											</div>
@@ -760,7 +756,7 @@ const VideoMerger = () => {
 											disabled={clips.length === 0}
 											className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 transition-colors w-full justify-center disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500"
 										>
-											{isPlaying ? 
+											{playbackState.isPlaying ? 
 												<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
 													<path d="M6,4V20H10V4H6M14,4V20H18V4H14Z"/>
 												</svg> :
@@ -768,23 +764,23 @@ const VideoMerger = () => {
 													<path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
 												</svg>
 											}
-											{isPlaying ? 'Pause' : 'Preview'}
+											{playbackState.isPlaying ? 'Pause' : 'Preview'}
 										</button>
 										
 										<button 
 											onClick={mergeVideos}
-											disabled={isProcessing || !ffmpegLoaded || clips.length === 0}
+											disabled={processingState.isProcessing || !ffmpegState.loaded || clips.length === 0}
 											className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
 										>
-											{isProcessing ? 
+											{processingState.isProcessing ? 
 												<div className="flex items-center gap-2">
 													<svg className="progress-ring w-4 h-4" viewBox="0 0 24 24">
 														<circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"
-															style={{ strokeDashoffset: 251.2 - (processingProgress / 100) * 251.2 }} />
+															style={{ strokeDashoffset: 251.2 - (processingState.progress / 100) * 251.2 }} />
 													</svg>
-													<span>Processing {processingProgress}%</span>
+													<span>Processing {processingState.progress}%</span>
 												</div> :
-												ffmpegLoaded ? 
+												ffmpegState.loaded ? 
 													<div className="flex items-center gap-2">
 														<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
 															<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
