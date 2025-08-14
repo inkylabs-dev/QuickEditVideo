@@ -278,6 +278,7 @@ const VideoMerger = () => {
 	const [dimensionsState, setDimensionsState] = useState<DimensionsState>({ width: 0, height: 0, useCustom: false });
 	
 	const videoRef = useRef<HTMLVideoElement>(null);
+	const preloadVideoRef = useRef<HTMLVideoElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// Initialize FFmpeg
@@ -388,10 +389,34 @@ const VideoMerger = () => {
 	const getTotalDuration = (): number => 
 		clips.reduce((total, clip) => total + clip.customDuration, 0);
 
+	// Preload next video for seamless transitions
+	useEffect(() => {
+		const { currentClipIndex } = playbackState;
+		const nextIndex = currentClipIndex + 1;
+		
+		if (preloadVideoRef.current && nextIndex < clips.length) {
+			const nextClip = clips[nextIndex];
+			if (nextClip && preloadVideoRef.current.src !== nextClip.url) {
+				preloadVideoRef.current.src = nextClip.url;
+				preloadVideoRef.current.load();
+			}
+		}
+	}, [playbackState.currentClipIndex, clips]);
+
 	const handleVideoEnded = () => {
 		const { currentClipIndex } = playbackState;
 		if (currentClipIndex < clips.length - 1) {
-			setPlaybackState(prev => ({ ...prev, currentClipIndex: currentClipIndex + 1 }));
+			const nextIndex = currentClipIndex + 1;
+			setPlaybackState(prev => ({ ...prev, currentClipIndex: nextIndex }));
+			
+			// Set the next video and auto-play it
+			setTimeout(() => {
+				if (videoRef.current && clips[nextIndex]) {
+					videoRef.current.src = clips[nextIndex].url;
+					videoRef.current.load();
+					videoRef.current.play().catch(console.error);
+				}
+			}, 50);
 		} else {
 			setPlaybackState({ isPlaying: false, currentClipIndex: 0 });
 		}
@@ -560,6 +585,12 @@ const VideoMerger = () => {
 									onEnded={handleVideoEnded}
 									onPlay={() => setPlaybackState(prev => ({ ...prev, isPlaying: true }))}
 									onPause={() => setPlaybackState(prev => ({ ...prev, isPlaying: false }))}
+									onLoadedData={() => {
+										// Auto-play when video loads if we're in playing state
+										if (playbackState.isPlaying && videoRef.current) {
+											videoRef.current.play().catch(console.error);
+										}
+									}}
 								>
 									Your browser does not support the video tag.
 								</video>
@@ -807,6 +838,14 @@ const VideoMerger = () => {
 				className="hidden"
 				ref={fileInputRef}
 				onChange={(e) => handleFileSelect(e.target.files)}
+			/>
+			
+			{/* Hidden preload video for seamless transitions */}
+			<video 
+				ref={preloadVideoRef}
+				className="hidden"
+				preload="metadata"
+				muted
 			/>
 			</div>
 		</DndProvider>
