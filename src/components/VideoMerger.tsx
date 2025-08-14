@@ -11,6 +11,7 @@ interface VideoClip {
 	format: string;
 	width: number;
 	height: number;
+	thumbnail?: string;
 }
 
 const VideoMerger = () => {
@@ -27,9 +28,33 @@ const VideoMerger = () => {
 	const [useGlobalDimensions, setUseGlobalDimensions] = useState<boolean>(false);
 	const [draggedClip, setDraggedClip] = useState<string | null>(null);
 	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+	const [rightPanelTab, setRightPanelTab] = useState<'clips' | 'settings'>('clips');
 	
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Generate thumbnail from video first frame
+	const generateThumbnail = (videoUrl: string): Promise<string> => {
+		return new Promise((resolve) => {
+			const video = document.createElement('video');
+			const canvas = document.createElement('canvas');
+			const ctx = canvas.getContext('2d');
+			
+			video.onloadeddata = () => {
+				video.currentTime = 0.1; // Seek to 0.1s to avoid black frame
+			};
+			
+			video.onseeked = () => {
+				canvas.width = video.videoWidth;
+				canvas.height = video.videoHeight;
+				ctx?.drawImage(video, 0, 0);
+				const thumbnail = canvas.toDataURL('image/jpeg', 0.8);
+				resolve(thumbnail);
+			};
+			
+			video.src = videoUrl;
+		});
+	};
 
 	// Initialize FFmpeg
 	useEffect(() => {
@@ -84,14 +109,17 @@ const VideoMerger = () => {
 			const video = document.createElement('video');
 			video.src = url;
 			
-			await new Promise((resolve) => {
-				video.onloadedmetadata = () => {
+			await new Promise(async (resolve) => {
+				video.onloadedmetadata = async () => {
 					const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
 					const detectedFormat = fileExtension === 'mov' ? 'mov' : 
 										  fileExtension === 'mkv' ? 'mkv' :
 										  fileExtension === 'avi' ? 'avi' :
 										  fileExtension === 'webm' ? 'webm' :
 										  'mp4';
+
+					// Generate thumbnail
+					const thumbnail = await generateThumbnail(url);
 
 					const clip: VideoClip = {
 						id: `${Date.now()}-${Math.random()}`,
@@ -103,6 +131,7 @@ const VideoMerger = () => {
 						format: detectedFormat,
 						width: video.videoWidth,
 						height: video.videoHeight,
+						thumbnail,
 					};
 
 					newClips.push(clip);
@@ -414,220 +443,300 @@ const VideoMerger = () => {
 					</div>
 				</div>
 
-				{/* Controls Section */}
+				{/* Right Panel */}
 				<div className="lg:col-span-1">
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-full">
-						<div className="flex items-center justify-between mb-4">
-							<h3 className="font-semibold text-gray-900">Settings</h3>
-							<button 
-								onClick={() => {
-									setCurrentView('landing');
-									setClips([]);
-									document.dispatchEvent(new CustomEvent('videoMergerViewChange', {
-										detail: { currentView: 'landing' }
-									}));
-								}}
-								className="text-gray-400 hover:text-gray-600"
-								title="Start over"
-							>
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-									<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-								</svg>
-							</button>
-						</div>
-
-						{/* Global Dimensions */}
-						<div className="space-y-4 mb-6">
-							<div>
-								<label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-									<input 
-										type="checkbox"
-										checked={useGlobalDimensions}
-										onChange={(e) => setUseGlobalDimensions((e.target as HTMLInputElement).checked)}
-										className="rounded"
-									/>
-									Custom dimensions
-								</label>
+					<div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full">
+						{/* Tab Header */}
+						<div className="border-b border-gray-200">
+							<div className="flex">
+								<button 
+									onClick={() => setRightPanelTab('clips')}
+									className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+										rightPanelTab === 'clips' 
+											? 'border-teal-500 text-teal-600 bg-teal-50' 
+											: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+									}`}
+								>
+									Clips ({clips.length})
+								</button>
+								<button 
+									onClick={() => setRightPanelTab('settings')}
+									className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+										rightPanelTab === 'settings' 
+											? 'border-teal-500 text-teal-600 bg-teal-50' 
+											: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+									}`}
+								>
+									Settings
+								</button>
 							</div>
-							
-							{useGlobalDimensions && (
-								<div className="grid grid-cols-2 gap-2">
-									<div>
-										<label className="block text-xs text-gray-600 mb-1">Width</label>
-										<input 
-											type="number" 
-											min="1" 
-											max="3840"
-											value={globalWidth}
-											onChange={(e) => setGlobalWidth(parseInt(e.target.value) || 0)}
-											className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
-										/>
-									</div>
-									<div>
-										<label className="block text-xs text-gray-600 mb-1">Height</label>
-										<input 
-											type="number" 
-											min="1" 
-											max="2160"
-											value={globalHeight}
-											onChange={(e) => setGlobalHeight(parseInt(e.target.value) || 0)}
-											className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
-										/>
-									</div>
-								</div>
-							)}
-							
-							{!useGlobalDimensions && clips.length > 0 && (
-								<div className="text-xs text-gray-500">
-									Using first video dimensions: {clips[0].width}×{clips[0].height}
-								</div>
-							)}
 						</div>
 
-						{/* Action Buttons */}
-						<div className="space-y-3">
-							<button 
-								onClick={() => fileInputRef.current?.click()}
-								className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 transition-colors w-full justify-center"
-							>
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-									<path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
-								</svg>
-								Add more videos
-							</button>
-							
-							<button 
-								onClick={togglePlayPause}
-								disabled={clips.length === 0}
-								className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 transition-colors w-full justify-center disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500"
-							>
-								{isPlaying ? 
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-										<path d="M6,4V20H10V4H6M14,4V20H18V4H14Z"/>
-									</svg> :
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-										<path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
-									</svg>
-								}
-								{isPlaying ? 'Pause' : 'Preview'}
-							</button>
-							
-							<button 
-								onClick={mergeVideos}
-								disabled={isProcessing || !ffmpegLoaded || clips.length === 0}
-								className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
-							>
-								{isProcessing ? 
-									<div className="flex items-center gap-2">
-										<svg className="progress-ring w-4 h-4" viewBox="0 0 24 24">
-											<circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"
-												style={{ strokeDashoffset: 251.2 - (processingProgress / 100) * 251.2 }} />
-										</svg>
-										<span>Processing {processingProgress}%</span>
-									</div> :
-									ffmpegLoaded ? 
-										<div className="flex items-center gap-2">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-												<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+						{/* Tab Content */}
+						<div className="p-4 h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+							{rightPanelTab === 'clips' ? (
+								/* Clips Tab */
+								<div className="space-y-3">
+									{clips.length === 0 ? (
+										<div className="text-center text-gray-500 py-8">
+											<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="mx-auto mb-3 text-gray-300">
+												<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+												<polyline points="14,2 14,8 20,8"/>
+												<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
 											</svg>
-											Download MP4
-										</div> :
-										'Loading...'
-								}
-							</button>
+											<p className="text-sm">No clips added yet</p>
+										</div>
+									) : (
+										clips.map((clip, index) => (
+											<div 
+												key={clip.id}
+												draggable
+												onDragStart={(e) => handleDragStart(e, clip.id)}
+												onDragOver={(e) => handleDragOver(e, index)}
+												onDragLeave={handleDragLeave}
+												onDrop={(e) => handleDrop(e, index)}
+												className={`clip-item p-3 border border-gray-200 rounded-lg cursor-move hover:border-gray-300 transition-colors ${
+													draggedClip === clip.id ? 'dragging opacity-50' : ''
+												} ${dragOverIndex === index ? 'drag-over' : ''}`}
+											>
+												<div className="flex gap-3">
+													{/* Video Thumbnail */}
+													<div className="w-16 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+														{clip.thumbnail ? (
+															<img 
+																src={clip.thumbnail} 
+																alt={clip.name}
+																className="w-full h-full object-cover"
+															/>
+														) : (
+															<div className="w-full h-full flex items-center justify-center">
+																<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+																	<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+																	<polyline points="14,2 14,8 20,8"/>
+																	<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
+																</svg>
+															</div>
+														)}
+													</div>
+													
+													{/* Clip Info */}
+													<div className="flex-1 min-w-0">
+														<div className="text-sm font-medium text-gray-900 truncate" title={clip.name}>
+															{clip.name}
+														</div>
+														<div className="text-xs text-gray-500 mt-1">
+															{clip.width}×{clip.height}
+														</div>
+														<div className="text-xs text-gray-500">
+															{formatTime(clip.duration)} → {formatTime(clip.customDuration)}
+														</div>
+														{clip.customDuration > clip.duration && (
+															<div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+																<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+																	<path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+																</svg>
+																Loop ×{Math.ceil(clip.customDuration / clip.duration)}
+															</div>
+														)}
+													</div>
+													
+													{/* Remove Button */}
+													<button 
+														onClick={() => removeClip(clip.id)}
+														className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0"
+														title="Remove clip"
+													>
+														<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+															<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+														</svg>
+													</button>
+												</div>
+												
+												{/* Duration Controls */}
+												<div className="mt-3 pt-3 border-t border-gray-100">
+													<div className="flex items-center gap-2">
+														<span className="text-xs text-gray-600 whitespace-nowrap">Duration:</span>
+														<input 
+															type="range"
+															min="0.1"
+															max={Math.max(clip.duration * 3, 60)}
+															step="0.1"
+															value={clip.customDuration}
+															onChange={(e) => updateClipDuration(clip.id, parseFloat(e.target.value))}
+															className="duration-slider flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+															style={{ 
+																'--value': `${(clip.customDuration / Math.max(clip.duration * 3, 60)) * 100}%` 
+															} as any}
+														/>
+														<input 
+															type="number"
+															min="0.1"
+															step="0.1"
+															value={clip.customDuration.toFixed(1)}
+															onChange={(e) => updateClipDuration(clip.id, parseFloat(e.target.value))}
+															className="w-14 px-1 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+														/>
+														<span className="text-xs text-gray-500">s</span>
+													</div>
+												</div>
+											</div>
+										))
+									)}
+								</div>
+							) : (
+								/* Settings Tab */
+								<div className="space-y-6">
+									<div className="flex items-center justify-between">
+										<h3 className="font-semibold text-gray-900">Project Settings</h3>
+										<button 
+											onClick={() => {
+												setCurrentView('landing');
+												setClips([]);
+												document.dispatchEvent(new CustomEvent('videoMergerViewChange', {
+													detail: { currentView: 'landing' }
+												}));
+											}}
+											className="text-gray-400 hover:text-gray-600"
+											title="Start over"
+										>
+											<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+												<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+											</svg>
+										</button>
+									</div>
+
+									{/* Global Dimensions */}
+									<div className="space-y-4">
+										<div>
+											<label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+												<input 
+													type="checkbox"
+													checked={useGlobalDimensions}
+													onChange={(e) => setUseGlobalDimensions((e.target as HTMLInputElement).checked)}
+													className="rounded"
+												/>
+												Custom dimensions
+											</label>
+										</div>
+										
+										{useGlobalDimensions && (
+											<div className="grid grid-cols-2 gap-2">
+												<div>
+													<label className="block text-xs text-gray-600 mb-1">Width</label>
+													<input 
+														type="number" 
+														min="1" 
+														max="3840"
+														value={globalWidth}
+														onChange={(e) => setGlobalWidth(parseInt(e.target.value) || 0)}
+														className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+													/>
+												</div>
+												<div>
+													<label className="block text-xs text-gray-600 mb-1">Height</label>
+													<input 
+														type="number" 
+														min="1" 
+														max="2160"
+														value={globalHeight}
+														onChange={(e) => setGlobalHeight(parseInt(e.target.value) || 0)}
+														className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+													/>
+												</div>
+											</div>
+										)}
+										
+										{!useGlobalDimensions && clips.length > 0 && (
+											<div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+												Using first video dimensions: {clips[0].width}×{clips[0].height}
+											</div>
+										)}
+									</div>
+
+									{/* Project Stats */}
+									{clips.length > 0 && (
+										<div className="space-y-3 pt-4 border-t border-gray-200">
+											<h4 className="font-medium text-gray-900">Project Summary</h4>
+											<div className="grid grid-cols-2 gap-4 text-sm">
+												<div>
+													<span className="text-gray-600">Total clips:</span>
+													<div className="font-medium">{clips.length}</div>
+												</div>
+												<div>
+													<span className="text-gray-600">Total duration:</span>
+													<div className="font-medium">{formatTime(getTotalDuration())}</div>
+												</div>
+												<div>
+													<span className="text-gray-600">Output format:</span>
+													<div className="font-medium">MP4</div>
+												</div>
+												<div>
+													<span className="text-gray-600">Quality:</span>
+													<div className="font-medium">High</div>
+												</div>
+											</div>
+										</div>
+									)}
+
+									{/* Action Buttons */}
+									<div className="space-y-3 pt-4 border-t border-gray-200">
+										<button 
+											onClick={() => fileInputRef.current?.click()}
+											className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 transition-colors w-full justify-center"
+										>
+											<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+												<path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+											</svg>
+											Add more videos
+										</button>
+										
+										<button 
+											onClick={togglePlayPause}
+											disabled={clips.length === 0}
+											className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 transition-colors w-full justify-center disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500"
+										>
+											{isPlaying ? 
+												<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+													<path d="M6,4V20H10V4H6M14,4V20H18V4H14Z"/>
+												</svg> :
+												<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+													<path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+												</svg>
+											}
+											{isPlaying ? 'Pause' : 'Preview'}
+										</button>
+										
+										<button 
+											onClick={mergeVideos}
+											disabled={isProcessing || !ffmpegLoaded || clips.length === 0}
+											className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
+										>
+											{isProcessing ? 
+												<div className="flex items-center gap-2">
+													<svg className="progress-ring w-4 h-4" viewBox="0 0 24 24">
+														<circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"
+															style={{ strokeDashoffset: 251.2 - (processingProgress / 100) * 251.2 }} />
+													</svg>
+													<span>Processing {processingProgress}%</span>
+												</div> :
+												ffmpegLoaded ? 
+													<div className="flex items-center gap-2">
+														<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+															<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+														</svg>
+														Download MP4
+													</div> :
+													'Loading...'
+											}
+										</button>
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
 			</div>
 
-			{/* Clips Management Section */}
-			{clips.length > 0 && (
-				<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-					<h3 className="font-semibold text-gray-900 mb-4">Video Clips ({clips.length})</h3>
-					
-					<div className="space-y-3">
-						{clips.map((clip, index) => (
-							<div 
-								key={clip.id}
-								draggable
-								onDragStart={(e) => handleDragStart(e, clip.id)}
-								onDragOver={(e) => handleDragOver(e, index)}
-								onDragLeave={handleDragLeave}
-								onDrop={(e) => handleDrop(e, index)}
-								className={`clip-item p-4 border border-gray-200 rounded-lg ${
-									draggedClip === clip.id ? 'dragging opacity-50' : ''
-								} ${dragOverIndex === index ? 'drag-over' : ''}`}
-							>
-								<div className="flex items-center gap-4">
-									{/* Drag Handle */}
-									<div className="clip-handle text-gray-400 hover:text-gray-600">
-										<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-											<path d="M9,3H11V5H9V3M13,3H15V5H13V3M9,7H11V9H9V7M13,7H15V9H13V7M9,11H11V13H9V11M13,11H15V13H13V11M9,15H11V17H9V15M13,15H15V17H13V15M9,19H11V21H9V19M13,19H15V21H13V19Z"/>
-										</svg>
-									</div>
-									
-									{/* Clip Info */}
-									<div className="flex-1 min-w-0">
-										<div className="text-sm font-medium text-gray-900 truncate">{clip.name}</div>
-										<div className="text-xs text-gray-500">
-											{clip.width}×{clip.height} • {formatTime(clip.duration)} original
-										</div>
-									</div>
-									
-									{/* Duration Controls */}
-									<div className="flex items-center gap-3">
-										<div className="text-xs text-gray-600 whitespace-nowrap">
-											Duration:
-										</div>
-										<input 
-											type="range"
-											min="0.1"
-											max={Math.max(clip.duration * 3, 60)}
-											step="0.1"
-											value={clip.customDuration}
-											onChange={(e) => updateClipDuration(clip.id, parseFloat(e.target.value))}
-											className="duration-slider w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-											style={{ 
-												'--value': `${(clip.customDuration / Math.max(clip.duration * 3, 60)) * 100}%` 
-											} as any}
-										/>
-										<input 
-											type="number"
-											min="0.1"
-											step="0.1"
-											value={clip.customDuration.toFixed(1)}
-											onChange={(e) => updateClipDuration(clip.id, parseFloat(e.target.value))}
-											className="w-16 px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
-										/>
-										<span className="text-xs text-gray-500">s</span>
-									</div>
-									
-									{/* Remove Button */}
-									<button 
-										onClick={() => removeClip(clip.id)}
-										className="text-gray-400 hover:text-red-600 transition-colors"
-										title="Remove clip"
-									>
-										<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-											<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-										</svg>
-									</button>
-								</div>
-								
-								{/* Loop indicator */}
-								{clip.customDuration > clip.duration && (
-									<div className="mt-2 text-xs text-amber-600 flex items-center gap-1">
-										<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-											<path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
-										</svg>
-										Will loop {Math.ceil(clip.customDuration / clip.duration)} times
-									</div>
-								)}
-							</div>
-						))}
-					</div>
-				</div>
-			)}
 			
 			{/* Hidden file input for adding more videos */}
 			<input 
