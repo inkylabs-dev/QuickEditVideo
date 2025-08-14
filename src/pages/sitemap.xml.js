@@ -2,7 +2,7 @@
 export async function GET() {
   const baseUrl = 'https://quickeditvideo.com';
 
-  // Define all pages with their priority and change frequency
+  // Define all existing pages with their priority and change frequency
   const pages = [
     {
       url: '/',
@@ -36,9 +36,9 @@ export async function GET() {
     }
   ];
 
-  // Generate XML sitemap
+  // Generate XML sitemap with proper XML encoding
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${pages.map(page => `  <url>
     <loc>${baseUrl}${page.url}</loc>
     <lastmod>${page.lastmod}</lastmod>
@@ -50,7 +50,7 @@ ${pages.map(page => `  <url>
   // Return sitemap with proper headers
   return new Response(sitemap, {
     headers: {
-      'Content-Type': 'application/xml',
+      'Content-Type': 'application/xml; charset=utf-8',
       'Cache-Control': 'public, max-age=3600' // Cache for 1 hour
     }
   });

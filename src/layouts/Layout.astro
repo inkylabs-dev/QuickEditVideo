@@ -7,6 +7,8 @@ export interface Props {
 	ogDescription?: string;
 	ogImage?: string;
 	canonicalUrl?: string;
+	breadcrumbs?: Array<{name: string, url: string}>;
+	structuredData?: object;
 }
 
 const {
@@ -16,7 +18,9 @@ const {
 	ogTitle = title,
 	ogDescription = description,
 	ogImage = "/logo.png",
-	canonicalUrl
+	canonicalUrl,
+	breadcrumbs = [],
+	structuredData
 } = Astro.props;
 
 const currentUrl = canonicalUrl || Astro.url.href;
@@ -86,6 +90,12 @@ const currentUrl = canonicalUrl || Astro.url.href;
 			]
 		}
 		</script>
+		
+		{structuredData && (
+			<script type="application/ld+json">
+				{JSON.stringify(structuredData)}
+			</script>
+		)}
 		<!-- Critical CSS for above-the-fold content -->
 		<style>
 			/* Critical styles to avoid render blocking */
@@ -118,7 +128,14 @@ const currentUrl = canonicalUrl || Astro.url.href;
 				<div class="max-w-6xl mx-auto py-4 flex items-center justify-between">
 					<div class="flex items-center gap-8">
 						<a href="/" class="font-bold text-xl text-gray-900 flex items-center gap-1" aria-label="QuickEditVideo homepage">
-							<img src="/logo.png" alt="QuickEditVideo Logo" class="h-8 w-auto" fetchpriority="high" />
+							<img 
+								src="/logo.png" 
+								alt="QuickEditVideo Logo" 
+								class="h-8 w-auto" 
+								fetchpriority="high"
+								width="32"
+								height="32"
+							/>
 							<span>QuickEditVideo</span>
 						</a>
 						
@@ -282,7 +299,34 @@ const currentUrl = canonicalUrl || Astro.url.href;
 		</nav>
 	</header>
 
-		<slot />
+	{breadcrumbs.length > 0 && (
+		<nav class="bg-gray-50 border-b border-gray-200 py-2" aria-label="Breadcrumb">
+			<div class="max-w-6xl mx-auto px-4 md:px-6">
+				<ol class="flex items-center space-x-2 text-sm" itemscope itemtype="https://schema.org/BreadcrumbList">
+					{breadcrumbs.map((crumb, index) => (
+						<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+							{index < breadcrumbs.length - 1 ? (
+								<>
+									<a href={crumb.url} class="text-gray-600 hover:text-gray-900 transition-colors" itemprop="item">
+										<span itemprop="name">{crumb.name}</span>
+									</a>
+									<meta itemprop="position" content={String(index + 1)} />
+									<svg class="ml-2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+									</svg>
+								</>
+							) : (
+								<span class="text-gray-900 font-medium" itemprop="name">{crumb.name}</span>
+							)}
+							<meta itemprop="position" content={String(index + 1)} />
+						</li>
+					))}
+				</ol>
+			</div>
+		</nav>
+	)}
+
+	<slot />
 
 		<!-- Tools Dropdown Script -->
 		<script>
@@ -364,6 +408,27 @@ const currentUrl = canonicalUrl || Astro.url.href;
 	/* Smooth scrolling */
 	html {
 		scroll-behavior: smooth;
+	}
+	
+	/* Reduce layout shift with consistent video aspect ratio */
+	.video-container-custom {
+		aspect-ratio: 16 / 9;
+		min-height: 200px;
+	}
+	
+	/* Improve CLS by setting min heights for content areas */
+	.content-section {
+		min-height: 300px;
+	}
+	
+	/* Performance optimization for transforms */
+	.transition-transform {
+		will-change: transform;
+	}
+	
+	/* Optimize repaints */
+	.hover\\:shadow-md:hover {
+		will-change: box-shadow;
 	}
 	
 	/* Remove default button styles, but preserve explicit borders */
