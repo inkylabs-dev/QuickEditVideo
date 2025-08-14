@@ -47,10 +47,14 @@ test.describe('Merge page', () => {
     await page.click('button:has-text("Tools")');
     
     // Check that merge tool is listed in Video Editing section
-    await expect(page.locator('text=Video Editing')).toBeVisible();
+    await expect(page.locator('h4', { hasText: 'Video Editing' })).toBeVisible();
     await expect(page.locator('a[href="/merge"]')).toBeVisible();
-    await expect(page.locator('text=Merger')).toBeVisible();
-    await expect(page.locator('text=Join videos')).toBeVisible();
+    
+    // Check within the dropdown menu specifically
+    const mergerLink = page.locator('#tools-dropdown-menu a[href="/merge"]');
+    await expect(mergerLink).toBeVisible();
+    await expect(mergerLink.locator('text=Merger')).toBeVisible();
+    await expect(mergerLink.locator('text=Join videos')).toBeVisible();
   });
 
   test('should display FAQ section', async ({ page }) => {
