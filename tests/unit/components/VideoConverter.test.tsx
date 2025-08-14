@@ -53,7 +53,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe('VideoConverter Preact Component - Comprehensive Tests', () => {
+describe('VideoConverter Preact Component', () => {
   describe('Initial Rendering', () => {
     it('should render landing view with upload interface', () => {
       render(<VideoConverter targetFormat="mp4" targetFormatName="MP4" />);

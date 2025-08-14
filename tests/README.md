@@ -6,7 +6,7 @@ This document describes the testing setup for QuickEditVideo, which uses both un
 
 The project uses a two-tier testing approach:
 - **Unit Tests** - Fast tests for components, utilities, and page content using Vitest
-- **E2E Tests** - Critical user flow tests using Playwright for browser automation
+- **E2E Tests** - Critical user flow tests using Playwright for browser automation, usually only test basic page loading and essential video processing & downloading with some attribute changes.
 
 ## Test Structure
 
