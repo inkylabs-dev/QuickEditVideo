@@ -93,14 +93,18 @@ const createVideoElement = (file: File): Promise<{ video: HTMLVideoElement; url:
 interface DraggableClipItemProps {
 	clip: VideoClip;
 	index: number;
+	isCurrentlyPlaying: boolean;
 	moveClip: (fromIndex: number, toIndex: number) => void;
 	removeClip: (clipId: string) => void;
 	updateClipDuration: (clipId: string, newDuration: number) => void;
+	resetClipDuration: (clipId: string) => void;
 	formatTime: (seconds: number) => string;
+	onClipClick: (index: number) => void;
 }
 
-const DraggableClipItem = ({ clip, index, moveClip, removeClip, updateClipDuration, formatTime }: DraggableClipItemProps) => {
+const DraggableClipItem = ({ clip, index, isCurrentlyPlaying, moveClip, removeClip, updateClipDuration, resetClipDuration, formatTime, onClipClick }: DraggableClipItemProps) => {
 	const ref = useRef<HTMLDivElement>(null);
+	const dragHandleRef = useRef<HTMLDivElement>(null);
 	
 	const [{ isDragging }, drag] = useDrag({
 		type: CONSTANTS.DND_TYPE,
@@ -147,17 +151,33 @@ const DraggableClipItem = ({ clip, index, moveClip, removeClip, updateClipDurati
 		}),
 	});
 
-	// Connect drag and drop refs
-	drag(drop(ref));
+	// Connect drag and drop refs - only the drag handle is draggable
+	drag(dragHandleRef);
+	drop(ref);
 
 	return (
 		<div 
 			ref={ref}
-			className={`clip-item p-3 border border-gray-200 rounded-lg cursor-move hover:border-gray-300 transition-colors ${
+			className={`clip-item p-3 border rounded-lg transition-colors ${
 				isDragging ? 'opacity-50 scale-105' : ''
-			} ${isOver ? 'border-teal-400 bg-teal-50' : ''}`}
+			} ${isOver ? 'border-teal-400 bg-teal-50' : ''} ${
+				isCurrentlyPlaying 
+					? 'border-teal-500 bg-teal-50 shadow-sm ring-1 ring-teal-200' 
+					: 'border-gray-200'
+			}`}
 		>
-			<div className="flex gap-3">
+			<div 
+				ref={dragHandleRef}
+				onClick={() => onClipClick(index)}
+				className="flex gap-3 cursor-pointer hover:bg-gray-50 -m-3 p-3 rounded-lg"
+			>
+				{/* Drag Handle */}
+				<div className="flex items-center cursor-move">
+					<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-gray-400">
+						<path d="M9,3V4H4V6H9V7H11V3H9M13,3V7H15V6H20V4H15V3H13M9,10V11H4V13H9V14H11V10H9M13,10V14H15V13H20V11H15V10H13M9,17V18H4V20H9V21H11V17H9M13,17V21H15V20H20V18H15V17H13Z"/>
+					</svg>
+				</div>
+				
 				{/* Video Thumbnail */}
 				<div className="w-16 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
 					{clip.thumbnail ? (
@@ -179,8 +199,18 @@ const DraggableClipItem = ({ clip, index, moveClip, removeClip, updateClipDurati
 				
 				{/* Clip Info */}
 				<div className="flex-1 min-w-0">
-					<div className="text-sm font-medium text-gray-900 truncate" title={clip.name}>
-						{clip.name}
+					<div className="flex items-center gap-2">
+						<div className="text-sm font-medium text-gray-900 truncate" title={clip.name}>
+							{clip.name}
+						</div>
+						{isCurrentlyPlaying && (
+							<div className="flex items-center gap-1 text-teal-600">
+								<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+								</svg>
+								<span className="text-xs font-medium">Preview</span>
+							</div>
+						)}
 					</div>
 					<div className="text-xs text-gray-500 mt-1">
 						{clip.width}×{clip.height}
@@ -198,16 +228,37 @@ const DraggableClipItem = ({ clip, index, moveClip, removeClip, updateClipDurati
 					)}
 				</div>
 				
-				{/* Remove Button */}
-				<button 
-					onClick={() => removeClip(clip.id)}
-					className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0"
-					title="Remove clip"
-				>
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-						<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-					</svg>
-				</button>
+				{/* Action Buttons */}
+				<div className="flex items-center gap-1 flex-shrink-0">
+					{/* Reset Duration Button */}
+					<button 
+						onClick={(e) => {
+							e.stopPropagation();
+							resetClipDuration(clip.id);
+						}}
+						className="text-gray-400 hover:text-blue-600 transition-colors"
+						title="Reset to original duration"
+						disabled={clip.customDuration === clip.duration}
+					>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+						</svg>
+					</button>
+					
+					{/* Remove Button */}
+					<button 
+						onClick={(e) => {
+							e.stopPropagation();
+							removeClip(clip.id);
+						}}
+						className="text-gray-400 hover:text-red-600 transition-colors"
+						title="Remove clip"
+					>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+						</svg>
+					</button>
+				</div>
 			</div>
 			
 			{/* Duration Controls */}
@@ -373,6 +424,16 @@ const VideoMerger = () => {
 		);
 	};
 
+	const resetClipDuration = (clipId: string) => {
+		setClips(prevClips =>
+			prevClips.map(clip =>
+				clip.id === clipId
+					? { ...clip, customDuration: clip.duration }
+					: clip
+			)
+		);
+	};
+
 	const removeClip = (clipId: string) => {
 		setClips(prevClips => {
 			const newClips = prevClips.filter(clip => clip.id !== clipId);
@@ -435,6 +496,27 @@ const VideoMerger = () => {
 		}
 		
 		setPlaybackState(prev => ({ ...prev, isPlaying: willPlay }));
+	};
+
+	const handleClipClick = (index: number) => {
+		if (index === playbackState.currentClipIndex) return;
+		
+		const wasPlaying = playbackState.isPlaying;
+		setPlaybackState(prev => ({ ...prev, currentClipIndex: index, isPlaying: false }));
+		
+		// Load and play the selected clip
+		setTimeout(() => {
+			if (videoRef.current && clips[index]) {
+				videoRef.current.src = clips[index].url;
+				videoRef.current.load();
+				
+				if (wasPlaying) {
+					videoRef.current.play().then(() => {
+						setPlaybackState(prev => ({ ...prev, isPlaying: true }));
+					}).catch(console.error);
+				}
+			}
+		}, 50);
 	};
 
 	const processClip = async (clip: VideoClip, index: number, outputDimensions: { width: number; height: number }) => {
@@ -667,11 +749,14 @@ const VideoMerger = () => {
 												key={clip.id}
 												clip={clip}
 												index={index}
+												isCurrentlyPlaying={index === playbackState.currentClipIndex}
 												moveClip={moveClip}
 												removeClip={removeClip}
 												updateClipDuration={updateClipDuration}
+												resetClipDuration={resetClipDuration}
 												formatTime={formatTime}
-/>
+												onClipClick={handleClipClick}
+											/>
 										))
 									)}
 								</div>
