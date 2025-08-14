@@ -17,6 +17,8 @@
     "astro": "^5.12.9",
     "mp4box": "^1.4.7",
     "preact": "^10.27.0",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "tailwindcss": "^3.4.17",
     "video.js": "^8.23.4"
   },
