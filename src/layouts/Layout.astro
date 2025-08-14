@@ -15,7 +15,7 @@ const {
 	keywords = "video editor, video trimmer, online video editor, free video editor, video converter, trim video, cut video, edit video online, video compression",
 	ogTitle = title,
 	ogDescription = description,
-	ogImage = "/og-image.jpg",
+	ogImage = "/logo.png",
 	canonicalUrl
 } = Astro.props;
 
@@ -86,37 +86,64 @@ const currentUrl = canonicalUrl || Astro.url.href;
 			]
 		}
 		</script>
+		<!-- Critical CSS for above-the-fold content -->
+		<style>
+			/* Critical styles to avoid render blocking */
+			.nav-critical { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 50; }
+			.nav-container { max-width: 72rem; margin: 0 auto; padding: 1rem; display: flex; align-items: center; justify-content: space-between; }
+			.logo-link { font-weight: 700; font-size: 1.25rem; color: #111827; display: flex; align-items: center; gap: 0.25rem; text-decoration: none; }
+			.logo-img { height: 2rem; width: auto; }
+			.hero-critical { min-height: 100vh; background: #f9fafb; }
+		</style>
+		
+		<!-- Resource hints for performance -->
+		<link rel="dns-prefetch" href="https://unpkg.com">
+		<link rel="preconnect" href="https://unpkg.com" crossorigin>
+		
+		<!-- Prefetch critical resources for video editing -->
+		<link rel="modulepreload" href="/_astro/preact.module.CuKiFU40.js">
+		
+		<!-- Performance optimizations -->
+		<meta name="format-detection" content="telephone=no">
+		<meta http-equiv="x-dns-prefetch-control" content="on">
+		
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 	</head>
 	<body>
 		<!-- Navigation -->
-		<nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
-			<div class="max-w-6xl mx-auto py-4 flex items-center justify-between">
-				<div class="flex items-center gap-8">
-					<a href="/" class="font-bold text-xl text-gray-900 flex items-center gap-1">
-						<img src="/logo.png" alt="QuickEditVideo Logo" class="h-8 w-auto" />
-						<span>QuickEditVideo</span>
-					</a>
-					
-					<!-- Tools Dropdown -->
-					<div class="relative">
-						<button 
-							id="tools-dropdown-trigger"
-							class="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-						>
-							<span class="font-medium">Tools</span>
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="transition-transform" id="dropdown-arrow">
-								<path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
-							</svg>
-						</button>
+		<header>
+			<nav class="bg-white border-b border-gray-200 sticky top-0 z-50" role="navigation" aria-label="Main navigation">
+				<div class="max-w-6xl mx-auto py-4 flex items-center justify-between">
+					<div class="flex items-center gap-8">
+						<a href="/" class="font-bold text-xl text-gray-900 flex items-center gap-1" aria-label="QuickEditVideo homepage">
+							<img src="/logo.png" alt="QuickEditVideo Logo" class="h-8 w-auto" fetchpriority="high" />
+							<span>QuickEditVideo</span>
+						</a>
 						
-						<!-- Dropdown Menu -->
-						<div 
-							id="tools-dropdown-menu"
-							class="absolute left-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible transform scale-95 transition-all duration-200 ease-out"
-						>
+						<!-- Tools Dropdown -->
+						<div class="relative">
+							<button 
+								id="tools-dropdown-trigger"
+								class="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+								aria-expanded="false"
+								aria-haspopup="true"
+								aria-label="Open video editing tools menu"
+							>
+								<span class="font-medium">Tools</span>
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="transition-transform" id="dropdown-arrow" aria-hidden="true">
+									<path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
+								</svg>
+							</button>
+							
+							<!-- Dropdown Menu -->
+							<div 
+								id="tools-dropdown-menu"
+								class="absolute left-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible transform scale-95 transition-all duration-200 ease-out"
+								role="menu"
+								aria-labelledby="tools-dropdown-trigger"
+							>
 							<div class="p-4">
 								<!-- Video Editing -->
 								<div class="mb-6">
@@ -253,6 +280,7 @@ const currentUrl = canonicalUrl || Astro.url.href;
 				</div>
 			</div>
 		</nav>
+	</header>
 
 		<slot />
 
