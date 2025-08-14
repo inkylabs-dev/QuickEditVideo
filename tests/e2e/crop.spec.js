@@ -125,8 +125,11 @@ test.describe('Crop page', () => {
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
-    // Wait for video to load and interface to change
-    await page.waitForSelector('video', { timeout: 15000 });
+    // Wait for the component to switch to cropping view (look for crop controls)
+    await page.waitForSelector('text=Crop Controls', { timeout: 15000 });
+    
+    // Now wait for video to load
+    await page.waitForSelector('video', { timeout: 10000 });
     
     // Check that video element is present and has src
     const video = page.locator('video');
