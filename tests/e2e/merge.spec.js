@@ -596,4 +596,288 @@ test.describe('Merge page', () => {
     // Check format and dimension info is displayed
     await expect(page.locator('.clip-item').locator('text=original').first()).toBeVisible();
   });
+
+  test('should merge two videos with standard settings and download merged file', async ({ page }) => {
+    await page.goto('/merge');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your videos', { timeout: 10000 });
+    
+    // Upload two copies of the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles([
+      'tests/e2e/static/colors.mp4',
+      'tests/e2e/static/colors.mp4'
+    ]);
+    
+    // Wait for videos to load
+    await page.waitForSelector('.clip-item', { timeout: 15000 });
+    
+    // Wait for FFmpeg to load (indicated by download button being enabled)
+    await page.waitForSelector('button:has-text("Download MP4"):not([disabled])', { timeout: 30000 });
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download MP4")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "merged"
+    expect(download.suggestedFilename()).toContain('merged');
+  });
+
+  test('should merge videos with specific durations and download file', async ({ page }) => {
+    await page.goto('/merge');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your videos', { timeout: 10000 });
+    
+    // Upload two copies of the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles([
+      'tests/e2e/static/colors.mp4',
+      'tests/e2e/static/colors.mp4'
+    ]);
+    
+    // Wait for videos to load
+    await page.waitForSelector('.clip-item', { timeout: 15000 });
+    
+    // Set specific duration for first video
+    const firstDurationInput = page.locator('.clip-item').first().locator('input[type="number"]');
+    await firstDurationInput.fill('1.5');
+    
+    // Set specific duration for second video
+    const secondDurationInput = page.locator('.clip-item').last().locator('input[type="number"]');
+    await secondDurationInput.fill('2.0');
+    
+    // Wait for FFmpeg to load (indicated by download button being enabled)
+    await page.waitForSelector('button:has-text("Download MP4"):not([disabled])', { timeout: 30000 });
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download MP4")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "merged"
+    expect(download.suggestedFilename()).toContain('merged');
+  });
+
+  test('should merge videos with precise timing controls and download file', async ({ page }) => {
+    await page.goto('/merge');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your videos', { timeout: 10000 });
+    
+    // Upload two copies of the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles([
+      'tests/e2e/static/colors.mp4',
+      'tests/e2e/static/colors.mp4'
+    ]);
+    
+    // Wait for videos to load
+    await page.waitForSelector('.clip-item', { timeout: 15000 });
+    
+    // Set precise timing (sub-second precision)
+    const firstDurationInput = page.locator('.clip-item').first().locator('input[type="number"]');
+    await firstDurationInput.fill('0.75');
+    
+    const secondDurationInput = page.locator('.clip-item').last().locator('input[type="number"]');
+    await secondDurationInput.fill('1.25');
+    
+    // Wait for FFmpeg to load
+    await page.waitForSelector('button:has-text("Download MP4"):not([disabled])', { timeout: 30000 });
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download MP4")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "merged"
+    expect(download.suggestedFilename()).toContain('merged');
+  });
+
+  test('should merge multiple videos with different durations and download file', async ({ page }) => {
+    await page.goto('/merge');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your videos', { timeout: 10000 });
+    
+    // Upload three copies of the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles([
+      'tests/e2e/static/colors.mp4',
+      'tests/e2e/static/colors.mp4',
+      'tests/e2e/static/colors.mp4'
+    ]);
+    
+    // Wait for videos to load
+    await page.waitForSelector('.clip-item', { timeout: 15000 });
+    
+    // Set different durations for each video
+    const durationInputs = page.locator('.clip-item input[type="number"]');
+    await durationInputs.nth(0).fill('1.0');
+    await durationInputs.nth(1).fill('1.5');
+    await durationInputs.nth(2).fill('2.0');
+    
+    // Verify the durations were set correctly
+    await expect(durationInputs.nth(0)).toHaveValue('1.0');
+    await expect(durationInputs.nth(1)).toHaveValue('1.5');
+    await expect(durationInputs.nth(2)).toHaveValue('2.0');
+    
+    // Wait for FFmpeg to load
+    await page.waitForSelector('button:has-text("Download MP4"):not([disabled])', { timeout: 30000 });
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download MP4")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "merged"
+    expect(download.suggestedFilename()).toContain('merged');
+  });
+
+  test('should merge videos with custom output resolution and download file', async ({ page }) => {
+    await page.goto('/merge');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your videos', { timeout: 10000 });
+    
+    // Upload two copies of the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles([
+      'tests/e2e/static/colors.mp4',
+      'tests/e2e/static/colors.mp4'
+    ]);
+    
+    // Wait for videos to load
+    await page.waitForSelector('.clip-item', { timeout: 15000 });
+    
+    // Enable custom dimensions
+    const customDimensionsCheckbox = page.locator('input[type="checkbox"]');
+    await customDimensionsCheckbox.check();
+    
+    // Set custom resolution
+    const dimensionInputs = page.locator('input[type="number"]');
+    // Find width and height inputs (skip the duration inputs)
+    await page.locator('label:has-text("Width") + input[type="number"]').fill('800');
+    await page.locator('label:has-text("Height") + input[type="number"]').fill('600');
+    
+    // Wait for FFmpeg to load
+    await page.waitForSelector('button:has-text("Download MP4"):not([disabled])', { timeout: 30000 });
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download MP4")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "merged"
+    expect(download.suggestedFilename()).toContain('merged');
+  });
+
+  test('should merge videos with looping configuration and download file', async ({ page }) => {
+    await page.goto('/merge');
+    
+    // Wait for the component to load
+    await page.waitForSelector('text=Select your videos', { timeout: 10000 });
+    
+    // Upload two copies of the test video file
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles([
+      'tests/e2e/static/colors.mp4',
+      'tests/e2e/static/colors.mp4'
+    ]);
+    
+    // Wait for videos to load
+    await page.waitForSelector('.clip-item', { timeout: 15000 });
+    
+    // Set durations that will cause looping (longer than original video)
+    const firstDurationInput = page.locator('.clip-item').first().locator('input[type="number"]');
+    await firstDurationInput.fill('8.0'); // Should cause looping
+    
+    const secondDurationInput = page.locator('.clip-item').last().locator('input[type="number"]');
+    await secondDurationInput.fill('6.0'); // Should cause looping
+    
+    // Wait for FFmpeg to load
+    await page.waitForSelector('button:has-text("Download MP4"):not([disabled])', { timeout: 30000 });
+    
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download');
+    
+    // Click download button
+    await page.click('button:has-text("Download MP4")');
+    
+    // Wait for download to complete
+    const download = await downloadPromise;
+    
+    // Save the downloaded file to get its size
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+    
+    // Check that the file exists and has size > 0
+    const stats = statSync(downloadPath);
+    expect(stats.size).toBeGreaterThan(0);
+    
+    // Verify filename contains "merged"
+    expect(download.suggestedFilename()).toContain('merged');
+  });
 });
