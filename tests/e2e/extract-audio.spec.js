@@ -45,11 +45,11 @@ test.describe('Extract-audio page', () => {
     await page.goto('/extract-audio');
     
     // Wait for the component to load
-    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    await page.waitForSelector('label[for="video-upload"]', { timeout: 10000 });
     
     // Check for upload interface elements (use role to be more specific)
     await expect(page.locator('h2', { hasText: 'Extract Audio from Video' })).toBeVisible();
-    await expect(page.locator('text=Select your video')).toBeVisible();
+    await expect(page.locator('label[for="video-upload"]')).toBeVisible();
     await expect(page.locator('text=Supports: MP4, WebM, AVI, MOV, MKV and more')).toBeVisible();
   });
 
@@ -69,8 +69,8 @@ test.describe('Extract-audio page', () => {
     // Check for main styling classes
     await expect(page.locator('main')).toHaveClass(/min-h-screen bg-gray-50/);
     
-    // Check for grid layout
-    await expect(page.locator('.grid')).toBeVisible();
+    // Check for specific grid layout
+    await expect(page.locator('.grid.grid-cols-1.md\\:grid-cols-3')).toBeVisible();
   });
 
   test('should navigate back to home page', async ({ page }) => {
@@ -126,7 +126,7 @@ test.describe('Extract-audio page', () => {
     await page.goto('/extract-audio');
     
     // Wait for the component to load
-    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    await page.waitForSelector('label[for="video-upload"]', { timeout: 10000 });
     
     // Check that file input exists (though hidden)
     const fileInput = page.locator('input[type="file"]');
@@ -138,7 +138,7 @@ test.describe('Extract-audio page', () => {
     await page.goto('/extract-audio');
     
     // Wait for the component to load
-    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    await page.waitForSelector('label[for="video-upload"]', { timeout: 10000 });
     
     // Upload the test video file (if it exists)
     const fileInput = page.locator('input[type="file"]');
@@ -169,7 +169,7 @@ test.describe('Extract-audio page', () => {
     await page.goto('/extract-audio');
     
     // Wait for the component to load
-    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    await page.waitForSelector('label[for="video-upload"]', { timeout: 10000 });
     
     try {
       // Upload the test video file
@@ -217,7 +217,7 @@ test.describe('Extract-audio page', () => {
     await page.goto('/extract-audio');
     
     // Wait for the component to load
-    await page.waitForSelector('text=Select your video', { timeout: 10000 });
+    await page.waitForSelector('label[for="video-upload"]', { timeout: 10000 });
     
     try {
       // Upload the test video file
