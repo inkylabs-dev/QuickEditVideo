@@ -1,0 +1,317 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AudioExtractor from '../components/AudioExtractor.tsx';
+---
+
+<Layout
+	title="Audio Extractor - Extract Audio from Video Online Free | QuickEditVideo"
+	description="Extract audio from video files online! Convert video to MP3 or WAV format. No uploads, no sign-up. Free audio extractor that works in your browser."
+	keywords="audio extractor, extract audio from video, video to MP3, video to WAV, audio converter, free audio extractor, online audio extractor"
+	ogTitle="Free Online Audio Extractor - Extract Audio from Videos"
+	ogDescription="Professional audio extraction tool. Convert videos to MP3 or WAV format. Works with all major video formats. No uploads required - completely private and secure."
+	canonicalUrl="https://quickeditvideo.com/extract-audio"
+>
+	<main class="min-h-screen bg-gray-50">
+		<!-- Page Header -->
+		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
+			<div class="max-w-6xl mx-auto px-4 md:px-6">
+				<h1 class="text-3xl font-bold text-gray-900">Audio Extractor</h1>
+				<p class="text-gray-600 mt-2">Extract audio from videos as MP3 or WAV</p>
+			</div>
+		</div>
+
+		<!-- Main Audio Extractor -->
+		<section class="p-4 md:p-6 w-full">
+			<div class="max-w-6xl mx-auto w-full">
+				<AudioExtractor client:load />
+			</div>
+		</section>
+
+		<!-- Quick Help -->
+		<section id="quick-help" class="px-4 md:px-6 pb-16">
+			<div class="max-w-6xl mx-auto">
+				<h3 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Quick Guide</h3>
+				
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<!-- Step 1: Upload -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+								<polyline points="14,2 14,8 20,8"/>
+								<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">1</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Upload Video</h4>
+						<p class="text-sm text-gray-600">Upload your video file (supports MP4, WebM, AVI, MOV)</p>
+					</div>
+
+					<!-- Step 2: Choose Format -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<polygon points="11 5,6 9,2 9,2 15,6 15,11 19,11 5"/>
+								<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">2</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Choose Format</h4>
+						<p class="text-sm text-gray-600">Select MP3 for smaller files or WAV for highest quality</p>
+					</div>
+
+					<!-- Step 3: Download -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+								<polyline points="7,10 12,15 17,10"/>
+								<line x1="12" y1="15" x2="12" y2="3"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">3</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Download Audio</h4>
+						<p class="text-sm text-gray-600">Extract and download your audio file instantly</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Content Section for SEO -->
+		<section class="bg-gray-50 py-16 px-4 md:px-6">
+			<div class="max-w-4xl mx-auto">
+				<!-- Introduction -->
+				<div class="mb-16">
+					<h2 class="text-3xl font-bold text-gray-900 mb-6">The Audio Extractor That Just Works</h2>
+					<div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+						<p>
+							Need to pull the audio from a video? Whether it's extracting a podcast from a video file, saving a song from a music video, or converting a presentation recording to audio-only, you shouldn't need expensive software to do something so simple.
+						</p>
+						<p>
+							Our audio extractor handles the heavy lifting for you. Just upload your video, choose MP3 or WAV format, and download your extracted audio in seconds. Everything happens right in your browser—no uploads to our servers, no software to download.
+						</p>
+						<p>
+							Clean, fast, and private. Because extracting audio from video should be this straightforward.
+						</p>
+					</div>
+				</div>
+
+				<!-- How It Works -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">How Our Audio Extractor Works</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Upload & Process Locally</h4>
+							<p class="text-gray-600 mb-4">
+								Select your video file and processing begins immediately in your browser. No server uploads, no waiting in queues—everything happens on your device using advanced WebAssembly technology.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Choose Your Format</h4>
+							<p class="text-gray-600 mb-4">
+								Pick MP3 for smaller files that work everywhere, or WAV for uncompressed, studio-quality audio. We optimize the extraction for each format automatically.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Instant Download</h4>
+							<p class="text-gray-600 mb-4">
+								Hit extract and download your audio file immediately. No watermarks, no compression artifacts, no quality loss from unnecessary re-encoding.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Universal Video Support</h4>
+							<p class="text-gray-600 mb-4">
+								Works with any video format your browser can play—MP4, WebM, AVI, MOV, MKV, and more. Desktop, tablet, or mobile, the tool adapts to your device.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Why Choose This Tool -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Why Choose Our Audio Extractor?</h3>
+					<div class="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Completely Free</h4>
+									<p class="text-sm text-gray-600">No trial periods, no premium features, no subscription plans.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Your Files Stay Private</h4>
+									<p class="text-sm text-gray-600">Videos never leave your device. Zero uploads to our servers.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Perfect Audio Quality</h4>
+									<p class="text-sm text-gray-600">Direct extraction without re-encoding or quality loss.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Works Everywhere</h4>
+									<p class="text-sm text-gray-600">Any device with a modern browser. No app downloads needed.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Multiple Formats</h4>
+									<p class="text-sm text-gray-600">Extract as MP3 for compatibility or WAV for maximum quality.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">No Registration</h4>
+									<p class="text-sm text-gray-600">Just upload and extract. No accounts, no email required.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- FAQ Section -->
+				<div>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-8">Frequently Asked Questions</h3>
+					<div class="space-y-6">
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Is the audio extractor free to use?</h4>
+							<p class="text-gray-600">Yes, completely free! Extract audio from as many videos as you want, with no limits or hidden charges.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">What's the difference between MP3 and WAV?</h4>
+							<p class="text-gray-600">MP3 files are smaller and more compatible but slightly compressed. WAV files are larger but maintain perfect audio quality with no compression.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Are my video files kept private?</h4>
+							<p class="text-gray-600">Absolutely. All processing happens locally in your browser. Your videos never get uploaded to our servers or leave your device.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Can I use this on mobile devices?</h4>
+							<p class="text-gray-600">Yes! The tool works on smartphones, tablets, and desktop computers. The interface automatically adapts to your screen size.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Will extracting audio reduce the quality?</h4>
+							<p class="text-gray-600">No quality loss occurs during extraction. We copy the original audio stream directly without re-encoding, preserving the exact same quality as the source video.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">What video formats are supported?</h4>
+							<p class="text-gray-600">We support all major video formats including MP4, WebM, AVI, MOV, MKV, FLV, and more. If your browser can play the video, we can extract its audio.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Is there a file size limit?</h4>
+							<p class="text-gray-600">The only limit is your device's available memory. Since processing happens locally, larger files just take a bit more time to extract.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Do I need to install any software?</h4>
+							<p class="text-gray-600">No installation required! The tool runs entirely in your web browser using modern web technologies. Just visit the page and start extracting.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		// Listen for events from AudioExtractor component to hide/show header
+		document.addEventListener('DOMContentLoaded', function() {
+			const pageHeader = document.getElementById('page-header');
+			
+			// Function to toggle header visibility
+			function toggleHeader(show) {
+				if (pageHeader) {
+					if (show) {
+						pageHeader.style.display = 'block';
+						pageHeader.style.opacity = '1';
+						pageHeader.style.transform = 'translateY(0)';
+					} else {
+						pageHeader.style.opacity = '0';
+						pageHeader.style.transform = 'translateY(-10px)';
+						setTimeout(() => {
+							pageHeader.style.display = 'none';
+						}, 300);
+					}
+				}
+			}
+			
+			// Listen for custom events from AudioExtractor
+			document.addEventListener('videoExtractorViewChange', function(event) {
+				const isLandingView = event.detail.currentView === 'landing';
+				toggleHeader(isLandingView);
+			});
+		});
+	</script>
+
+	<style>
+		.video-container {
+			aspect-ratio: 16/9;
+			max-height: calc(100vh - 250px);
+			width: 100%;
+			height: 100%;
+		}
+		
+		.video-container-custom {
+			max-height: calc(100vh - 400px);
+		}
+		
+		@media (max-width: 768px) {
+			.video-container-custom {
+				max-height: 40vh;
+			}
+		}
+		
+		.progress-ring {
+			transform: rotate(-90deg);
+		}
+		
+		.progress-ring circle {
+			stroke-dasharray: 251.2;
+			stroke-dashoffset: 251.2;
+			transition: stroke-dashoffset 0.1s ease;
+		}
+
+		/* Prevent horizontal scroll */
+		* {
+			box-sizing: border-box;
+		}
+	</style>
+</Layout>
