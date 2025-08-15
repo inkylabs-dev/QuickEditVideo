@@ -7,7 +7,8 @@ QuickEditVideo is an Astro 5.12.9 web application for free online video editing.
 ## Working Effectively
 
 ### Bootstrap, Build, and Test the Repository
-- `npm install` -- installs dependencies. Takes about 60 seconds. NEVER CANCEL. Set timeout to 120+ seconds.
+- `npm install` -- installs dependencies and copies FFmpeg core files. Takes about 60 seconds. NEVER CANCEL. Set timeout to 120+ seconds.
+- `npm run copy-ffmpeg` -- copies FFmpeg core files from node_modules to public/ffmpeg-core/. Runs automatically during install, dev, and build.
 - `npm run build` -- builds the production application. Takes about 3 seconds. Very fast build process.
 - `npm run dev` -- starts development server on http://localhost:4321. Usually ready in under 5 seconds.
 - `npm run preview` -- previews the built application. Requires running `npm run build` first.
@@ -15,6 +16,7 @@ QuickEditVideo is an Astro 5.12.9 web application for free online video editing.
 
 ### Development Workflow
 - ALWAYS run `npm install` before starting development in a fresh clone.
+- FFmpeg core files are automatically copied to `public/ffmpeg-core/` during install, dev, and build processes.
 - ALWAYS run the development server with `npm run dev` for active development.
 - ALWAYS build with `npm run build` before testing production behavior or deployment.
 - The application is fully functional after these basic steps - no additional setup required.
