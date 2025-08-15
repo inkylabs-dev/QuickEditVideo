@@ -260,8 +260,8 @@ const VideoConverterContent = ({ targetFormat, targetFormatName }: VideoConverte
               </div>
 
               <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-sm text-gray-600 mb-1">Converting to</div>
-                <div className="text-lg font-medium text-gray-900 uppercase">{targetFormatName}</div>
+                <div className="text-sm text-gray-600 mb-1" data-testid="converting-to-label">Converting to</div>
+                <div className="text-lg font-medium text-gray-900 uppercase" data-testid="target-format">{targetFormatName}</div>
               </div>
 
               <div className="p-3 bg-gray-50 rounded-lg">

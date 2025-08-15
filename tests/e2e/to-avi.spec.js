@@ -21,7 +21,9 @@ test.describe('Convert to AVI page - E2E', () => {
     await page.waitForSelector('video', { timeout: 15000 });
     await page.waitForSelector('button:has-text("Download as AVI"):not([disabled])', { timeout: 30000 });
     
-    await expect(page.locator('.bg-orange-50 .text-lg.font-medium.text-orange-700', { hasText: 'AVI' })).toBeVisible();
+    // Check that conversion interface is displayed
+    await expect(page.getByTestId('converting-to-label')).toBeVisible();
+    await expect(page.getByTestId('target-format', { hasText: 'AVI' })).toBeVisible();
     
     const downloadPromise = page.waitForEvent('download');
     await page.click('button:has-text("Download as AVI")');

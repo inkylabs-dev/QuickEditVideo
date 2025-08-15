@@ -21,7 +21,7 @@ test.describe('Convert to MKV page - E2E', () => {
     await page.waitForSelector('video', { timeout: 15000 });
     await page.waitForSelector('button:has-text("Download as MKV"):not([disabled])', { timeout: 30000 });
     
-    await expect(page.locator('.bg-orange-50 .text-lg.font-medium.text-orange-700', { hasText: 'MKV' })).toBeVisible();
+    await expect(page.getByTestId('target-format', { hasText: 'MKV' })).toBeVisible();
     
     const downloadPromise = page.waitForEvent('download');
     await page.click('button:has-text("Download as MKV")');

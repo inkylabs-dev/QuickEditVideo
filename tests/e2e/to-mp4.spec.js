@@ -30,8 +30,8 @@ test.describe('Convert to MP4 page - E2E', () => {
     await page.waitForSelector('button:has-text("Download as MP4"):not([disabled])', { timeout: 30000 });
     
     // Check that conversion interface is displayed
-    await expect(page.locator('.bg-orange-50 .text-sm.text-orange-600', { hasText: 'Converting to' })).toBeVisible();
-    await expect(page.locator('.bg-orange-50 .text-lg.font-medium.text-orange-700', { hasText: 'MP4' })).toBeVisible();
+    await expect(page.getByTestId('converting-to-label')).toBeVisible();
+    await expect(page.getByTestId('target-format', { hasText: 'MP4' })).toBeVisible();
     
     // Set up download listener
     const downloadPromise = page.waitForEvent('download');
