@@ -122,6 +122,47 @@ Object.defineProperty(HTMLVideoElement.prototype, 'paused', {
   value: true,
 });
 
+Object.defineProperty(HTMLVideoElement.prototype, 'videoWidth', {
+  writable: true,
+  value: 1920,
+});
+
+Object.defineProperty(HTMLVideoElement.prototype, 'videoHeight', {
+  writable: true,
+  value: 1080,
+});
+
+// Mock getBoundingClientRect for crop overlay calculations
+HTMLVideoElement.prototype.getBoundingClientRect = vi.fn(() => ({
+  width: 640,
+  height: 360,
+  top: 0,
+  left: 0,
+  bottom: 360,
+  right: 640,
+  x: 0,
+  y: 0,
+  toJSON: () => ({}),
+}));
+
+// Mock parent element for container calculations
+Object.defineProperty(HTMLVideoElement.prototype, 'parentElement', {
+  get: () => ({
+    getBoundingClientRect: () => ({
+      width: 640,
+      height: 360,
+      top: 0,
+      left: 0,
+      bottom: 360,
+      right: 640,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    })
+  }),
+  configurable: true
+});
+
 // Mock document.dispatchEvent for custom events
 const originalDispatchEvent = document.dispatchEvent;
 document.dispatchEvent = vi.fn(originalDispatchEvent);
