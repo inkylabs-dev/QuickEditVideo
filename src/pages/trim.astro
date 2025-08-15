@@ -1,6 +1,30 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import VideoTrimmer from '../components/VideoTrimmer.tsx';
+
+// Structured data for Video Trimmer tool
+const trimmerStructuredData = {
+	"@context": "https://schema.org",
+	"@type": "SoftwareApplication",
+	"name": "Video Trimmer",
+	"description": "Free online video trimming tool. Cut videos with frame-perfect precision. Works with all major formats.",
+	"applicationCategory": "MultimediaApplication",
+	"operatingSystem": "Any",
+	"url": "https://quickeditvideo.com/trim",
+	"offers": {
+		"@type": "Offer",
+		"price": "0",
+		"priceCurrency": "USD"
+	},
+	"featureList": [
+		"Frame-perfect video trimming",
+		"No quality loss",
+		"Multiple format support (MP4, WebM, AVI, MOV)",
+		"Privacy-focused (no uploads)",
+		"Browser-based processing"
+	],
+	"screenshot": "https://quickeditvideo.com/logo.png"
+};
 ---
 
 <Layout
@@ -10,6 +34,11 @@ import VideoTrimmer from '../components/VideoTrimmer.tsx';
 	ogTitle="Free Online Video Trimmer - Cut Videos with Precision"
 	ogDescription="Professional video trimming tool. Cut videos with frame-perfect precision. Works with all major formats. No uploads required - completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/trim"
+	breadcrumbs={[
+		{name: "Home", url: "/"},
+		{name: "Video Trimmer", url: "/trim"}
+	]}
+	structuredData={trimmerStructuredData}
 >
 	<main class="min-h-screen bg-gray-50">
 		<!-- Page Header -->
