@@ -127,15 +127,15 @@ const VideoWatermarkContent = () => {
 			setOriginalWidth(width);
 			setOriginalHeight(height);
 			
-			// Set initial logo size and position
+			// Set initial logo size and position (centered)
 			const defaultLogoSize = Math.min(width, height) * 0.15; // 15% of the smaller dimension
 			const defaultWidth = Math.round(defaultLogoSize);
 			const defaultHeight = Math.round(defaultLogoSize / logoAspectRatio);
 			
 			setLogoWidth(defaultWidth);
 			setLogoHeight(defaultHeight);
-			setLogoLeft(10);
-			setLogoTop(10);
+			setLogoLeft(Math.round((width - defaultWidth) / 2)); // Center horizontally
+			setLogoTop(Math.round((height - defaultHeight) / 2)); // Center vertically
 		}
 	};
 
@@ -148,14 +148,16 @@ const VideoWatermarkContent = () => {
 			
 			setLogoWidth(defaultWidth);
 			setLogoHeight(defaultHeight);
-			setLogoLeft(10);
-			setLogoTop(10);
+			setLogoLeft(Math.round((originalWidth - defaultWidth) / 2)); // Center horizontally
+			setLogoTop(Math.round((originalHeight - defaultHeight) / 2)); // Center vertically
 		} else {
-			// Fallback defaults
-			setLogoWidth(100);
-			setLogoHeight(Math.round(100 / logoAspectRatio));
-			setLogoLeft(10);
-			setLogoTop(10);
+			// Fallback defaults (centered in a typical 1920x1080 space)
+			const defaultWidth = 100;
+			const defaultHeight = Math.round(100 / logoAspectRatio);
+			setLogoWidth(defaultWidth);
+			setLogoHeight(defaultHeight);
+			setLogoLeft(Math.round((1920 - defaultWidth) / 2));
+			setLogoTop(Math.round((1080 - defaultHeight) / 2));
 		}
 	};
 
@@ -184,7 +186,6 @@ const VideoWatermarkContent = () => {
 		const video = videoRef.current;
 		if (!video) return { left: '10px', top: '10px', width: '100px', height: '100px' };
 
-		const videoRect = video.getBoundingClientRect();
 		const containerRect = video.parentElement?.getBoundingClientRect();
 		if (!containerRect) return { left: '10px', top: '10px', width: '100px', height: '100px' };
 
@@ -241,7 +242,6 @@ const VideoWatermarkContent = () => {
 		const deltaX = clientX - dragStart.x;
 		const deltaY = clientY - dragStart.y;
 		
-		const videoRect = videoRef.current.getBoundingClientRect();
 		const containerRect = videoRef.current.parentElement?.getBoundingClientRect();
 		if (!containerRect) return;
 
@@ -288,19 +288,16 @@ const VideoWatermarkContent = () => {
 		const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 		
 		const deltaX = clientX - resizeStart.x;
-		const deltaY = clientY - resizeStart.y;
 		
 		const containerRect = videoRef.current.parentElement?.getBoundingClientRect();
 		if (!containerRect) return;
 
 		// Calculate scale factors
 		const scaleX = originalWidth / containerRect.width;
-		const scaleY = originalHeight / containerRect.height;
 		
 		if (resizeHandle === 'bottom-right') {
 			// Use the larger delta to determine the resize direction, maintaining aspect ratio
 			const deltaXScaled = deltaX * scaleX;
-			const deltaYScaled = deltaY * scaleY;
 			
 			// Use width as primary dimension and calculate height from aspect ratio
 			const newWidth = resizeStart.logoWidth + deltaXScaled;
@@ -613,12 +610,11 @@ const VideoWatermarkContent = () => {
 									onMouseDown={handleLogoDragStart}
 									onTouchStart={handleLogoDragStart}
 								>
-									{/* Mobile drag icon - positioned inside the logo overlay */}
-									<div className="sm:hidden absolute top-0 left-0 right-0 bg-teal-500 text-white px-2 py-1 text-xs flex items-center justify-center gap-1 z-10">
-										<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+									{/* Mobile drag icon - positioned above the logo overlay */}
+									<div className="sm:hidden absolute -top-10 left-1/2 transform -translate-x-1/2 text-teal-500 p-3 z-10">
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
 											<path d="M13,6V11H18V7.75L22.25,12L18,16.25V13H13V18H16.25L12,22.25L7.75,18H11V13H6V16.25L1.75,12L6,7.75V11H11V6H7.75L12,1.75L16.25,6H13Z"/>
 										</svg>
-										Drag
 									</div>
 									
 									<img 
