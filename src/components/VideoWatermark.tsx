@@ -613,6 +613,14 @@ const VideoWatermarkContent = () => {
 									onMouseDown={handleLogoDragStart}
 									onTouchStart={handleLogoDragStart}
 								>
+									{/* Mobile drag icon - visible only on small screens */}
+									<div className="sm:hidden absolute -top-8 left-1/2 transform -translate-x-1/2 bg-teal-500 text-white px-2 py-1 rounded text-xs flex items-center gap-1 z-10">
+										<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+											<path d="M13,6V11H18V7.75L22.25,12L18,16.25V13H13V18H16.25L12,22.25L7.75,18H11V13H6V16.25L1.75,12L6,7.75V11H11V6H7.75L12,1.75L16.25,6H13Z"/>
+										</svg>
+										Drag
+									</div>
+									
 									<img 
 										src={logoUrl} 
 										alt="Logo"
@@ -728,9 +736,12 @@ const VideoWatermarkContent = () => {
 							<div>
 								<button
 									onClick={resetToDefaults}
-									className="w-full px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg transition-colors border border-gray-300"
+									className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
 								>
-									Reset to Defaults
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+										<path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+									</svg>
+									Reset
 								</button>
 							</div>
 						</div>
