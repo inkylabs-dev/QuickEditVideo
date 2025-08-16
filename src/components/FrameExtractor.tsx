@@ -20,10 +20,9 @@ const FrameExtractorContent = () => {
   
   // Frame extraction settings
   const [extractionMode, setExtractionMode] = useState<'single' | 'range'>('single');
-  const [singleTime, setSingleTime] = useState<string>('');
-  const [startTime, setStartTime] = useState<string>('');
-  const [endTime, setEndTime] = useState<string>('');
-  const [interval, setInterval] = useState<string>('1');
+  const [singleTime, setSingleTime] = useState<string>('0');
+  const [startTime, setStartTime] = useState<string>('0');
+  const [endTime, setEndTime] = useState<string>('1');
   const [frameFormat, setFrameFormat] = useState<'png' | 'jpg'>('png');
   
   // Extracted frames
@@ -101,7 +100,6 @@ const FrameExtractorContent = () => {
     } else {
       const start = parseTime(startTime);
       const end = parseTime(endTime);
-      const intervalVal = parseFloat(interval);
       
       if (start < 0 || start > videoDuration) {
         return { valid: false, message: `Start time must be between 0 and ${videoDuration.toFixed(1)} seconds` };
@@ -112,16 +110,13 @@ const FrameExtractorContent = () => {
       if (start >= end) {
         return { valid: false, message: 'Start time must be less than end time' };
       }
-      if (intervalVal <= 0) {
-        return { valid: false, message: 'Interval must be greater than 0' };
-      }
     }
     return { valid: true };
   };
 
   // Extract frames
   const handleExtractFrames = async () => {
-    if (!ffmpeg || !ffmpegLoaded || !selectedFile) return;
+    if (!ffmpeg || !ffmpeg.current || !ffmpegLoaded || !selectedFile) return;
 
     const validation = validateTimes();
     if (!validation.valid) {
@@ -138,13 +133,13 @@ const FrameExtractorContent = () => {
 
       if (extractionMode === 'single') {
         const time = parseTime(singleTime);
-        const result = await extractFrames(ffmpeg, selectedFile, [time], frameFormat);
+        const result = await extractFrames(ffmpeg.current, selectedFile, [time], frameFormat);
         frames = result;
       } else {
         const start = parseTime(startTime);
         const end = parseTime(endTime);
-        const intervalVal = parseFloat(interval);
-        const result = await extractFramesInRange(ffmpeg, selectedFile, start, end, intervalVal, frameFormat);
+        // Fixed interval of 1 second for range extraction
+        const result = await extractFramesInRange(ffmpeg.current, selectedFile, start, end, 1, frameFormat);
         frames = result;
       }
 
@@ -186,10 +181,9 @@ const FrameExtractorContent = () => {
     setIsProcessing(false);
     setProcessingProgress(0);
     setExtractedFrames([]);
-    setSingleTime('');
-    setStartTime('');
-    setEndTime('');
-    setInterval('1');
+    setSingleTime('0');
+    setStartTime('0');
+    setEndTime('1');
     
     // Dispatch event to notify page about view change
     document.dispatchEvent(new CustomEvent('frameExtractorViewChange', {
@@ -204,20 +198,18 @@ const FrameExtractorContent = () => {
   // Landing view for file selection
   if (currentView === 'landing') {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-        <div className="mb-6">
-          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <path d="M8 12h8"/>
-              <path d="M12 8v8"/>
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Extract Frames from Video</h2>
-          <p className="text-gray-600 mb-6">Upload a video to extract frames at specific times or intervals</p>
-        </div>
-        
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-teal-400 transition-colors">
+      <div className="bg-white rounded-lg border-4 border-dashed border-gray-900 hover:border-gray-900 transition-colors">
+        <div 
+          className="p-16 text-center cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length > 0) handleFileSelect(files[0]);
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDragEnter={(e) => e.preventDefault()}
+        >
           <input
             ref={fileInputRef}
             type="file"
@@ -226,19 +218,26 @@ const FrameExtractorContent = () => {
             className="hidden"
             id="video-upload"
           />
-          <label htmlFor="video-upload" className="cursor-pointer">
-            <div className="text-gray-600 mb-4">
-              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <p className="text-lg font-medium text-gray-900 mb-2">Drop your video here or click to upload</p>
-            <p className="text-sm text-gray-500">Supports MP4, WebM, AVI, MOV and more</p>
-          </label>
+          <div className="mb-6">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-gray-400">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <path d="M10 15.5L16 12L10 8.5V15.5Z"/>
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Select your video</h3>
+          <p className="text-gray-600 mb-6">Drop a video file here or click to browse</p>
+          <div className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+            Choose file
+          </div>
+          <p className="text-xs text-gray-500 mt-4">Supports MP4, WebM, AVI, MOV and more</p>
         </div>
         
         {!ffmpegLoaded && (
-          <div className="mt-4 text-sm text-yellow-600">
+          <div className="mt-4 text-sm text-yellow-600 text-center">
             Loading video processing engine...
           </div>
         )}
@@ -297,6 +296,15 @@ const FrameExtractorContent = () => {
                   </svg>
                   Reset
                 </button>
+                <button 
+                  onClick={resetExtraction}
+                  className="text-sm text-gray-600 hover:text-gray-900 flex items-center justify-center w-6 h-6"
+                  title="Close"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -341,7 +349,7 @@ const FrameExtractorContent = () => {
                   max={videoDuration}
                   step="0.1"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-                  placeholder="e.g., 30.5"
+                  placeholder="0"
                 />
               </div>
             ) : (
@@ -358,7 +366,7 @@ const FrameExtractorContent = () => {
                     max={videoDuration}
                     step="0.1"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-                    placeholder="e.g., 10"
+                    placeholder="e.g., 0"
                   />
                 </div>
                 <div>
@@ -373,22 +381,11 @@ const FrameExtractorContent = () => {
                     max={videoDuration}
                     step="0.1"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-                    placeholder="e.g., 30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Interval (seconds)
-                  </label>
-                  <input
-                    type="number"
-                    value={interval}
-                    onChange={(e) => setInterval(e.target.value)}
-                    min="0.1"
-                    step="0.1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                     placeholder="e.g., 1"
                   />
+                </div>
+                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                  Frames will be extracted every 1 second in the specified range
                 </div>
               </div>
             )}
