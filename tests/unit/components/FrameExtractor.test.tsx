@@ -250,7 +250,9 @@ describe('FrameExtractor', () => {
   it('rejects non-video files', () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.txt', { type: 'text/plain' });
     
     // Mock alert
@@ -269,7 +271,9 @@ describe('FrameExtractor', () => {
   it('validates time ranges correctly', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -306,7 +310,9 @@ describe('FrameExtractor', () => {
   it('supports both PNG and JPG formats', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
