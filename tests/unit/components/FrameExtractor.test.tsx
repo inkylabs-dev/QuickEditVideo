@@ -57,6 +57,14 @@ vi.mock('@ffmpeg/util', () => ({
   fetchFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
 }));
 
+// Mock JSZip
+vi.mock('jszip', () => ({
+  default: vi.fn().mockImplementation(() => ({
+    file: vi.fn(),
+    generateAsync: vi.fn().mockResolvedValue(new Blob(['mock-zip-content']))
+  }))
+}));
+
 // Mock URL.createObjectURL and revokeObjectURL
 global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url');
 global.URL.revokeObjectURL = vi.fn();
@@ -316,6 +324,129 @@ describe('FrameExtractor', () => {
     await waitFor(() => {
       expect(screen.getByText('PNG')).toBeInTheDocument();
       expect(screen.getByText('JPG')).toBeInTheDocument();
+    });
+  });
+
+  it('shows download all button only when multiple frames are extracted', async () => {
+    render(<FrameExtractor />);
+    
+    const fileInput = screen.getByLabelText('video-upload');
+    const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
+    
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [file] } });
+    });
+
+    // Switch to time range mode
+    await act(async () => {
+      fireEvent.click(screen.getByText('Time Range'));
+    });
+
+    // Extract multiple frames
+    await act(async () => {
+      fireEvent.click(screen.getByText('Extract Frames'));
+    });
+
+    await waitFor(() => {
+      // Should show extracted frames section
+      expect(screen.getByText('Extracted Frames (2)')).toBeInTheDocument();
+      
+      // Should show download all button for multiple frames
+      expect(screen.getByText(/Download All \(2 frames\)/)).toBeInTheDocument();
+    });
+  });
+
+  it('does not show download all button for single frame', async () => {
+    // Mock extractFrames to return only one frame
+    const { extractFrames } = await import('../../../src/FFmpegUtils/extractFrames');
+    vi.mocked(extractFrames).mockResolvedValueOnce([
+      {
+        time: 0,
+        data: new Uint8Array([1, 2, 3, 4]),
+        filename: 'frame_0.00s.png'
+      }
+    ]);
+
+    render(<FrameExtractor />);
+    
+    const fileInput = screen.getByLabelText('video-upload');
+    const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
+    
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [file] } });
+    });
+
+    // Use single time mode (default)
+    await act(async () => {
+      fireEvent.click(screen.getByText('Extract Frames'));
+    });
+
+    await waitFor(() => {
+      // Should show extracted frames section for 1 frame
+      expect(screen.getByText('Extracted Frames (1)')).toBeInTheDocument();
+      
+      // Should NOT show download all button for single frame
+      expect(screen.queryByText(/Download All/)).not.toBeInTheDocument();
+    });
+  });
+
+  it('creates ZIP file and triggers download when download all is clicked', async () => {
+    // Mock JSZip
+    const mockZip = {
+      file: vi.fn(),
+      generateAsync: vi.fn().mockResolvedValue(new Blob(['mock-zip-content']))
+    };
+    
+    // Mock JSZip constructor
+    vi.doMock('jszip', () => ({
+      default: vi.fn().mockImplementation(() => mockZip)
+    }));
+
+    // Mock createElement to capture download link creation
+    const mockAElement = {
+      href: '',
+      download: '',
+      click: vi.fn()
+    };
+    createElementSpy.mockReturnValue(mockAElement as any);
+
+    render(<FrameExtractor />);
+    
+    const fileInput = screen.getByLabelText('video-upload');
+    const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
+    
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [file] } });
+    });
+
+    // Switch to time range mode to get multiple frames
+    await act(async () => {
+      fireEvent.click(screen.getByText('Time Range'));
+    });
+
+    // Extract frames
+    await act(async () => {
+      fireEvent.click(screen.getByText('Extract Frames'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Download All \(2 frames\)/)).toBeInTheDocument();
+    });
+
+    // Click download all button
+    await act(async () => {
+      fireEvent.click(screen.getByText(/Download All \(2 frames\)/));
+    });
+
+    await waitFor(() => {
+      // Verify ZIP creation
+      expect(mockZip.file).toHaveBeenCalledWith('frame_0.00s.png', expect.any(Uint8Array));
+      expect(mockZip.file).toHaveBeenCalledWith('frame_1.00s.png', expect.any(Uint8Array));
+      expect(mockZip.generateAsync).toHaveBeenCalledWith({ type: 'blob' });
+      
+      // Verify download trigger
+      expect(mockAElement.download).toBe('extracted-frames-2-frames.zip');
+      expect(mockAElement.click).toHaveBeenCalled();
     });
   });
 });

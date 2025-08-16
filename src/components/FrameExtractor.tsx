@@ -3,6 +3,7 @@ import type { JSX } from 'preact';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { extractFrames, extractFramesInRange } from '../FFmpegUtils/extractFrames';
 import Loading from './Loading';
+import JSZip from 'jszip';
 
 interface ExtractedFrame {
   time: number;
@@ -190,6 +191,36 @@ const FrameExtractorContent = () => {
     a.href = frame.blobUrl;
     a.download = frame.filename;
     a.click();
+  };
+
+  // Download all frames as ZIP (only for multiple frames)
+  const downloadAllFrames = async () => {
+    if (extractedFrames.length <= 1) return;
+    
+    try {
+      const zip = new JSZip();
+      
+      // Add each frame to the ZIP
+      for (const frame of extractedFrames) {
+        zip.file(frame.filename, frame.data);
+      }
+      
+      // Generate ZIP file
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      // Create download link
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `extracted-frames-${extractedFrames.length}-frames.zip`;
+      a.click();
+      
+      // Clean up URL
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error creating ZIP file:', error);
+      alert('Error creating ZIP file. Please try again.');
+    }
   };
 
   // Reset extraction parameters to default values (but keep selected file)
@@ -549,9 +580,22 @@ const FrameExtractorContent = () => {
       {/* Extracted Frames Section */}
       {extractedFrames.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Extracted Frames ({extractedFrames.length})
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Extracted Frames ({extractedFrames.length})
+            </h3>
+            {extractedFrames.length > 1 && (
+              <button
+                onClick={downloadAllFrames}
+                className="bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 text-sm font-medium py-2 px-4 rounded-md transition-colors flex items-center gap-2"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H13L20,15V8L14,2M14,3.5L18.5,8H14V3.5M14,9H19V14H12V21H6A1,1 0 0,1 5,20V4A1,1 0 0,1 6,3H13V9Z"/>
+                </svg>
+                Download All ({extractedFrames.length} frames)
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {extractedFrames.map((frame, index) => (
               <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
