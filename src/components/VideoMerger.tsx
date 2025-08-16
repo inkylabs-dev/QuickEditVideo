@@ -4,6 +4,7 @@ import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { fetchFile } from '@ffmpeg/util';
+import { SelectFile } from './SelectFile';
 
 interface VideoClip {
 	id: string;
@@ -342,16 +343,14 @@ const VideoMergerContent = () => {
 		};
 	};
 
-	const handleFileSelect = async (files: FileList | null) => {
-		if (!files?.length) return;
+	const handleFileSelect = async (files: File | FileList | null) => {
+		if (!files) return;
+		
+		// Handle single file or FileList
+		const fileList = files instanceof File ? [files] : Array.from(files);
+		if (!fileList.length) return;
 
-		const videoFiles = Array.from(files).filter(file => file.type.startsWith('video/'));
-		if (!videoFiles.length) {
-			alert('Please select valid video files.');
-			return;
-		}
-
-		const newClips = await Promise.all(videoFiles.map(createClipFromFile));
+		const newClips = await Promise.all(fileList.map(createClipFromFile));
 		
 		// Set dimensions from first video if not using custom dimensions
 		if (newClips.length && !dimensionsState.useCustom) {
@@ -367,6 +366,11 @@ const VideoMergerContent = () => {
 				detail: { currentView: 'editing' }
 			}));
 		}
+	};
+
+	// Video file validation function
+	const validateVideoFile = (file: File): boolean => {
+		return file.type.startsWith('video/');
 	};
 
 	// Handle drag and drop reordering with react-dnd
@@ -572,44 +576,15 @@ const VideoMergerContent = () => {
 
 	if (appState.currentView === 'landing') {
 		return (
-			<div className="bg-white rounded-lg border-4 border-dashed border-gray-900 hover:border-gray-900 transition-colors">
-				<div 
-					className="p-16 text-center cursor-pointer"
-					onClick={() => fileInputRef.current?.click()}
-					onDrop={(e) => {
-						e.preventDefault();
-						const files = e.dataTransfer.files;
-						if (files.length > 0) handleFileSelect(files);
-					}}
-					onDragOver={(e) => e.preventDefault()}
-					onDragEnter={(e) => e.preventDefault()}
-				>
-					<input 
-						type="file" 
-						accept="video/*" 
-						multiple
-						className="hidden"
-						ref={fileInputRef}
-						onChange={(e) => handleFileSelect(e.target.files)}
-					/>
-					<div className="mb-6">
-						<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-gray-400">
-							<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-							<polyline points="14,2 14,8 20,8"/>
-							<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
-						</svg>
-					</div>
-					<h3 className="text-xl font-semibold text-gray-900 mb-2">Select your videos</h3>
-					<p className="text-gray-600 mb-6">Drop multiple video files here or click to browse</p>
-					<div className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium transition-colors">
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-							<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-						</svg>
-						Choose files
-					</div>
-					<p className="text-xs text-gray-500 mt-4">Supports MP4, WebM, AVI, MOV and more</p>
-				</div>
-			</div>
+			<SelectFile
+				multiple={true}
+				onFileSelect={handleFileSelect}
+				validateFile={validateVideoFile}
+				validationErrorMessage="Please select valid video files."
+				title="Select your videos"
+				description="Drop multiple video files here or click to browse"
+				buttonText="Choose files"
+			/>
 		);
 	}
 
