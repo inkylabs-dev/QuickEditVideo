@@ -20,15 +20,15 @@ export async function addWatermark(
   const outputName = `output.${videoExt}`;
 
   // Write input files to FFmpeg filesystem
-  await ffmpeg.writeFile(videoInputName, await fetchFile(videoFile));
-  await ffmpeg.writeFile(imageInputName, await fetchFile(imageFile));
+  await ffmpeg.current.writeFile(videoInputName, await fetchFile(videoFile));
+  await ffmpeg.current.writeFile(imageInputName, await fetchFile(imageFile));
 
   // Create overlay filter with position and size
   const overlayFilter = `overlay=${x}:${y}`;
   const scaleFilter = `scale=${width}:${height}`;
 
   // Execute FFmpeg command to add watermark
-  await ffmpeg.exec([
+  await ffmpeg.current.exec([
     "-i", videoInputName,
     "-i", imageInputName,
     "-filter_complex", `[1:v]${scaleFilter}[scaled];[0:v][scaled]${overlayFilter}`,
@@ -36,6 +36,6 @@ export async function addWatermark(
     outputName
   ]);
 
-  const data = await ffmpeg.readFile(outputName);
+  const data = await ffmpeg.current.readFile(outputName);
   return new Uint8Array(data as ArrayBuffer);
 }
