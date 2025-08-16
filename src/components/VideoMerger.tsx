@@ -4,6 +4,7 @@ import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { fetchFile } from '@ffmpeg/util';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 
 interface VideoClip {
 	id: string;
@@ -668,31 +669,15 @@ const VideoMergerContent = () => {
 				{/* Right Panel */}
 				<div className="lg:col-span-1">
 					<div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full">
-						{/* Tab Header */}
-						<div className="border-b border-gray-200">
-							<div className="flex">
-								<button 
-									onClick={() => setAppState(prev => ({ ...prev, rightPanelTab: 'clips' }))}
-									className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-										appState.rightPanelTab === 'clips' 
-											? 'border-teal-500 text-teal-600 bg-teal-50' 
-											: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-									}`}
-								>
+						<Tabs value={appState.rightPanelTab} onValueChange={(value) => setAppState(prev => ({ ...prev, rightPanelTab: value as 'clips' | 'settings' }))}>
+							<TabsList>
+								<TabsTrigger tabValue="clips">
 									Clips ({clips.length})
-								</button>
-								<button 
-									onClick={() => setAppState(prev => ({ ...prev, rightPanelTab: 'settings' }))}
-									className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-										appState.rightPanelTab === 'settings' 
-											? 'border-teal-500 text-teal-600 bg-teal-50' 
-											: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-									}`}
-								>
+								</TabsTrigger>
+								<TabsTrigger tabValue="settings">
 									Settings
-								</button>
-							</div>
-						</div>
+								</TabsTrigger>
+							</TabsList>
 
 						{/* Tab Content */}
 						<div className="p-4 h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
@@ -875,6 +860,7 @@ const VideoMergerContent = () => {
 								</div>
 							)}
 						</div>
+						</Tabs>
 					</div>
 				</div>
 			</div>

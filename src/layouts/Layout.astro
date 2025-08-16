@@ -1,5 +1,6 @@
 ---
 import NavTools from '../components/NavTools.astro';
+import { NavToolsDropdown } from '../components/NavToolsDropdown.tsx';
 import '../styles/globals.css';
 
 export interface Props {
@@ -353,7 +354,7 @@ const currentUrl = canonicalUrl || Astro.url.href;
 							</a>
 							
 							<!-- Desktop Tools Dropdown -->
-							<NavTools />
+							<NavToolsDropdown client:load />
 					</div>
 					
 					<!-- Desktop Badges -->
