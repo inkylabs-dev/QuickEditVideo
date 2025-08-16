@@ -3,6 +3,7 @@ import type { JSX } from 'preact';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { extractFrames, extractFramesInRange } from '../FFmpegUtils/extractFrames';
 import Loading from './Loading';
+import ControlPanel, { type Tab } from './ControlPanel';
 
 interface ExtractedFrame {
   time: number;
