@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { extractFrames, extractFramesInRange } from '../FFmpegUtils/extractFrames';
+import Loading from './Loading';
 
 interface ExtractedFrame {
   time: number;
@@ -91,25 +92,42 @@ const FrameExtractorContent = () => {
     return `${min}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // Validate time inputs
+  // Validate time inputs with stricter boundary checks
   const validateTimes = (): { valid: boolean; message?: string } => {
+    if (videoDuration === 0) {
+      return { valid: false, message: 'Video duration not available. Please wait for video to load.' };
+    }
+
     if (extractionMode === 'single') {
       const time = parseTime(singleTime);
-      if (time < 0 || time > videoDuration) {
-        return { valid: false, message: `Time must be between 0 and ${videoDuration.toFixed(1)} seconds` };
+      if (time < 0) {
+        return { valid: false, message: 'Time cannot be negative' };
+      }
+      if (time > videoDuration) {
+        return { valid: false, message: `Time cannot exceed video duration (${videoDuration.toFixed(1)}s)` };
       }
     } else {
       const start = parseTime(startTime);
       const end = parseTime(endTime);
+      const intervalValue = parseFloat(interval) || 1;
       
-      if (start < 0 || start > videoDuration) {
-        return { valid: false, message: `Start time must be between 0 and ${videoDuration.toFixed(1)} seconds` };
+      if (start < 0) {
+        return { valid: false, message: 'Start time cannot be negative' };
       }
-      if (end < 0 || end > videoDuration) {
-        return { valid: false, message: `End time must be between 0 and ${videoDuration.toFixed(1)} seconds` };
+      if (start > videoDuration) {
+        return { valid: false, message: `Start time cannot exceed video duration (${videoDuration.toFixed(1)}s)` };
+      }
+      if (end < 0) {
+        return { valid: false, message: 'End time cannot be negative' };
+      }
+      if (end > videoDuration) {
+        return { valid: false, message: `End time cannot exceed video duration (${videoDuration.toFixed(1)}s)` };
       }
       if (start >= end) {
         return { valid: false, message: 'Start time must be less than end time' };
+      }
+      if (intervalValue <= 0) {
+        return { valid: false, message: 'Distance between frames must be greater than 0' };
       }
     }
     return { valid: true };
@@ -174,8 +192,20 @@ const FrameExtractorContent = () => {
     a.click();
   };
 
-  // Reset to landing view
+  // Reset extraction parameters to default values (but keep selected file)
   const resetExtraction = () => {
+    setIsProcessing(false);
+    setProcessingProgress(0);
+    setExtractedFrames([]);
+    setSingleTime('0');
+    setStartTime('0');
+    setEndTime('1');
+    setInterval('1');
+    setFrameFormat('png');
+  };
+
+  // Close and return to landing view (reset everything)
+  const closeExtraction = () => {
     setSelectedFile(null);
     setVideoUrl('');
     setVideoDuration(0);
@@ -187,6 +217,7 @@ const FrameExtractorContent = () => {
     setStartTime('0');
     setEndTime('1');
     setInterval('1');
+    setFrameFormat('png');
     
     // Dispatch event to notify page about view change
     document.dispatchEvent(new CustomEvent('frameExtractorViewChange', {
@@ -279,6 +310,12 @@ const FrameExtractorContent = () => {
                     {formatTime(videoDuration)} duration
                   </div>
                 </div>
+                <div className="text-xs text-gray-500">
+                  {selectedFile && `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`}
+                </div>
+              </div>
+              <div className="mt-1 text-xs text-gray-600">
+                Max duration: {videoDuration.toFixed(1)}s • Use times between 0 and {videoDuration.toFixed(1)} seconds
               </div>
             </div>
           </div>
@@ -321,6 +358,7 @@ const FrameExtractorContent = () => {
                   <button 
                     onClick={resetExtraction}
                     className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                    title="Reset parameters to default"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
@@ -328,9 +366,9 @@ const FrameExtractorContent = () => {
                     Reset
                   </button>
                   <button 
-                    onClick={resetExtraction}
+                    onClick={closeExtraction}
                     className="text-sm text-gray-600 hover:text-gray-900 flex items-center justify-center w-6 h-6"
-                    title="Close"
+                    title="Close and select new file"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
@@ -351,7 +389,7 @@ const FrameExtractorContent = () => {
                       value={singleTime}
                       onChange={(e) => setSingleTime(e.target.value)}
                       min="0"
-                      max={videoDuration}
+                      max={videoDuration.toString()}
                       step="0.1"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                       placeholder="0"
@@ -393,7 +431,7 @@ const FrameExtractorContent = () => {
                   >
                     {isProcessing ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                        <Loading className="w-4 h-4" />
                         Extracting... {processingProgress}%
                       </>
                     ) : (
@@ -418,7 +456,7 @@ const FrameExtractorContent = () => {
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
                       min="0"
-                      max={videoDuration}
+                      max={videoDuration.toString()}
                       step="0.1"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                       placeholder="e.g., 0"
@@ -433,7 +471,7 @@ const FrameExtractorContent = () => {
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
                       min="0"
-                      max={videoDuration}
+                      max={videoDuration.toString()}
                       step="0.1"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                       placeholder="e.g., 1"
@@ -489,7 +527,7 @@ const FrameExtractorContent = () => {
                   >
                     {isProcessing ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                        <Loading className="w-4 h-4" />
                         Extracting... {processingProgress}%
                       </>
                     ) : (

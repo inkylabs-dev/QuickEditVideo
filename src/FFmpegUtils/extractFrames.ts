@@ -52,12 +52,12 @@ export async function extractFramesInRange(
   const times: number[] = [];
   
   // Generate time points within the range
-  for (let t = startTime; t <= endTime; t += interval) {
+  for (let t = startTime; t < endTime; t += interval) {
     times.push(t);
   }
   
-  // If the last time point doesn't align exactly with endTime, add endTime
-  if (times[times.length - 1] !== endTime && endTime > startTime) {
+  // Only add endTime if it's not already included and is greater than startTime
+  if (times.length === 0 || (times[times.length - 1] !== endTime && endTime > startTime)) {
     times.push(endTime);
   }
 
