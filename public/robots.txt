@@ -1,29 +1,12 @@
 User-agent: *
 Allow: /
 
-# Sitemap location
-Sitemap: https://quickeditvideo.com/sitemap.xml
+# Sitemaps
+Sitemap: https://quickeditvideo.com/sitemap-index.xml
 
-# Allow all search engines to crawl the site
-# No restrictions as this is a public video editing tool
+# Block access to admin and private areas (if any)
+Disallow: /admin/
+Disallow: /private/
 
-# Crawl delay to be respectful to server resources
-Crawl-delay: 1
-
-# Block any potential admin or private areas (none currently exist)
-# Disallow: /admin/
-# Disallow: /private/
-
-# Allow crawling of all video editing tools
-Allow: /trim
-Allow: /merge
-Allow: /resize
-Allow: /crop
-Allow: /compress
-Allow: /to-mp4
-Allow: /to-avi
-Allow: /to-mov
-Allow: /to-webm
-Allow: /to-gif
-Allow: /to-mkv
-Allow: /extract-audio
+# Allow all crawlers to access the main content
+# This site provides free video editing tools

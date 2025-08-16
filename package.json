@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@astrojs/preact": "^4.1.0",
+    "@astrojs/sitemap": "^3.5.0",
     "@astrojs/tailwind": "^6.0.2",
     "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.10",

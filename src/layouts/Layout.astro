@@ -46,6 +46,9 @@ const currentUrl = canonicalUrl || Astro.url.href;
 		<!-- Canonical URL -->
 		{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 		
+		<!-- Sitemap -->
+		<link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+		
 		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content={currentUrl} />

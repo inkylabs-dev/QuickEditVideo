@@ -8,6 +8,7 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
+    site: 'https://quickeditvideo.com',
     integrations: [tailwind(), preact({
         compat: true
     }), sitemap()],
