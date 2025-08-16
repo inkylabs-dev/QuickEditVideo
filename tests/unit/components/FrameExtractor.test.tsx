@@ -330,7 +330,7 @@ describe('FrameExtractor', () => {
   it('shows download all button only when multiple frames are extracted', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText('video-upload');
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -352,7 +352,7 @@ describe('FrameExtractor', () => {
       expect(screen.getByText('Extracted Frames (2)')).toBeInTheDocument();
       
       // Should show download all button for multiple frames
-      expect(screen.getByText(/Download All \(2 frames\)/)).toBeInTheDocument();
+      expect(screen.getByTitle('Download all frames as ZIP')).toBeInTheDocument();
     });
   });
 
@@ -369,7 +369,7 @@ describe('FrameExtractor', () => {
 
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText('video-upload');
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -386,7 +386,7 @@ describe('FrameExtractor', () => {
       expect(screen.getByText('Extracted Frames (1)')).toBeInTheDocument();
       
       // Should NOT show download all button for single frame
-      expect(screen.queryByText(/Download All/)).not.toBeInTheDocument();
+      expect(screen.queryByTitle('Download all frames as ZIP')).not.toBeInTheDocument();
     });
   });
 
@@ -412,7 +412,7 @@ describe('FrameExtractor', () => {
 
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText('video-upload');
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -430,12 +430,12 @@ describe('FrameExtractor', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/Download All \(2 frames\)/)).toBeInTheDocument();
+      expect(screen.getByTitle('Download all frames as ZIP')).toBeInTheDocument();
     });
 
     // Click download all button
     await act(async () => {
-      fireEvent.click(screen.getByText(/Download All \(2 frames\)/));
+      fireEvent.click(screen.getByTitle('Download all frames as ZIP'));
     });
 
     await waitFor(() => {

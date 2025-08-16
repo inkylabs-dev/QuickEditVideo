@@ -587,12 +587,12 @@ const FrameExtractorContent = () => {
             {extractedFrames.length > 1 && (
               <button
                 onClick={downloadAllFrames}
-                className="bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 text-sm font-medium py-2 px-4 rounded-md transition-colors flex items-center gap-2"
+                title="Download all frames as ZIP"
+                className="bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 p-2 rounded-md transition-colors flex items-center justify-center"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H13L20,15V8L14,2M14,3.5L18.5,8H14V3.5M14,9H19V14H12V21H6A1,1 0 0,1 5,20V4A1,1 0 0,1 6,3H13V9Z"/>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
                 </svg>
-                Download All ({extractedFrames.length} frames)
               </button>
             )}
           </div>
