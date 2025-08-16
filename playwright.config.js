@@ -20,6 +20,8 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: 'http://localhost:4321',
 
+    screenshot: 'only-on-failure',
+
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
@@ -74,6 +76,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run preview',
     url: 'http://localhost:4321',
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
   },
 });

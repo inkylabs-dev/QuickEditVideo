@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
+import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
+import { fetchFile } from '@ffmpeg/util';
 
 interface AspectRatio {
   label: string;
@@ -57,7 +59,7 @@ const calculateScale = (currentWidth: number, currentHeight: number, originalWid
   return Math.round(Math.min(widthScale, heightScale));
 };
 
-const VideoCropper = () => {
+const VideoCropperContent = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'cropping'>('landing');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
@@ -76,8 +78,6 @@ const VideoCropper = () => {
   
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingProgress, setProcessingProgress] = useState<number>(0);
-  const [ffmpeg, setFfmpeg] = useState<any>(null);
-  const [ffmpegLoaded, setFfmpegLoaded] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [originalFormat, setOriginalFormat] = useState<string>('mp4');
   const [overlayKey, setOverlayKey] = useState<number>(0);
@@ -110,41 +110,13 @@ const VideoCropper = () => {
     { label: '2:3', value: '2:3', ratio: 2/3 }
   ];
 
-  // Initialize FFmpeg
-  useEffect(() => {
-    const loadFFmpeg = async () => {
-      try {
-        if (!(window as any).FFmpeg) {
-          await new Promise<void>((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js';
-            script.onload = () => resolve();
-            script.onerror = reject;
-            document.head.appendChild(script);
-          });
-        }
+  // Get FFmpeg context
+  const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress } = useFFmpeg();
 
-        const { createFFmpeg } = (window as any).FFmpeg;
-        const ffmpegInstance = createFFmpeg({ 
-          log: true,
-          progress: ({ ratio }: { ratio: number }) => {
-            if (ratio > 0) {
-              setProcessingProgress(Math.round(ratio * 100));
-            }
-          },
-          corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
-        });
-        
-        await ffmpegInstance.load();
-        setFfmpeg(ffmpegInstance);
-        setFfmpegLoaded(true);
-      } catch (error) {
-        console.error('Failed to load FFmpeg:', error);
-      }
-    };
-    
-    loadFFmpeg();
-  }, []);
+  // Update processing progress from FFmpeg context
+  useEffect(() => {
+    setProcessingProgress(progress);
+  }, [progress]);
 
   // Update overlay when crop values change
   useEffect(() => {
@@ -317,18 +289,17 @@ const VideoCropper = () => {
 
   // Crop and download video
   const cropVideo = async () => {
-    if (!ffmpeg || !ffmpegLoaded || !selectedFile) return;
+    if (!ffmpeg?.current || !ffmpegLoaded || !selectedFile) return;
 
     setIsProcessing(true);
-    setProcessingProgress(0);
+    setProgress(0);
 
     try {
-      const { fetchFile } = (window as any).FFmpeg;
       const inputExt = selectedFile.name.split('.').pop();
       const inputFile = `input.${inputExt}`;
       const outputFile = `${selectedFile.name.split('.')[0]}_cropped.${originalFormat}`;
 
-      ffmpeg.FS('writeFile', inputFile, await fetchFile(selectedFile));
+      await ffmpeg.current.writeFile(inputFile, await fetchFile(selectedFile));
 
       // Validate crop parameters
       if (cropWidth <= 0 || cropHeight <= 0) {
@@ -392,39 +363,30 @@ const VideoCropper = () => {
         
         // Then crop from the rotated video using transformed coordinates
         filterChain += `,crop=${cropWidth}:${cropHeight}:${newCropLeft}:${newCropTop}`;
-        
-        console.log('Transformed crop coordinates:', { 
-          original: { cropLeft, cropTop, cropCenterX, cropCenterY },
-          rotated: { newCropLeft, newCropTop, newCropCenterX, newCropCenterY }
-        });
       } else {
         // No rotation, just crop normally
         filterChain = `crop=${cropWidth}:${cropHeight}:${cropLeft}:${cropTop}`;
       }
 
-      console.log('FFmpeg filter chain:', filterChain);
-      console.log('Crop parameters:', { cropWidth, cropHeight, cropLeft, cropTop, rotation });
-
       try {
-        await ffmpeg.run(
+        await ffmpeg.current.exec([
           '-i', inputFile,
           '-vf', filterChain,
           '-c:a', 'copy', // Copy audio without re-encoding
           outputFile
-        );
+        ]);
       } catch (ffmpegError) {
         console.error('FFmpeg processing error:', ffmpegError);
         
         // Try without audio copy if that was the issue
-        console.log('Retrying without audio copy...');
-        await ffmpeg.run(
+        await ffmpeg.current.exec([
           '-i', inputFile,
           '-vf', filterChain,
           outputFile
-        );
+        ]);
       }
 
-      const data = ffmpeg.FS('readFile', outputFile);
+      const data = await ffmpeg.current.readFile(outputFile);
       const blob = new Blob([data.buffer], { type: getMimeType(originalFormat) });
       
       // Download file
@@ -434,16 +396,14 @@ const VideoCropper = () => {
       a.click();
       URL.revokeObjectURL(a.href);
 
-      // Cleanup
-      ffmpeg.FS('unlink', inputFile);
-      ffmpeg.FS('unlink', outputFile);
+      // Cleanup would be handled automatically by the new FFmpeg API
 
     } catch (error) {
       console.error('Error cropping video:', error);
       alert('Error processing video. Please try again.');
     } finally {
       setIsProcessing(false);
-      setProcessingProgress(0);
+      setProgress(0);
     }
   };
 
@@ -1260,6 +1220,15 @@ const VideoCropper = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Main VideoCropper component with FFmpegProvider
+const VideoCropper = () => {
+  return (
+    <FfmpegProvider>
+      <VideoCropperContent />
+    </FfmpegProvider>
   );
 };
 

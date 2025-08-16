@@ -7,6 +7,9 @@ dist/
 # dependencies
 node_modules/
 
+# generated ffmpeg files
+public/ffmpeg-core/
+
 # logs
 npm-debug.log*
 yarn-debug.log*

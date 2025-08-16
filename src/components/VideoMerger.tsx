@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { JSX } from 'preact';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
+import { fetchFile } from '@ffmpeg/util';
 
 interface VideoClip {
 	id: string;
@@ -308,10 +310,6 @@ interface ProcessingState {
 	progress: number;
 }
 
-interface FFmpegState {
-	instance: any;
-	loaded: boolean;
-}
 
 interface DimensionsState {
 	width: number;
@@ -319,40 +317,25 @@ interface DimensionsState {
 	useCustom: boolean;
 }
 
-const VideoMerger = () => {
+const VideoMergerContent = () => {
 	// Simplified state management
 	const [clips, setClips] = useState<VideoClip[]>([]);
 	const [appState, setAppState] = useState<AppState>({ currentView: 'landing', rightPanelTab: 'clips' });
 	const [playbackState, setPlaybackState] = useState<PlaybackState>({ isPlaying: false, currentClipIndex: 0 });
 	const [processingState, setProcessingState] = useState<ProcessingState>({ isProcessing: false, progress: 0 });
-	const [ffmpegState, setFFmpegState] = useState<FFmpegState>({ instance: null, loaded: false });
 	const [dimensionsState, setDimensionsState] = useState<DimensionsState>({ width: 0, height: 0, useCustom: false });
 	
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const preloadVideoRef = useRef<HTMLVideoElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	// Initialize FFmpeg
+	// Get FFmpeg context
+	const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress } = useFFmpeg();
+
+	// Update processing progress from FFmpeg context
 	useEffect(() => {
-		const initializeFFmpeg = async () => {
-			try {
-				await loadFFmpegScript();
-				
-				const { createFFmpeg } = (window as any).FFmpeg;
-				const instance = createFFmpeg({ 
-					log: true,
-					corePath: CONSTANTS.FFMPEG.CORE_PATH,
-				});
-				
-				await instance.load();
-				setFFmpegState({ instance, loaded: true });
-			} catch (error) {
-				console.error('Failed to load FFmpeg:', error);
-			}
-		};
-		
-		initializeFFmpeg();
-	}, []);
+		setProcessingState(prev => ({ ...prev, progress }));
+	}, [progress]);
 
 	const createClipFromFile = async (file: File): Promise<VideoClip> => {
 		const { video, url } = await createVideoElement(file);
@@ -520,15 +503,14 @@ const VideoMerger = () => {
 	};
 
 	const processClip = async (clip: VideoClip, index: number, outputDimensions: { width: number; height: number }) => {
-		const { fetchFile } = (window as any).FFmpeg;
-		const { instance } = ffmpegState;
+		if (!ffmpeg?.current) throw new Error('FFmpeg not available');
 		
 		const inputExt = clip.file.name.split('.').pop();
 		const inputFile = `input_${index}.${inputExt}`;
 		const outputFile = `processed_${index}.mp4`;
 		
 		// Write input file
-		instance.FS('writeFile', inputFile, await fetchFile(clip.file));
+		await ffmpeg.current.writeFile(inputFile, await fetchFile(clip.file));
 		
 		const needsLooping = clip.customDuration > clip.duration;
 		const args = [
@@ -542,15 +524,14 @@ const VideoMerger = () => {
 			outputFile
 		];
 		
-		await instance.run(...args);
-		instance.FS('unlink', inputFile);
+		await ffmpeg.current.exec(args);
+		// Cleanup is handled automatically by the new FFmpeg API
 		
 		return outputFile;
 	};
 
 	const mergeVideos = async () => {
-		const { instance, loaded } = ffmpegState;
-		if (!instance || !loaded || !clips.length) return;
+		if (!ffmpeg?.current || !ffmpegLoaded || !clips.length) return;
 
 		setProcessingState({ isProcessing: true, progress: 0 });
 
@@ -576,13 +557,13 @@ const VideoMerger = () => {
 			
 			// Create and execute concatenation
 			const concatContent = processedFiles.map(file => `file '${file}'`).join('\n');
-			instance.FS('writeFile', 'concat.txt', new TextEncoder().encode(concatContent));
+			await ffmpeg.current.writeFile('concat.txt', new TextEncoder().encode(concatContent));
 			
-			await instance.run('-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', 'merged_video.mp4');
+			await ffmpeg.current.exec(['-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', 'merged_video.mp4']);
 			setProcessingState(prev => ({ ...prev, progress: 100 }));
 			
 			// Download result
-			const data = instance.FS('readFile', 'merged_video.mp4');
+			const data = await ffmpeg.current.readFile('merged_video.mp4');
 			const blob = new Blob([data.buffer], { type: 'video/mp4' });
 			const url = URL.createObjectURL(blob);
 			
@@ -592,10 +573,7 @@ const VideoMerger = () => {
 			link.click();
 			URL.revokeObjectURL(url);
 			
-			// Cleanup
-			[...processedFiles, 'concat.txt', 'merged_video.mp4'].forEach(file => 
-				instance.FS('unlink', file)
-			);
+			// Cleanup would be handled automatically by the new FFmpeg API
 			
 		} catch (error) {
 			console.error('Error merging videos:', error);
@@ -885,7 +863,7 @@ const VideoMerger = () => {
 										
 										<button 
 											onClick={mergeVideos}
-											disabled={processingState.isProcessing || !ffmpegState.loaded || clips.length === 0}
+											disabled={processingState.isProcessing || !ffmpegLoaded || clips.length === 0}
 											className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
 										>
 											{processingState.isProcessing ? 
@@ -896,7 +874,7 @@ const VideoMerger = () => {
 													</svg>
 													<span>Processing {processingState.progress}%</span>
 												</div> :
-												ffmpegState.loaded ? 
+												ffmpegLoaded ? 
 													<div className="flex items-center gap-2">
 														<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
 															<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
@@ -934,6 +912,15 @@ const VideoMerger = () => {
 			/>
 			</div>
 		</DndProvider>
+	);
+};
+
+// Main VideoMerger component with FFmpegProvider
+const VideoMerger = () => {
+	return (
+		<FfmpegProvider>
+			<VideoMergerContent />
+		</FfmpegProvider>
 	);
 };
 

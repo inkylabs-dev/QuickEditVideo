@@ -1,20 +1,20 @@
 import { test, expect } from '@playwright/test';
 import { statSync } from 'fs';
 
-test.describe('Trim page - E2E', () => {
-  test('should load trim page successfully', async ({ page }) => {
-    await page.goto('/trim');
+test.describe('Convert to MP4 page - E2E', () => {
+  test('should load MP4 converter page successfully', async ({ page }) => {
+    await page.goto('/to-mp4');
     
     // Check that the page loads with correct title
-    await expect(page).toHaveTitle(/Video Trimmer - Cut & Trim Videos Online Free/);
+    await expect(page).toHaveTitle(/Convert to MP4 - Free Online Video Converter/);
     
     // Check basic page structure
-    await expect(page.locator('h1')).toContainText('Video Trimmer');
+    await expect(page.locator('h1')).toContainText('Convert to MP4');
     await expect(page.locator('text=Select your video')).toBeVisible({ timeout: 10000 });
   });
 
-  test('should trim video and download file', async ({ page }) => {
-    await page.goto('/trim');
+  test('should convert video to MP4 and download file', async ({ page }) => {
+    await page.goto('/to-mp4');
     
     // Wait for the component to load
     await page.waitForSelector('text=Select your video', { timeout: 10000 });
@@ -27,26 +27,17 @@ test.describe('Trim page - E2E', () => {
     await page.waitForSelector('video', { timeout: 15000 });
     
     // Wait for FFmpeg to load (indicated by download button being enabled)
-    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 30000 });
+    await page.waitForSelector('button:has-text("Download as MP4"):not([disabled])', { timeout: 30000 });
     
-    // Check that trimming interface is displayed
-    await expect(page.locator('text=Controls')).toBeVisible();
-    await expect(page.locator('text=Start time')).toBeVisible();
-    await expect(page.locator('text=End time')).toBeVisible();
-    
-    // Set start time to 1 second
-    const startTimeInput = page.locator('input[type="number"]').first();
-    await startTimeInput.fill('1');
-    
-    // Set end time to 3 seconds  
-    const endTimeInput = page.locator('input[type="number"]').last();
-    await endTimeInput.fill('3');
+    // Check that conversion interface is displayed
+    await expect(page.getByTestId('converting-to-label')).toBeVisible();
+    await expect(page.getByTestId('target-format', { hasText: 'MP4' })).toBeVisible();
     
     // Set up download listener
     const downloadPromise = page.waitForEvent('download');
     
     // Click download button
-    await page.click('button:has-text("Download")');
+    await page.click('button:has-text("Download as MP4")');
     
     // Wait for download to complete
     const download = await downloadPromise;
@@ -59,7 +50,8 @@ test.describe('Trim page - E2E', () => {
     const stats = statSync(downloadPath);
     expect(stats.size).toBeGreaterThan(0);
     
-    // Verify filename contains "trimmed"
-    expect(download.suggestedFilename()).toContain('trimmed');
+    // Verify filename contains "converted" and has .mp4 extension
+    expect(download.suggestedFilename()).toContain('converted');
+    expect(download.suggestedFilename()).toMatch(/\.mp4$/);
   });
 });

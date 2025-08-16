@@ -18,15 +18,15 @@ export default defineConfig({
                 'react': 'preact/compat',
                 'react-dom': 'preact/compat'
             }
+        },
+        optimizeDeps: {
+            exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util']
+        },
+        worker: {
+            format: 'es'
         }
     },
     server: {
-        headers: {
-            'Cross-Origin-Embedder-Policy': 'require-corp',
-            'Cross-Origin-Opener-Policy': 'same-origin'
-        }
-    },
-    preview: {
         headers: {
             'Cross-Origin-Embedder-Policy': 'require-corp',
             'Cross-Origin-Opener-Policy': 'same-origin'
