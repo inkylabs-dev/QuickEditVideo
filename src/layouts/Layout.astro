@@ -520,14 +520,14 @@ const currentUrl = canonicalUrl || Astro.url.href;
 			<div class="max-w-6xl mx-auto px-4 md:px-6">
 				<ol class="flex items-center space-x-2 text-sm" itemscope itemtype="https://schema.org/BreadcrumbList">
 					{breadcrumbs.map((crumb, index) => (
-						<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+						<li class="flex items-center" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
 							{index < breadcrumbs.length - 1 ? (
 								<>
 									<a href={crumb.url} class="text-gray-600 hover:text-gray-900 transition-colors" itemprop="item">
 										<span itemprop="name">{crumb.name}</span>
 									</a>
 									<meta itemprop="position" content={String(index + 1)} />
-									<svg class="ml-2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg class="ml-2 w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
 									</svg>
 								</>
