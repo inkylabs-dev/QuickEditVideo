@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { fetchFile } from '@ffmpeg/util';
+import ControlPanel from './ControlPanel';
 
 const VideoResizerContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'resizing'>('landing');
@@ -118,6 +119,15 @@ const VideoResizerContent = () => {
 		setScale(100);
 		setNewWidth(originalWidth);
 		setNewHeight(originalHeight);
+	};
+
+	// Close and return to landing view
+	const closeResizer = () => {
+		setCurrentView('landing');
+		// Dispatch event to notify page about view change
+		document.dispatchEvent(new CustomEvent('videoResizerViewChange', {
+			detail: { currentView: 'landing' }
+		}));
 	};
 
 	// Resize and download video
@@ -267,36 +277,13 @@ const VideoResizerContent = () => {
 
 				{/* Controls Section */}
 				<div className="lg:col-span-1">
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-full">
-						<div className="flex items-center justify-between mb-4">
-							<h3 className="font-semibold text-gray-900">Resize Controls</h3>
-							<div className="flex items-center gap-2">
-								<button 
-									onClick={resetResize}
-									className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-								>
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-										<path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
-									</svg>
-									Reset
-								</button>
-								<button 
-									onClick={() => {
-										setCurrentView('landing');
-										// Dispatch event to notify page about view change
-										document.dispatchEvent(new CustomEvent('videoResizerViewChange', {
-											detail: { currentView: 'landing' }
-										}));
-									}}
-									className="text-gray-400 hover:text-gray-600"
-									title="Choose different video"
-								>
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-										<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-									</svg>
-								</button>
-							</div>
-						</div>
+					<ControlPanel
+						title="Resize Controls"
+						onReset={resetResize}
+						onClose={closeResizer}
+						resetTitle="Reset to original dimensions"
+						closeTitle="Choose different video"
+					>
 
 						{/* Scale Controls */}
 						<div className="space-y-4 mb-6">
@@ -388,7 +375,7 @@ const VideoResizerContent = () => {
 								}
 							</button>
 						</div>
-					</div>
+					</ControlPanel>
 				</div>
 			</div>
 
