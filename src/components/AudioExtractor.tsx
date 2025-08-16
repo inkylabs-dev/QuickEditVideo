@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { fetchFile } from '@ffmpeg/util';
+import { SelectFile } from './SelectFile';
 
 const AudioExtractorContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'extracting'>('landing');
@@ -23,17 +24,20 @@ const AudioExtractorContent = () => {
 		setProcessingProgress(progress);
 	}, [progress]);
 
-	// Handle file selection
-	const handleFileSelect = (file: File | null) => {
-		if (!file || !file.type.startsWith('video/')) {
-			alert('Please select a valid video file.');
+	// Handle file selection from SelectFile component
+	const handleFileSelect = (file: File | FileList | null) => {
+		// Return early if no file selected
+		if (!file) {
 			return;
 		}
+		
+		// SelectFile ensures file is validated before calling this
+		const selectedFile = file as File;
 
-		setSelectedFile(file);
+		setSelectedFile(selectedFile);
 		
 		// Create video URL for preview
-		const url = URL.createObjectURL(file);
+		const url = URL.createObjectURL(selectedFile);
 		setVideoUrl(url);
 		setCurrentView('extracting');
 		
@@ -41,6 +45,11 @@ const AudioExtractorContent = () => {
 		document.dispatchEvent(new CustomEvent('videoExtractorViewChange', {
 			detail: { currentView: 'extracting' }
 		}));
+	};
+
+	// Video file validation function
+	const validateVideoFile = (file: File): boolean => {
+		return file.type.startsWith('video/');
 	};
 
 	// Handle video loaded metadata
@@ -153,37 +162,20 @@ const AudioExtractorContent = () => {
 						</svg>
 					</div>
 					<h2 className="text-2xl font-bold text-gray-900 mb-2">Extract Audio from Video</h2>
-					<p className="text-gray-600 max-w-md mx-auto">
+					<p className="text-gray-600 max-w-md mx-auto mb-6">
 						Select your video file to extract the audio as MP3 or WAV. Processing happens entirely in your browser.
 					</p>
 				</div>
 				
-				<div className="mb-6">
-					<input
-						ref={fileInputRef}
-						type="file"
-						accept="video/*"
-						onChange={(e) => {
-							const file = (e.target as HTMLInputElement).files?.[0] || null;
-							handleFileSelect(file);
-						}}
-						className="hidden"
-						id="video-upload"
-					/>
-					<label 
-						htmlFor="video-upload"
-						className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium cursor-pointer transition-colors shadow-sm"
-					>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-							<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-						</svg>
-						Select your video
-					</label>
-				</div>
+				<SelectFile
+					onFileSelect={handleFileSelect}
+					validateFile={validateVideoFile}
+					validationErrorMessage="Please select a valid video file."
+					buttonText="Select your video"
+				/>
 				
-				<div className="text-sm text-gray-500">
-					<p>Supports: MP4, WebM, AVI, MOV, MKV and more</p>
-					<p className="mt-1">Your files are processed locally and never uploaded</p>
+				<div className="text-sm text-gray-500 mt-4">
+					<p>Your files are processed locally and never uploaded</p>
 				</div>
 			</div>
 		);
