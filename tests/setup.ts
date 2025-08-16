@@ -129,6 +129,38 @@ Object.defineProperty(HTMLVideoElement.prototype, 'load', {
   value: vi.fn(),
 });
 
+// Mock HTMLVideoElement creation to auto-trigger loadedmetadata event
+const originalCreateElement = document.createElement;
+document.createElement = vi.fn((tagName: string) => {
+  const element = originalCreateElement.call(document, tagName);
+  if (tagName === 'video') {
+    // Set default video properties
+    Object.defineProperty(element, 'duration', { value: 60, configurable: true });
+    Object.defineProperty(element, 'videoWidth', { value: 1920, configurable: true });
+    Object.defineProperty(element, 'videoHeight', { value: 1080, configurable: true });
+    
+    // Auto-trigger onloadedmetadata when src is set
+    let _src = '';
+    Object.defineProperty(element, 'src', {
+      get: () => _src,
+      set: (value: string) => {
+        _src = value;
+        // Trigger loadedmetadata event immediately
+        if ((element as any).onloadedmetadata) {
+          // Use a microtask to ensure it's truly async but immediate
+          Promise.resolve().then(() => {
+            if ((element as any).onloadedmetadata) {
+              (element as any).onloadedmetadata();
+            }
+          });
+        }
+      },
+      configurable: true
+    });
+  }
+  return element;
+});
+
 Object.defineProperty(HTMLVideoElement.prototype, 'play', {
   writable: true,
   value: vi.fn().mockResolvedValue(undefined),
