@@ -15,59 +15,86 @@ if (typeof global !== 'undefined' && !global.Uint8Array) {
   global.Uint8Array = Uint8Array;
 }
 
-// Mock FFmpeg for Node.js compatibility
-vi.mock('@ffmpeg/ffmpeg', () => {
-  const mockFFmpeg = vi.fn().mockImplementation(() => ({
-    load: vi.fn().mockResolvedValue(undefined),
-    writeFile: vi.fn().mockResolvedValue(undefined),
-    readFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
-    exec: vi.fn().mockResolvedValue(undefined),
-    on: vi.fn(),
-    off: vi.fn(),
-    terminate: vi.fn().mockResolvedValue(undefined),
-  }));
+// Use real FFmpeg binary for Node.js testing instead of mocks
+import { NodeFFmpeg } from './ffmpeg-node-adapter';
 
+vi.mock('@ffmpeg/ffmpeg', () => {
   return {
-    FFmpeg: mockFFmpeg,
+    FFmpeg: NodeFFmpeg,
   };
 });
 
-// Mock FFmpeg util functions
+// Use real fetchFile function from the adapter
+import { fetchFile } from './ffmpeg-node-adapter';
+
 vi.mock('@ffmpeg/util', () => ({
   toBlobURL: vi.fn().mockResolvedValue('blob:mock-ffmpeg-url'),
-  fetchFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
+  fetchFile: fetchFile,
 }));
 
-// Mock the FFmpegProvider to always be in loaded state for tests
-vi.mock('../src/FFmpegCore/FfmpegProvider.tsx', () => ({
-  FfmpegProvider: ({ children }: { children: any }) => children,
-}));
+// Update FFmpegProvider mock to use real FFmpeg
+vi.mock('../src/FFmpegCore/FfmpegProvider.tsx', async () => {
+  const { NodeFFmpeg } = await import('./ffmpeg-node-adapter');
+  
+  const FfmpegProvider = ({ children }: { children: any }) => {
+    return children; // Just pass through children for tests
+  };
 
-// Mock the useFFmpeg hook to provide a ready state
-vi.mock('../src/FFmpegCore/useFFmpeg.ts', () => ({
-  useFFmpeg: () => ({
-    ffmpeg: { current: {
-      load: vi.fn().mockResolvedValue(undefined),
-      writeFile: vi.fn().mockResolvedValue(undefined),
-      readFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
-      exec: vi.fn().mockResolvedValue(undefined),
-      on: vi.fn(),
-      off: vi.fn(),
-    }},
-    loaded: true,
-    loading: false,
-    isLoaded: true,
-    isLoading: false,
-    error: null,
-    message: '',
-    progress: 0,
-    load: vi.fn().mockResolvedValue(undefined),
-    writeFile: vi.fn().mockResolvedValue(undefined),
-    readFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
-    exec: vi.fn().mockResolvedValue(undefined),
-    setProgress: vi.fn(),
-  }),
-}));
+  return {
+    FfmpegProvider,
+  };
+});
+
+// Update useFFmpeg hook to use real FFmpeg
+vi.mock('../src/FFmpegCore/useFFmpeg.ts', async () => {
+  const { NodeFFmpeg } = await import('./ffmpeg-node-adapter');
+  
+  const useFFmpeg = () => {
+    const ffmpeg = { current: new NodeFFmpeg() };
+    
+    // Initialize FFmpeg in tests
+    if (ffmpeg.current) {
+      ffmpeg.current.load();
+    }
+    
+    return {
+      ffmpeg,
+      loaded: true,
+      loading: false,
+      isLoaded: true,
+      isLoading: false,
+      error: null,
+      message: '',
+      progress: 0,
+      load: async () => {
+        if (ffmpeg.current) {
+          await ffmpeg.current.load();
+        }
+      },
+      writeFile: async (name: string, data: Uint8Array) => {
+        if (ffmpeg.current) {
+          await ffmpeg.current.writeFile(name, data);
+        }
+      },
+      readFile: async (name: string) => {
+        if (ffmpeg.current) {
+          return await ffmpeg.current.readFile(name);
+        }
+        return new Uint8Array([1, 2, 3, 4]);
+      },
+      exec: async (args: string[]) => {
+        if (ffmpeg.current) {
+          await ffmpeg.current.exec(args);
+        }
+      },
+      setProgress: vi.fn(),
+    };
+  };
+
+  return {
+    useFFmpeg,
+  };
+});
 
 // Mock browser APIs for Astro component testing
 Object.defineProperty(window, 'matchMedia', {
