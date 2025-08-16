@@ -404,101 +404,126 @@ const VideoWatermarkContent = () => {
 
 	if (currentView === 'landing') {
 		return (
-			<div className="bg-white rounded-lg border-4 border-dashed border-gray-900 hover:border-gray-900 transition-colors">
-				<div className="p-16 text-center">
-					<div className="mb-6">
-						<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-gray-400">
-							<rect width="18" height="18" x="3" y="3" rx="2"/>
-							<path d="M9 9h6v6H9z"/>
-							<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-						</svg>
-					</div>
-					<h3 className="text-xl font-semibold text-gray-900 mb-2">Add Watermark to Video</h3>
-					<p className="text-gray-600 mb-6">Upload your video and logo to get started</p>
-
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-						{/* Video Upload */}
-						<div 
-							className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-teal-400 hover:bg-teal-50 transition-colors cursor-pointer"
-							onDrop={(e) => handleDrop(e, 'video')}
-							onDragOver={handleDragOver}
-							onClick={() => videoFileInputRef.current?.click()}
-						>
-							<div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
-									<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-									<polyline points="14,2 14,8 20,8"/>
-									<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
-								</svg>
-							</div>
-							<h4 className="font-medium text-gray-900 mb-2">Upload Video</h4>
-							<p className="text-sm text-gray-600 mb-3">MP4, WebM, AVI, MOV and more</p>
-							{videoFile ? (
+			<>
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+					{/* Video Upload - Left Side */}
+					<div 
+						className="bg-white rounded-lg border-4 border-dashed border-gray-900 hover:border-gray-900 transition-colors p-16 text-center cursor-pointer"
+						onDrop={(e) => handleDrop(e, 'video')}
+						onDragOver={handleDragOver}
+						onClick={() => videoFileInputRef.current?.click()}
+					>
+						{videoFile && videoUrl ? (
+							<div className="space-y-3">
+								<div className="w-32 h-24 mx-auto rounded-lg overflow-hidden bg-black">
+									<video
+										src={videoUrl}
+										className="w-full h-full object-cover"
+										muted
+									/>
+								</div>
+								<h3 className="text-xl font-semibold text-gray-900 mb-2">Select your video</h3>
 								<div className="text-sm text-teal-600 font-medium">✓ {videoFile.name}</div>
-							) : (
-								<div className="text-sm text-gray-500">Click to browse or drag & drop</div>
-							)}
-							<input
-								ref={videoFileInputRef}
-								type="file"
-								accept="video/*"
-								onChange={(e) => handleVideoFileSelect(e.currentTarget.files?.[0] || null)}
-								className="hidden"
-							/>
-						</div>
-
-						{/* Logo Upload */}
-						<div 
-							className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-teal-400 hover:bg-teal-50 transition-colors cursor-pointer"
-							onDrop={(e) => handleDrop(e, 'logo')}
-							onDragOver={handleDragOver}
-							onClick={() => logoFileInputRef.current?.click()}
-						>
-							<div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
-									<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
-									<circle cx="9" cy="9" r="2"/>
-									<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-								</svg>
 							</div>
-							<h4 className="font-medium text-gray-900 mb-2">Upload Logo</h4>
-							<p className="text-sm text-gray-600 mb-3">PNG, JPG, SVG and more</p>
-							{logoFile ? (
-								<div className="text-sm text-teal-600 font-medium">✓ {logoFile.name}</div>
-							) : (
-								<div className="text-sm text-gray-500">Click to browse or drag & drop</div>
-							)}
-							<input
-								ref={logoFileInputRef}
-								type="file"
-								accept="image/*"
-								onChange={(e) => handleLogoFileSelect(e.currentTarget.files?.[0] || null)}
-								className="hidden"
-							/>
-						</div>
+						) : (
+							<div className="space-y-3">
+								<div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto">
+									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
+										<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+										<polyline points="14,2 14,8 20,8"/>
+										<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
+									</svg>
+								</div>
+								<h3 className="text-xl font-semibold text-gray-900 mb-2">Select your video</h3>
+								<p className="text-gray-600 mb-6">Drop a video file here or click to browse</p>
+								<div className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium transition-colors">
+									<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+										<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+									</svg>
+									Choose file
+								</div>
+								<p className="text-xs text-gray-500 mt-4">Supports MP4, WebM, AVI, MOV and more</p>
+							</div>
+						)}
+						<input
+							ref={videoFileInputRef}
+							type="file"
+							accept="video/*"
+							onChange={(e) => handleVideoFileSelect(e.currentTarget.files?.[0] || null)}
+							className="hidden"
+						/>
 					</div>
 
-					{videoFile && logoFile && (
-						<div className="mt-6">
-							<button
-								onClick={() => {
-									setCurrentView('watermarking');
-									document.dispatchEvent(new CustomEvent('videoWatermarkViewChange', {
-										detail: { currentView: 'watermarking' }
-									}));
-								}}
-								className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium transition-colors"
-							>
-								<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-									<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-								</svg>
-								Continue to Editor
-							</button>
-						</div>
-					)}
-					<p className="text-xs text-gray-500 mt-4">Your files never leave your device</p>
+					{/* Logo Upload - Right Side */}
+					<div 
+						className="bg-white rounded-lg border-4 border-dashed border-gray-900 hover:border-gray-900 transition-colors p-16 text-center cursor-pointer"
+						onDrop={(e) => handleDrop(e, 'logo')}
+						onDragOver={handleDragOver}
+						onClick={() => logoFileInputRef.current?.click()}
+					>
+						{logoFile && logoUrl ? (
+							<div className="space-y-3">
+								<div className="w-32 h-24 mx-auto rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+									<img
+										src={logoUrl}
+										alt="Logo preview"
+										className="max-w-full max-h-full object-contain"
+									/>
+								</div>
+								<h3 className="text-xl font-semibold text-gray-900 mb-2">Select your logo</h3>
+								<div className="text-sm text-teal-600 font-medium">✓ {logoFile.name}</div>
+							</div>
+						) : (
+							<div className="space-y-3">
+								<div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto">
+									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
+										<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+										<circle cx="9" cy="9" r="2"/>
+										<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+									</svg>
+								</div>
+								<h3 className="text-xl font-semibold text-gray-900 mb-2">Select your logo</h3>
+								<p className="text-gray-600 mb-6">Drop a logo file here or click to browse</p>
+								<div className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium transition-colors">
+									<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+										<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+									</svg>
+									Choose file
+								</div>
+								<p className="text-xs text-gray-500 mt-4">Supports PNG, JPG, SVG and more</p>
+							</div>
+						)}
+						<input
+							ref={logoFileInputRef}
+							type="file"
+							accept="image/*"
+							onChange={(e) => handleLogoFileSelect(e.currentTarget.files?.[0] || null)}
+							className="hidden"
+						/>
+					</div>
 				</div>
-			</div>
+
+				{videoFile && logoFile && (
+					<div className="mt-6 text-center">
+						<button
+							onClick={() => {
+								setCurrentView('watermarking');
+								document.dispatchEvent(new CustomEvent('videoWatermarkViewChange', {
+									detail: { currentView: 'watermarking' }
+								}));
+							}}
+							className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium transition-colors"
+						>
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+							</svg>
+							Continue to Editor
+						</button>
+					</div>
+				)}
+				
+				<p className="text-xs text-gray-500 mt-4 text-center">Your files never leave your device</p>
+			</>
 		);
 	}
 
