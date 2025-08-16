@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import HomeTools from '../components/HomeTools.astro';
+import { CTAButton } from '../components/CTAButton.tsx';
+import { HomeToolsReact } from '../components/HomeToolsReact.tsx';
 ---
 
 <Layout 
@@ -26,16 +27,13 @@ import HomeTools from '../components/HomeTools.astro';
 				
 				
 				<!-- Primary CTA -->
-				<a href="/trim" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-8 py-4 font-medium text-lg transition-colors shadow-sm">
+				<CTAButton href="/trim" client:load>
 					Start editing
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-						<path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
-					</svg>
-				</a>
+				</CTAButton>
 			</div>
 		</section>
 
 		<!-- HomeTools Component -->
-		<HomeTools />
+		<HomeToolsReact client:load />
 	</main>
 </Layout>
