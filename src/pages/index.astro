@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import HomeTools from '../components/HomeTools.astro';
 ---
 
 <Layout 
@@ -34,113 +35,7 @@ import Layout from '../layouts/Layout.astro';
 			</div>
 		</section>
 
-		<!-- Popular Tools -->
-		<section class="pb-16 px-6">
-			<div class="max-w-4xl mx-auto">
-				<h2 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Most used tools</h2>
-				
-				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-					<a href="/trim" class="group p-6 bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all">
-						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-200 transition-colors">
-							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
-								<path d="M20 4L3 11l3 3l4-2l2 4Z"/>
-							</svg>
-						</div>
-						<h3 class="font-semibold text-gray-900 mb-2">Video Trimmer</h3>
-						<p class="text-sm text-gray-600">Cut videos with frame precision</p>
-					</a>
-
-					<a href="/merge" class="group p-6 bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all">
-						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-200 transition-colors">
-							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
-								<path d="M16 3h5v5M4 20L20.2 3.8M21 16v5h-5M15 15l6 6M4 4l5 5"/>
-							</svg>
-						</div>
-						<h3 class="font-semibold text-gray-900 mb-2">Video Merger</h3>
-						<p class="text-sm text-gray-600">Combine multiple videos into one</p>
-					</a>
-
-					<a href="/to-mp4" class="group p-6 bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all">
-						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-200 transition-colors">
-							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
-								<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-								<polyline points="14,2 14,8 20,8"/>
-							</svg>
-						</div>
-						<h3 class="font-semibold text-gray-900 mb-2">Convert to MP4</h3>
-						<p class="text-sm text-gray-600">Universal format converter</p>
-					</a>
-				</div>
-
-				<!-- All Tools Section -->
-				<h2 class="text-2xl font-semibold text-gray-900 mb-8 text-center mt-12">All tools</h2>
-				<div id="all-tools" class="pt-8 border-t border-gray-200">
-					<div class="space-y-8">
-						<!-- Video Editing -->
-						<div>
-							<h3 class="text-lg font-medium text-gray-900 mb-4">Video Editing</h3>
-							<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-								<a href="/trim" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">Trimmer</div>
-								</a>
-								<a href="/merge" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">Merger</div>
-								</a>
-								<a href="/resize" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">Resizer</div>
-								</a>
-								<a href="/crop" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">Cropper</div>
-								</a>
-							</div>
-						</div>
-
-						<!-- Converters -->
-						<div>
-							<h3 class="text-lg font-medium text-gray-900 mb-4">Format Converters</h3>
-							<div class="grid grid-cols-3 md:grid-cols-6 gap-3">
-								<a href="/to-mp4" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">MP4</div>
-								</a>
-								<a href="/to-avi" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">AVI</div>
-								</a>
-								<a href="/to-mov" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">MOV</div>
-								</a>
-								<a href="/to-webm" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">WebM</div>
-								</a>
-								<a href="/to-gif" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">GIF</div>
-								</a>
-								<a href="/to-mkv" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">MKV</div>
-								</a>
-							</div>
-						</div>
-
-						<!-- Audio -->
-						<div>
-							<h3 class="text-lg font-medium text-gray-900 mb-4">Audio & Quality</h3>
-							<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-								<a href="/extract-audio" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">Extract Audio</div>
-								</a>
-								<a href="/compress" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">Compress</div>
-								</a>
-								<a href="/enhance" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">Enhance</div>
-								</a>
-								<a href="/volume" class="p-3 text-center bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors">
-									<div class="text-sm font-medium text-gray-900">Volume</div>
-								</a>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</section>
+		<!-- HomeTools Component -->
+		<HomeTools />
 	</main>
 </Layout>
