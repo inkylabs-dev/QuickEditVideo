@@ -22,8 +22,6 @@ interface VideoClip {
 const CONSTANTS = {
 	DND_TYPE: 'clip',
 	FFMPEG: {
-		SCRIPT_URL: 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js',
-		CORE_PATH: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
 		THUMBNAIL_TIME: 0.1,
 		JPEG_QUALITY: 0.8,
 	},
@@ -70,17 +68,6 @@ const generateThumbnail = (videoUrl: string): Promise<string> => {
 	});
 };
 
-const loadFFmpegScript = (): Promise<void> => {
-	return new Promise((resolve, reject) => {
-		if ((window as any).FFmpeg) return resolve();
-		
-		const script = document.createElement('script');
-		script.src = CONSTANTS.FFMPEG.SCRIPT_URL;
-		script.onload = () => resolve();
-		script.onerror = reject;
-		document.head.appendChild(script);
-	});
-};
 
 const createVideoElement = (file: File): Promise<{ video: HTMLVideoElement; url: string }> => {
 	return new Promise((resolve) => {
