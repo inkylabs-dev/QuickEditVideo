@@ -18,6 +18,7 @@ const VideoWatermarkContent = () => {
 	const [logoHeight, setLogoHeight] = useState<number>(100);
 	const [logoLeft, setLogoLeft] = useState<number>(10);
 	const [logoTop, setLogoTop] = useState<number>(10);
+	const [logoAspectRatio, setLogoAspectRatio] = useState<number>(1);
 	
 	const [isProcessing, setIsProcessing] = useState<boolean>(false);
 	const [processingProgress, setProcessingProgress] = useState<number>(0);
@@ -96,6 +97,14 @@ const VideoWatermarkContent = () => {
 		const url = URL.createObjectURL(file);
 		setLogoUrl(url);
 		
+		// Calculate aspect ratio of the logo
+		const img = new Image();
+		img.onload = () => {
+			const aspectRatio = img.width / img.height;
+			setLogoAspectRatio(aspectRatio);
+		};
+		img.src = url;
+		
 		// If video is already selected, switch to watermarking view
 		if (videoFile) {
 			setCurrentView('watermarking');
@@ -120,11 +129,54 @@ const VideoWatermarkContent = () => {
 			
 			// Set initial logo size and position
 			const defaultLogoSize = Math.min(width, height) * 0.15; // 15% of the smaller dimension
-			setLogoWidth(Math.round(defaultLogoSize));
-			setLogoHeight(Math.round(defaultLogoSize));
+			const defaultWidth = Math.round(defaultLogoSize);
+			const defaultHeight = Math.round(defaultLogoSize / logoAspectRatio);
+			
+			setLogoWidth(defaultWidth);
+			setLogoHeight(defaultHeight);
 			setLogoLeft(10);
 			setLogoTop(10);
 		}
+	};
+
+	// Reset to default values
+	const resetToDefaults = () => {
+		if (originalWidth && originalHeight) {
+			const defaultLogoSize = Math.min(originalWidth, originalHeight) * 0.15; // 15% of the smaller dimension
+			const defaultWidth = Math.round(defaultLogoSize);
+			const defaultHeight = Math.round(defaultLogoSize / logoAspectRatio);
+			
+			setLogoWidth(defaultWidth);
+			setLogoHeight(defaultHeight);
+			setLogoLeft(10);
+			setLogoTop(10);
+		} else {
+			// Fallback defaults
+			setLogoWidth(100);
+			setLogoHeight(Math.round(100 / logoAspectRatio));
+			setLogoLeft(10);
+			setLogoTop(10);
+		}
+	};
+
+	// Handle width change with aspect ratio maintenance
+	const handleWidthChange = (newWidth: number) => {
+		const constrainedWidth = Math.max(20, Math.min(originalWidth - logoLeft, newWidth));
+		const newHeight = Math.round(constrainedWidth / logoAspectRatio);
+		const constrainedHeight = Math.max(20, Math.min(originalHeight - logoTop, newHeight));
+		
+		setLogoWidth(constrainedWidth);
+		setLogoHeight(constrainedHeight);
+	};
+
+	// Handle height change with aspect ratio maintenance
+	const handleHeightChange = (newHeight: number) => {
+		const constrainedHeight = Math.max(20, Math.min(originalHeight - logoTop, newHeight));
+		const newWidth = Math.round(constrainedHeight * logoAspectRatio);
+		const constrainedWidth = Math.max(20, Math.min(originalWidth - logoLeft, newWidth));
+		
+		setLogoHeight(constrainedHeight);
+		setLogoWidth(constrainedWidth);
 	};
 
 	// Calculate logo overlay position as percentage for display
@@ -245,22 +297,27 @@ const VideoWatermarkContent = () => {
 		const scaleX = originalWidth / containerRect.width;
 		const scaleY = originalHeight / containerRect.height;
 		
-		let newWidth = resizeStart.logoWidth;
-		let newHeight = resizeStart.logoHeight;
-		let newLeft = resizeStart.logoLeft;
-		let newTop = resizeStart.logoTop;
-		
 		if (resizeHandle === 'bottom-right') {
-			newWidth = resizeStart.logoWidth + (deltaX * scaleX);
-			newHeight = resizeStart.logoHeight + (deltaY * scaleY);
+			// Use the larger delta to determine the resize direction, maintaining aspect ratio
+			const deltaXScaled = deltaX * scaleX;
+			const deltaYScaled = deltaY * scaleY;
+			
+			// Use width as primary dimension and calculate height from aspect ratio
+			const newWidth = resizeStart.logoWidth + deltaXScaled;
+			const constrainedWidth = Math.max(20, Math.min(originalWidth - logoLeft, newWidth));
+			const newHeight = Math.round(constrainedWidth / logoAspectRatio);
+			const constrainedHeight = Math.max(20, Math.min(originalHeight - logoTop, newHeight));
+			
+			// If height constraint is more restrictive, use it to calculate width
+			if (constrainedHeight !== newHeight) {
+				const adjustedWidth = Math.round(constrainedHeight * logoAspectRatio);
+				setLogoWidth(adjustedWidth);
+				setLogoHeight(constrainedHeight);
+			} else {
+				setLogoWidth(constrainedWidth);
+				setLogoHeight(constrainedHeight);
+			}
 		}
-		
-		// Constrain dimensions
-		newWidth = Math.max(20, Math.min(originalWidth - newLeft, newWidth));
-		newHeight = Math.max(20, Math.min(originalHeight - newTop, newHeight));
-		
-		setLogoWidth(Math.round(newWidth));
-		setLogoHeight(Math.round(newHeight));
 	};
 
 	const handleResizeEnd = () => {
@@ -391,6 +448,7 @@ const VideoWatermarkContent = () => {
 		setVideoUrl('');
 		setLogoUrl('');
 		setCurrentView('landing');
+		setLogoAspectRatio(1);
 		
 		// Clear file inputs
 		if (videoFileInputRef.current) videoFileInputRef.current.value = '';
@@ -568,32 +626,6 @@ const VideoWatermarkContent = () => {
 										onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
 										onTouchStart={(e) => handleResizeStart(e, 'bottom-right')}
 									></div>
-									
-									{/* Center label with drag/resize hint */}
-									<div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-teal-600 text-white px-2 py-1 rounded text-xs font-medium pointer-events-none flex items-center gap-1">
-										{isDragging ? (
-											<>
-												<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-													<path d="M13,6V11H18V7.75L22.25,12L18,16.25V13H13V18H16.25L12,22.25L7.75,18H11V13H6V16.25L1.75,12L6,7.75V11H11V6H7.75L12,1.75L16.25,6H13Z"/>
-												</svg>
-												Moving
-											</>
-										) : isResizing ? (
-											<>
-												<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-													<path d="M22,18V22H18V20H20V18H22M22,6V10H20V8H18V6H22M14,16V18H10V20H8V18H10V16H14M12,8V10H14V8H12M8,6H12V4H8V6M16,4V6H20V4H16M16,10H18V6H16V10M6,10V14H4V10H6M10,14H8V16H6V14H8V12H10V14M4,14H2V18H4V16H2V14H4Z"/>
-												</svg>
-												Resizing
-											</>
-										) : (
-											<>
-												<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-													<path d="M13,6V11H18V7.75L22.25,12L18,16.25V13H13V18H16.25L12,22.25L7.75,18H11V13H6V16.25L1.75,12L6,7.75V11H11V6H7.75L12,1.75L16.25,6H13Z"/>
-												</svg>
-												Drag/Resize
-											</>
-										)}
-									</div>
 								</div>
 							)}
 						</div>
@@ -662,14 +694,14 @@ const VideoWatermarkContent = () => {
 
 							{/* Size Controls */}
 							<div>
-								<h4 className="text-sm font-medium text-gray-700 mb-3">Size Controls</h4>
+								<h4 className="text-sm font-medium text-gray-700 mb-3">Size Controls (Aspect Ratio Locked)</h4>
 								<div className="grid grid-cols-2 gap-3">
 									<div>
 										<label className="block text-xs font-medium text-gray-700 mb-1">Width (px)</label>
 										<input
 											type="number"
 											value={logoWidth}
-											onChange={(e) => setLogoWidth(Math.max(20, Math.min(originalWidth - logoLeft, parseInt(e.currentTarget.value) || 0)))}
+											onChange={(e) => handleWidthChange(parseInt(e.currentTarget.value) || 0)}
 											className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
 											min="20"
 											max={originalWidth - logoLeft}
@@ -680,13 +712,26 @@ const VideoWatermarkContent = () => {
 										<input
 											type="number"
 											value={logoHeight}
-											onChange={(e) => setLogoHeight(Math.max(20, Math.min(originalHeight - logoTop, parseInt(e.currentTarget.value) || 0)))}
+											onChange={(e) => handleHeightChange(parseInt(e.currentTarget.value) || 0)}
 											className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
 											min="20"
 											max={originalHeight - logoTop}
 										/>
 									</div>
 								</div>
+								<div className="mt-2 text-xs text-gray-500">
+									Aspect Ratio: {logoAspectRatio.toFixed(2)}
+								</div>
+							</div>
+							
+							{/* Reset Button */}
+							<div>
+								<button
+									onClick={resetToDefaults}
+									className="w-full px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg transition-colors border border-gray-300"
+								>
+									Reset to Defaults
+								</button>
 							</div>
 						</div>
 
