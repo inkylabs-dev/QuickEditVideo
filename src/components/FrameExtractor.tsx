@@ -23,6 +23,7 @@ const FrameExtractorContent = () => {
   const [singleTime, setSingleTime] = useState<string>('0');
   const [startTime, setStartTime] = useState<string>('0');
   const [endTime, setEndTime] = useState<string>('1');
+  const [interval, setInterval] = useState<string>('1');
   const [frameFormat, setFrameFormat] = useState<'png' | 'jpg'>('png');
   
   // Extracted frames
@@ -138,8 +139,9 @@ const FrameExtractorContent = () => {
       } else {
         const start = parseTime(startTime);
         const end = parseTime(endTime);
-        // Fixed interval of 1 second for range extraction
-        const result = await extractFramesInRange(ffmpeg.current, selectedFile, start, end, 1, frameFormat);
+        const intervalSeconds = parseFloat(interval) || 1;
+        // Use customizable interval for range extraction
+        const result = await extractFramesInRange(ffmpeg.current, selectedFile, start, end, intervalSeconds, frameFormat);
         frames = result;
       }
 
@@ -184,6 +186,7 @@ const FrameExtractorContent = () => {
     setSingleTime('0');
     setStartTime('0');
     setEndTime('1');
+    setInterval('1');
     
     // Dispatch event to notify page about view change
     document.dispatchEvent(new CustomEvent('frameExtractorViewChange', {
@@ -283,51 +286,26 @@ const FrameExtractorContent = () => {
 
         {/* Controls Section */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-full">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Extract Frames</h3>
-              <div className="flex items-center gap-2">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full">
+            {/* Tab Header */}
+            <div className="border-b border-gray-200">
+              <div className="flex">
                 <button 
-                  onClick={resetExtraction}
-                  className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
-                  </svg>
-                  Reset
-                </button>
-                <button 
-                  onClick={resetExtraction}
-                  className="text-sm text-gray-600 hover:text-gray-900 flex items-center justify-center w-6 h-6"
-                  title="Close"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Extraction Mode Selection */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Extraction Mode</label>
-              <div className="flex gap-2">
-                <button
                   onClick={() => setExtractionMode('single')}
-                  className={`flex-1 px-3 py-2 text-sm rounded-md border ${
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     extractionMode === 'single' 
-                      ? 'bg-teal-50 border-teal-300 text-teal-700' 
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                      ? 'border-teal-500 text-teal-600 bg-teal-50' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
                   Single Time
                 </button>
-                <button
+                <button 
                   onClick={() => setExtractionMode('range')}
-                  className={`flex-1 px-3 py-2 text-sm rounded-md border ${
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     extractionMode === 'range' 
-                      ? 'bg-teal-50 border-teal-300 text-teal-700' 
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                      ? 'border-teal-500 text-teal-600 bg-teal-50' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
                   Time Range
@@ -335,108 +313,197 @@ const FrameExtractorContent = () => {
               </div>
             </div>
 
-            {/* Time Input Controls */}
-            {extractionMode === 'single' ? (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Time (seconds)
-                </label>
-                <input
-                  type="number"
-                  value={singleTime}
-                  onChange={(e) => setSingleTime(e.target.value)}
-                  min="0"
-                  max={videoDuration}
-                  step="0.1"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-                  placeholder="0"
-                />
-              </div>
-            ) : (
-              <div className="space-y-3 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Time (seconds)
-                  </label>
-                  <input
-                    type="number"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    min="0"
-                    max={videoDuration}
-                    step="0.1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-                    placeholder="e.g., 0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Time (seconds)
-                  </label>
-                  <input
-                    type="number"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    min="0"
-                    max={videoDuration}
-                    step="0.1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-                    placeholder="e.g., 1"
-                  />
-                </div>
-                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                  Frames will be extracted every 1 second in the specified range
+            {/* Tab Content */}
+            <div className="p-4 h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900">Extract Frames</h3>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={resetExtraction}
+                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+                    </svg>
+                    Reset
+                  </button>
+                  <button 
+                    onClick={resetExtraction}
+                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center justify-center w-6 h-6"
+                    title="Close"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
-            )}
 
-            {/* Frame Format Selection */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Frame Format</label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setFrameFormat('png')}
-                  className={`flex-1 px-3 py-2 text-sm rounded-md border ${
-                    frameFormat === 'png' 
-                      ? 'bg-teal-50 border-teal-300 text-teal-700' 
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  PNG
-                </button>
-                <button
-                  onClick={() => setFrameFormat('jpg')}
-                  className={`flex-1 px-3 py-2 text-sm rounded-md border ${
-                    frameFormat === 'jpg' 
-                      ? 'bg-teal-50 border-teal-300 text-teal-700' 
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  JPG
-                </button>
-              </div>
-            </div>
+              {extractionMode === 'single' ? (
+                /* Single Time Tab */
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Time (seconds)
+                    </label>
+                    <input
+                      type="number"
+                      value={singleTime}
+                      onChange={(e) => setSingleTime(e.target.value)}
+                      min="0"
+                      max={videoDuration}
+                      step="0.1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+                      placeholder="0"
+                    />
+                  </div>
 
-            {/* Extract Button */}
-            <button
-              onClick={handleExtractFrames}
-              disabled={isProcessing || !ffmpegLoaded}
-              className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              {isProcessing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Extracting... {processingProgress}%
-                </>
+                  {/* Frame Format Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Frame Format</label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setFrameFormat('png')}
+                        className={`flex-1 px-3 py-2 text-sm rounded-md border ${
+                          frameFormat === 'png' 
+                            ? 'bg-teal-50 border-teal-300 text-teal-700' 
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        PNG
+                      </button>
+                      <button
+                        onClick={() => setFrameFormat('jpg')}
+                        className={`flex-1 px-3 py-2 text-sm rounded-md border ${
+                          frameFormat === 'jpg' 
+                            ? 'bg-teal-50 border-teal-300 text-teal-700' 
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        JPG
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Extract Button */}
+                  <button
+                    onClick={handleExtractFrames}
+                    disabled={isProcessing || !ffmpegLoaded}
+                    className="w-full bg-white hover:bg-gray-50 disabled:bg-gray-200 text-gray-900 border-2 border-gray-900 disabled:border-gray-400 disabled:text-gray-500 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                        Extracting... {processingProgress}%
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                        </svg>
+                        Extract Frames
+                      </>
+                    )}
+                  </button>
+                </div>
               ) : (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-                  </svg>
-                  Extract Frames
-                </>
+                /* Time Range Tab */
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Time (seconds)
+                    </label>
+                    <input
+                      type="number"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      min="0"
+                      max={videoDuration}
+                      step="0.1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+                      placeholder="e.g., 0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      End Time (seconds)
+                    </label>
+                    <input
+                      type="number"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      min="0"
+                      max={videoDuration}
+                      step="0.1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+                      placeholder="e.g., 1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Distance between frames (seconds)
+                    </label>
+                    <input
+                      type="number"
+                      value={interval}
+                      onChange={(e) => setInterval(e.target.value)}
+                      min="0.1"
+                      step="0.1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+                      placeholder="1"
+                    />
+                  </div>
+
+                  {/* Frame Format Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Frame Format</label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setFrameFormat('png')}
+                        className={`flex-1 px-3 py-2 text-sm rounded-md border ${
+                          frameFormat === 'png' 
+                            ? 'bg-teal-50 border-teal-300 text-teal-700' 
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        PNG
+                      </button>
+                      <button
+                        onClick={() => setFrameFormat('jpg')}
+                        className={`flex-1 px-3 py-2 text-sm rounded-md border ${
+                          frameFormat === 'jpg' 
+                            ? 'bg-teal-50 border-teal-300 text-teal-700' 
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        JPG
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Extract Button */}
+                  <button
+                    onClick={handleExtractFrames}
+                    disabled={isProcessing || !ffmpegLoaded}
+                    className="w-full bg-white hover:bg-gray-50 disabled:bg-gray-200 text-gray-900 border-2 border-gray-900 disabled:border-gray-400 disabled:text-gray-500 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                        Extracting... {processingProgress}%
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                        </svg>
+                        Extract Frames
+                      </>
+                    )}
+                  </button>
+                </div>
               )}
-            </button>
+            </div>
           </div>
         </div>
       </div>
@@ -447,7 +514,7 @@ const FrameExtractorContent = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Extracted Frames ({extractedFrames.length})
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {extractedFrames.map((frame, index) => (
               <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
                 <div className="aspect-video bg-gray-100">
@@ -468,7 +535,7 @@ const FrameExtractorContent = () => {
                   </div>
                   <button
                     onClick={() => downloadFrame(frame)}
-                    className="w-full bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-1"
+                    className="w-full bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 text-sm font-medium py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-1"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
