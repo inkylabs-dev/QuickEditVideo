@@ -4,11 +4,15 @@ import tailwind from '@astrojs/tailwind';
 
 import preact from '@astrojs/preact';
 
+import sitemap from '@astrojs/sitemap';
+
 // https://astro.build/config
 export default defineConfig({
+    site: 'https://quickeditvideo.com',
     integrations: [tailwind(), preact({
-        compat: true
-    })],
+        compat: true,
+        devtools: true,
+    }), sitemap()],
     devToolbar: {
         enabled: false,
     },
