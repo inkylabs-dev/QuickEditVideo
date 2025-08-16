@@ -46,9 +46,6 @@ const currentUrl = canonicalUrl || Astro.url.href;
 		<!-- Canonical URL -->
 		{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 		
-		<!-- Sitemap -->
-		<link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
-		
 		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content={currentUrl} />
@@ -179,17 +176,17 @@ const currentUrl = canonicalUrl || Astro.url.href;
 						
 						<!-- Mobile Badges (Right) -->
 						<div class="mobile-badges flex items-center gap-1 text-xs text-gray-600">
-							<div class="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
-								<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-gray-600">
-									<path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11.5C14.8,12.4 14.4,13.2 13.7,13.7L17.25,17.25L16.17,18.33L12.67,14.83C12.45,14.94 12.23,15 12,15C10.6,15 9.2,13.4 9.2,11.5V10.5C9.2,8.6 10.6,7 12,7Z"/>
-								</svg>
-								<span>Private</span>
-							</div>
-							<div class="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
-								<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-gray-600">
-									<path d="M4,6H20V16H4V6M20,18A2,2 0 0,0 22,16V6C22,4.89 21.1,4 20,4H4C2.89,4 2,4.89 2,6V16A2,2 0 0,0 4,18H0V20H24V18H20Z"/>
-								</svg>
-								<span>Local</span>
+							<div class="relative group">
+								<div class="flex items-center justify-center bg-green-100 p-2 rounded-full hover:bg-green-200 transition-colors">
+									<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11.5C14.8,12.4 14.4,13.2 13.7,13.7L17.25,17.25L16.17,18.33L12.67,14.83C12.45,14.94 12.23,15 12,15C10.6,15 9.2,13.4 9.2,11.5V10.5C9.2,8.6 10.6,7 12,7Z"/>
+									</svg>
+								</div>
+								<!-- Tooltip -->
+								<div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-10">
+									Private
+									<div class="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -364,16 +361,17 @@ const currentUrl = canonicalUrl || Astro.url.href;
 					
 					<!-- Desktop Badges -->
 					<div class="desktop-badges flex items-center gap-2 text-sm text-gray-600">
-						<div class="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-gray-600">
-								<path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11.5C14.8,12.4 14.4,13.2 13.7,13.7L17.25,17.25L16.17,18.33L12.67,14.83C12.45,14.94 12.23,15 12,15C10.6,15 9.2,13.4 9.2,11.5V10.5C9.2,8.6 10.6,7 12,7Z"/>
-							</svg>
-							<span>Private</span>
-							<span class="text-gray-400">•</span>
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-gray-600">
-								<path d="M4,6H20V16H4V6M20,18A2,2 0 0,0 22,16V6C22,4.89 21.1,4 20,4H4C2.89,4 2,4.89 2,6V16A2,2 0 0,0 4,18H0V20H24V18H20Z"/>
-							</svg>
-							<span>No uploads</span>
+						<div class="relative group">
+							<div class="flex items-center justify-center bg-green-100 p-2 rounded-full hover:bg-green-200 transition-colors">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+									<path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11.5C14.8,12.4 14.4,13.2 13.7,13.7L17.25,17.25L16.17,18.33L12.67,14.83C12.45,14.94 12.23,15 12,15C10.6,15 9.2,13.4 9.2,11.5V10.5C9.2,8.6 10.6,7 12,7Z"/>
+								</svg>
+							</div>
+							<!-- Tooltip -->
+							<div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-sm rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-10">
+								Private
+								<div class="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
+							</div>
 						</div>
 					</div>
 				</div>
