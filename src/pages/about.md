@@ -1,5 +1,5 @@
 ---
-layout: '../layouts/Layout.astro'
+layout: '../layouts/MarkdownLayout.astro'
 title: "About Us - QuickEditVideo"
 description: "Learn about QuickEditVideo's mission to make video editing free, accessible, and dignified for everyone. Open source, no paywalls, no limits."
 ---

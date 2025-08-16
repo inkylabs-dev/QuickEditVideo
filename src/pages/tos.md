@@ -1,5 +1,5 @@
 ---
-layout: '../layouts/Layout.astro'
+layout: '../layouts/MarkdownLayout.astro'
 title: "Terms of Service - QuickEditVideo"
 description: "QuickEditVideo's Terms of Service. Free, open-source video editing tools with no account required. Your videos stay on your device."
 ---

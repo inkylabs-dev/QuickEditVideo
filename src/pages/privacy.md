@@ -1,5 +1,5 @@
 ---
-layout: '../layouts/Layout.astro'
+layout: '../layouts/MarkdownLayout.astro'
 title: "Privacy Policy - QuickEditVideo"
 description: "QuickEditVideo's privacy policy. We don't collect personal data, store videos, or require accounts. Your privacy is our priority."
 ---
