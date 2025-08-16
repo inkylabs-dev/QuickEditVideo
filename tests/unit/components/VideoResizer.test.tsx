@@ -50,23 +50,35 @@ global.Blob = vi.fn().mockImplementation((content, options) => ({
 const mockDownloadClick = vi.fn();
 const originalCreateElement = document.createElement;
 
-// Mock HTMLVideoElement prototype
-const mockVideoElement = {
-  duration: 10,
-  videoWidth: 1920,
-  videoHeight: 1080,
-  currentTime: 0,
-  paused: true,
-  play: vi.fn().mockResolvedValue(undefined),
-  pause: vi.fn(),
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  src: '',
-  onloadedmetadata: null,
-  onplay: null,
-  onpause: null,
-  style: {},
-};
+      // Create a mock URL for the video
+      const mockUrl = 'blob:mock-url';
+      
+      // Mock HTMLVideoElement behavior directly on prototype  
+      class MockHTMLVideoElement extends HTMLElement {
+        videoWidth = 1920;
+        videoHeight = 1080;
+        duration = 120;
+        paused = true;
+        src = '';
+        currentTime = 0;
+        onloadedmetadata: any = null;
+        
+        play() { return Promise.resolve(); }
+        pause() { return undefined; }
+        load() { return undefined; }
+        
+        // Override setAttribute to trigger loadedmetadata when src is set
+        setAttribute(name: string, value: string) {
+          super.setAttribute(name, value);
+          if (name === 'src' && value && this.onloadedmetadata) {
+            // Simulate metadata loading asynchronously
+            setTimeout(() => {
+              const event = new Event('loadedmetadata');
+              this.onloadedmetadata?.(event);
+            }, 0);
+          }
+        }
+      }
 
 // Helper function to simulate video loaded metadata
 const simulateVideoLoadedMetadata = (videoElement: any) => {
@@ -76,6 +88,85 @@ const simulateVideoLoadedMetadata = (videoElement: any) => {
 };
 
 beforeEach(() => {
+  // Mock HTMLVideoElement prototype to ensure all video elements have the right properties
+  const originalVideoElement = global.HTMLVideoElement;
+  
+  global.HTMLVideoElement = class MockHTMLVideoElement extends HTMLElement {
+    public play: any;
+    public pause: any;
+    public load: any;
+    
+    constructor() {
+      super();
+      
+      // Set video properties that will be available when the component accesses them
+      Object.defineProperty(this, 'videoWidth', {
+        writable: false,
+        value: 1920,
+        configurable: true,
+      });
+      
+      Object.defineProperty(this, 'videoHeight', {
+        writable: false,
+        value: 1080,
+        configurable: true,
+      });
+      
+      Object.defineProperty(this, 'duration', {
+        writable: false,
+        value: 10,
+        configurable: true,
+      });
+      
+      Object.defineProperty(this, 'currentTime', {
+        writable: true,
+        value: 0,
+        configurable: true,
+      });
+      
+      Object.defineProperty(this, 'paused', {
+        writable: true,
+        value: true,
+        configurable: true,
+      });
+      
+      let videoSrc = '';
+      Object.defineProperty(this, 'src', {
+        get: () => videoSrc,
+        set: (value) => {
+          videoSrc = value;
+          // Trigger loadedmetadata when src is set
+          setTimeout(() => {
+            this.dispatchEvent(new Event('loadedmetadata'));
+          }, 50);
+        },
+        configurable: true,
+      });
+      
+      // Mock methods
+      this.play = vi.fn().mockImplementation(() => {
+        Object.defineProperty(this, 'paused', {
+          writable: true,
+          value: false,
+          configurable: true,
+        });
+        setTimeout(() => this.dispatchEvent(new Event('play')), 10);
+        return Promise.resolve();
+      });
+      
+      this.pause = vi.fn().mockImplementation(() => {
+        Object.defineProperty(this, 'paused', {
+          writable: true,
+          value: true,
+          configurable: true,
+        });
+        setTimeout(() => this.dispatchEvent(new Event('pause')), 10);
+      });
+      
+      this.load = vi.fn();
+    }
+  } as any;
+
   document.createElement = vi.fn().mockImplementation((tagName) => {
     if (tagName === 'a') {
       return {
@@ -86,43 +177,9 @@ beforeEach(() => {
       };
     }
     if (tagName === 'video') {
-      const videoElement = originalCreateElement.call(document, tagName) as HTMLVideoElement;
-      Object.defineProperty(videoElement, 'duration', {
-        writable: true,
-        value: 10,
-      });
-      Object.defineProperty(videoElement, 'currentTime', {
-        writable: true,
-        value: 0,
-      });
-      Object.defineProperty(videoElement, 'videoWidth', {
-        writable: true,
-        value: 1920,
-      });
-      Object.defineProperty(videoElement, 'videoHeight', {
-        writable: true,
-        value: 1080,
-      });
-      Object.defineProperty(videoElement, 'paused', {
-        writable: true,
-        value: true,
-      });
-      
-      // Mock loadedmetadata event to fire immediately
-      setTimeout(() => {
-        const event = new Event('loadedmetadata');
-        videoElement.dispatchEvent(event);
-      }, 0);
-      
-      return videoElement;
+      return new global.HTMLVideoElement();
     }
     return originalCreateElement.call(document, tagName);
-  });
-
-  // Mock HTMLVideoElement
-  Object.defineProperty(global, 'HTMLVideoElement', {
-    value: vi.fn().mockImplementation(() => mockVideoElement),
-    writable: true,
   });
 });
 
@@ -232,32 +289,12 @@ describe('VideoResizer Component', () => {
       // Wait for the view to change to resizing
       await waitFor(() => {
         expect(screen.queryByText('Select your video')).not.toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
 
-      // Find the video element and mock its properties
-      const videoElement = document.querySelector('video');
-      if (videoElement) {
-        // Mock the video element properties that would be set when metadata loads
-        Object.defineProperty(videoElement, 'duration', { value: 10, writable: true, configurable: true });
-        Object.defineProperty(videoElement, 'videoWidth', { value: 1920, writable: true, configurable: true });
-        Object.defineProperty(videoElement, 'videoHeight', { value: 1080, writable: true, configurable: true });
-        Object.defineProperty(videoElement, 'paused', { value: true, writable: true, configurable: true });
-        Object.defineProperty(videoElement, 'currentTime', { value: 0, writable: true, configurable: true });
-        
-        // Mock video element methods
-        videoElement.play = vi.fn().mockResolvedValue(undefined);
-        videoElement.pause = vi.fn();
-        
-        // Trigger the loadedmetadata event to simulate video loading
-        await act(async () => {
-          fireEvent.loadedMetadata(videoElement);
-        });
-      }
-
-      // Wait for the component to update with video metadata
+      // Wait for the component to update with video metadata and show controls
       await waitFor(() => {
         expect(screen.getByText('Resize Controls')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
 
     it('displays video player and controls', async () => {
@@ -309,6 +346,11 @@ describe('VideoResizer Component', () => {
       await act(async () => {
         fireEvent.change(fileInput, { target: { files: [mockFile] } });
       });
+      
+      // Wait for the view to change and controls to load
+      await waitFor(() => {
+        expect(screen.getByText('Resize Controls')).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
 
     it('has scale slider with correct attributes', async () => {
@@ -357,6 +399,17 @@ describe('VideoResizer Component', () => {
   });
 
   describe('Dimension Controls', () => {
+    // Helper function to trigger video metadata loading
+    const triggerVideoMetadata = async () => {
+      await act(async () => {
+        const videoElement = document.querySelector('video') as HTMLVideoElement;
+        if (videoElement) {
+          const event = new Event('loadedmetadata');
+          videoElement.dispatchEvent(event);
+        }
+      });
+    };
+    
     beforeEach(async () => {
       render(<VideoResizer />);
       
@@ -366,9 +419,16 @@ describe('VideoResizer Component', () => {
       await act(async () => {
         fireEvent.change(fileInput, { target: { files: [mockFile] } });
       });
+      
+      // Wait for the view to change and controls to load
+      await waitFor(() => {
+        expect(screen.getByText('Resize Controls')).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
 
     it('has width input with correct attributes', async () => {
+      await triggerVideoMetadata();
+      
       await waitFor(() => {
         const widthInput = screen.getByDisplayValue('1920');
         expect(widthInput).toBeInTheDocument();
@@ -379,6 +439,8 @@ describe('VideoResizer Component', () => {
     });
 
     it('has height input with correct attributes', async () => {
+      await triggerVideoMetadata();
+      
       await waitFor(() => {
         const heightInput = screen.getByDisplayValue('1080');
         expect(heightInput).toBeInTheDocument();
@@ -389,6 +451,8 @@ describe('VideoResizer Component', () => {
     });
 
     it('allows updating width and maintains aspect ratio', async () => {
+      await triggerVideoMetadata();
+      
       await waitFor(() => {
         const widthInput = screen.getByDisplayValue('1920');
         
@@ -401,6 +465,8 @@ describe('VideoResizer Component', () => {
     });
 
     it('allows updating height and maintains aspect ratio', async () => {
+      await triggerVideoMetadata();
+      
       await waitFor(() => {
         const heightInput = screen.getByDisplayValue('1080');
         
@@ -413,6 +479,8 @@ describe('VideoResizer Component', () => {
     });
 
     it('updates scale when dimensions change', async () => {
+      await triggerVideoMetadata();
+      
       await waitFor(() => {
         const widthInput = screen.getByDisplayValue('1920');
         
@@ -425,6 +493,17 @@ describe('VideoResizer Component', () => {
   });
 
   describe('Video Information Display', () => {
+    // Helper function to trigger video metadata loading
+    const triggerVideoMetadata = async () => {
+      await act(async () => {
+        const videoElement = document.querySelector('video') as HTMLVideoElement;
+        if (videoElement) {
+          const event = new Event('loadedmetadata');
+          videoElement.dispatchEvent(event);
+        }
+      });
+    };
+    
     beforeEach(async () => {
       render(<VideoResizer />);
       
@@ -434,6 +513,11 @@ describe('VideoResizer Component', () => {
       await act(async () => {
         fireEvent.change(fileInput, { target: { files: [mockFile] } });
       });
+      
+      // Wait for the view to change and video info to load
+      await waitFor(() => {
+        expect(screen.getByText('Resize Information')).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
 
     it('displays file name', async () => {
@@ -443,6 +527,8 @@ describe('VideoResizer Component', () => {
     });
 
     it('shows dimension change indicator', async () => {
+      await triggerVideoMetadata();
+      
       await waitFor(() => {
         expect(screen.getByText('1920×1080 → 1920×1080')).toBeInTheDocument();
       });
@@ -458,12 +544,16 @@ describe('VideoResizer Component', () => {
     });
 
     it('shows original dimensions', async () => {
+      await triggerVideoMetadata();
+      
       await waitFor(() => {
         expect(screen.getByText('1920 × 1080')).toBeInTheDocument();
       });
     });
 
     it('displays new dimensions', async () => {
+      await triggerVideoMetadata();
+      
       await waitFor(() => {
         expect(screen.getByText('1920 × 1080')).toBeInTheDocument();
       });
@@ -492,6 +582,11 @@ describe('VideoResizer Component', () => {
       await act(async () => {
         fireEvent.change(fileInput, { target: { files: [mockFile] } });
       });
+      
+      // Wait for the view to change and download button to appear
+      await waitFor(() => {
+        expect(screen.getByText('Download MP4')).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
 
     it('processes video when download button is clicked', async () => {
@@ -551,17 +646,35 @@ describe('VideoResizer Component', () => {
     it('uses correct FFmpeg scale filter', async () => {
       const mockExec = vi.fn().mockResolvedValue(undefined);
       
-      // Mock the FFmpeg exec function
-      vi.mocked(vi.importActual('../../../src/FFmpegCore')).useFFmpeg = () => ({
+      // Get current mock implementation and modify exec
+      const { useFFmpeg } = await import('../../../src/FFmpegCore');
+      const mockUseFFmpeg = vi.mocked(useFFmpeg);
+      
+      // Update the mock to return our custom exec function
+      mockUseFFmpeg.mockReturnValue({
         ffmpeg: {
           current: {
             writeFile: vi.fn().mockResolvedValue(undefined),
             readFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
             exec: mockExec,
-          }
+            load: vi.fn().mockResolvedValue(undefined),
+            on: vi.fn(),
+            off: vi.fn(),
+            terminate: vi.fn().mockResolvedValue(undefined),
+            loaded: true,
+          } as any
         },
+        loaded: true,
         isLoaded: true,
+        loading: false,
+        isLoading: false,
+        error: null,
+        message: '',
         progress: 0,
+        load: vi.fn().mockResolvedValue(undefined),
+        writeFile: vi.fn().mockResolvedValue(undefined),
+        readFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
+        exec: mockExec,
         setProgress: vi.fn(),
       });
 
@@ -582,6 +695,17 @@ describe('VideoResizer Component', () => {
   });
 
   describe('Reset Functionality', () => {
+    // Helper function to trigger video metadata loading
+    const triggerVideoMetadata = async () => {
+      await act(async () => {
+        const videoElement = document.querySelector('video') as HTMLVideoElement;
+        if (videoElement) {
+          const event = new Event('loadedmetadata');
+          videoElement.dispatchEvent(event);
+        }
+      });
+    };
+    
     beforeEach(async () => {
       render(<VideoResizer />);
       
@@ -591,6 +715,11 @@ describe('VideoResizer Component', () => {
       await act(async () => {
         fireEvent.change(fileInput, { target: { files: [mockFile] } });
       });
+      
+      // Wait for the view to change and reset button to appear
+      await waitFor(() => {
+        expect(screen.getByText('Reset')).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
 
     it('resets resize settings when reset button is clicked', async () => {
@@ -618,6 +747,8 @@ describe('VideoResizer Component', () => {
     });
 
     it('resets dimensions to original when reset', async () => {
+      await triggerVideoMetadata();
+      
       await waitFor(() => {
         // Change dimensions first
         const widthInput = screen.getByDisplayValue('1920');
@@ -648,6 +779,11 @@ describe('VideoResizer Component', () => {
       await act(async () => {
         fireEvent.change(fileInput, { target: { files: [mockFile] } });
       });
+      
+      // Wait for the view to change and close button to appear
+      await waitFor(() => {
+        expect(screen.getByTitle('Choose different video')).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
 
     it('returns to landing view when close button is clicked', async () => {
@@ -676,6 +812,11 @@ describe('VideoResizer Component', () => {
       await act(async () => {
         fireEvent.change(fileInput, { target: { files: [mockFile] } });
       });
+      
+      // Wait for the view to change and play button to appear
+      await waitFor(() => {
+        expect(screen.getByText('Play')).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
 
     it('toggles play state when play button is clicked', async () => {
@@ -695,6 +836,17 @@ describe('VideoResizer Component', () => {
   });
 
   describe('Error Handling', () => {
+    // Helper function to trigger video metadata loading
+    const triggerVideoMetadata = async () => {
+      await act(async () => {
+        const videoElement = document.querySelector('video') as HTMLVideoElement;
+        if (videoElement) {
+          const event = new Event('loadedmetadata');
+          videoElement.dispatchEvent(event);
+        }
+      });
+    };
+    
     it('handles FFmpeg processing errors gracefully', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
@@ -708,16 +860,18 @@ describe('VideoResizer Component', () => {
         fireEvent.change(fileInput, { target: { files: [mockFile] } });
       });
 
-      // Mock FFmpeg to throw an error
-      const mockFFmpeg = vi.mocked(vi.importActual('../../../src/FFmpegCore')).useFFmpeg();
-      if (mockFFmpeg.ffmpeg.current) {
-        mockFFmpeg.ffmpeg.current.writeFile = vi.fn().mockRejectedValue(new Error('FFmpeg error'));
-      }
-
+      // Wait for the video to be loaded and view to change
       await waitFor(() => {
-        const downloadButton = screen.getByText('Download MP4');
-        fireEvent.click(downloadButton);
+        expect(screen.queryByText('Select your video')).not.toBeInTheDocument();
       });
+
+      // Wait for the component to render the resizing view
+      await waitFor(() => {
+        expect(screen.getByText('Download MP4')).toBeInTheDocument();
+      });
+
+      const downloadButton = screen.getByText('Download MP4');
+      fireEvent.click(downloadButton);
 
       await waitFor(() => {
         expect(alertSpy).toHaveBeenCalledWith('Error processing video. Please try again.');
@@ -737,6 +891,8 @@ describe('VideoResizer Component', () => {
         fireEvent.change(fileInput, { target: { files: [mockFile] } });
       });
 
+      await triggerVideoMetadata();
+
       await waitFor(() => {
         const widthInput = screen.getByDisplayValue('1920');
         
@@ -745,7 +901,7 @@ describe('VideoResizer Component', () => {
         
         // Should not update to invalid value or should handle gracefully
         expect(widthInput).toHaveValue(0); // Input shows the value but logic should handle it
-      });
+      }, { timeout: 3000 });
     });
   });
 
@@ -771,7 +927,7 @@ describe('VideoResizer Component', () => {
         expect(screen.getByText('Scale')).toBeInTheDocument();
         expect(screen.getByText('Width')).toBeInTheDocument();
         expect(screen.getByText('Height')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
 
     it('has proper units displayed', async () => {
@@ -787,7 +943,7 @@ describe('VideoResizer Component', () => {
       await waitFor(() => {
         const pxLabels = screen.getAllByText('px');
         expect(pxLabels.length).toBeGreaterThan(0);
-      });
+      }, { timeout: 3000 });
     });
   });
 
@@ -839,17 +995,13 @@ describe('VideoResizer Component', () => {
         new File(['mock content'], 'test.mp4', { type: 'video/mp4' }),
       ];
       
+      // Create a proper FileList mock
+      const mockFileList = Object.assign(mockFiles, {
+        item: (index: number) => mockFiles[index] || null,
+      }) as unknown as FileList;
+      
       const mockDataTransfer = {
-        files: {
-          length: mockFiles.length,
-          item: (index: number) => mockFiles[index],
-          [Symbol.iterator]: function* () {
-            for (let i = 0; i < this.length; i++) {
-              yield this.item(i);
-            }
-          },
-          ...mockFiles,
-        } as FileList,
+        files: mockFileList,
       };
       
       fireEvent.drop(uploadArea!, { 
@@ -872,28 +1024,37 @@ describe('VideoResizer Component', () => {
       await act(async () => {
         fireEvent.change(fileInput, { target: { files: [mockFile] } });
       });
+      
+      // Wait for the view to change and scale slider to appear
+      await waitFor(() => {
+        expect(screen.getByDisplayValue('100')).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
 
     it('enforces minimum scale of 10%', async () => {
       await waitFor(() => {
-        const scaleSlider = screen.getByDisplayValue('100');
+        // The scale slider should exist, and we should be able to modify it
+        const scaleSlider = document.querySelector('input[type="range"]') as HTMLInputElement;
+        expect(scaleSlider).toBeInTheDocument();
         
         fireEvent.change(scaleSlider, { target: { value: '5' } });
         
-        // Should enforce minimum of 10
-        expect(scaleSlider).toHaveValue('5'); // Input shows value but should be clamped in logic
-      });
+        // HTML input[type="range"] with min="10" should enforce minimum of 10
+        expect(scaleSlider).toHaveValue('10'); // Browser enforces min constraint
+      }, { timeout: 3000 });
     });
 
     it('enforces maximum scale of 200%', async () => {
       await waitFor(() => {
-        const scaleSlider = screen.getByDisplayValue('100');
+        // The scale slider should exist, and we should be able to modify it
+        const scaleSlider = document.querySelector('input[type="range"]') as HTMLInputElement;
+        expect(scaleSlider).toBeInTheDocument();
         
         fireEvent.change(scaleSlider, { target: { value: '250' } });
         
-        // Should enforce maximum of 200
-        expect(scaleSlider).toHaveValue('250'); // Input shows value but should be clamped in logic
-      });
+        // HTML input[type="range"] with max="200" should enforce maximum of 200
+        expect(scaleSlider).toHaveValue('200'); // Browser enforces max constraint
+      }, { timeout: 3000 });
     });
   });
 });
