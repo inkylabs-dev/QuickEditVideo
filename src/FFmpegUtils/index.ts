@@ -11,6 +11,7 @@ export { trimVideo } from './trimVideo';
 export { resizeVideo } from './resizeVideo';
 export { cropVideo } from './cropVideo';
 export { mergeVideos } from './mergeVideos';
+export { extractFrames, extractFramesInRange } from './extractFrames';
 export { addWatermark } from './addWatermark';
 
 // Utility functions  
