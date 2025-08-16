@@ -178,7 +178,11 @@ describe('VideoTrimmer Component', () => {
       
       fireEvent.change(fileInput, { target: { files: null } });
       
-      expect(alertSpy).toHaveBeenCalledWith('Please select a valid video file.');
+      // With SelectFile component, null files are handled gracefully without alerts
+      expect(alertSpy).not.toHaveBeenCalled();
+      
+      // Should still be on landing view
+      expect(screen.getByText('Select your video')).toBeInTheDocument();
       
       alertSpy.mockRestore();
     });
