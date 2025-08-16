@@ -34,6 +34,10 @@
     "tailwindcss": "^3.4.17",
     "video.js": "^8.23.4"
   },
+  "overrides": {
+    "react": "npm:@preact/compat@latest",
+    "react-dom": "npm:@preact/compat@latest"
+  },
   "devDependencies": {
     "@playwright/test": "^1.54.2",
     "@testing-library/jest-dom": "^6.7.0",

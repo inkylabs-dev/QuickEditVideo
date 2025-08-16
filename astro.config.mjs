@@ -10,7 +10,8 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
     site: 'https://quickeditvideo.com',
     integrations: [tailwind(), preact({
-        compat: true
+        compat: true,
+        devtools: true,
     }), sitemap()],
     devToolbar: {
         enabled: false,
