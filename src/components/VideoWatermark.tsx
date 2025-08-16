@@ -163,9 +163,9 @@ const VideoWatermarkContent = () => {
 
 	// Handle width change with aspect ratio maintenance
 	const handleWidthChange = (newWidth: number) => {
-		const constrainedWidth = Math.max(20, Math.min(originalWidth - logoLeft, newWidth));
+		const constrainedWidth = Math.round(Math.max(20, Math.min(originalWidth - logoLeft, newWidth)));
 		const newHeight = Math.round(constrainedWidth / logoAspectRatio);
-		const constrainedHeight = Math.max(20, Math.min(originalHeight - logoTop, newHeight));
+		const constrainedHeight = Math.round(Math.max(20, Math.min(originalHeight - logoTop, newHeight)));
 		
 		setLogoWidth(constrainedWidth);
 		setLogoHeight(constrainedHeight);
@@ -173,9 +173,9 @@ const VideoWatermarkContent = () => {
 
 	// Handle height change with aspect ratio maintenance
 	const handleHeightChange = (newHeight: number) => {
-		const constrainedHeight = Math.max(20, Math.min(originalHeight - logoTop, newHeight));
+		const constrainedHeight = Math.round(Math.max(20, Math.min(originalHeight - logoTop, newHeight)));
 		const newWidth = Math.round(constrainedHeight * logoAspectRatio);
-		const constrainedWidth = Math.max(20, Math.min(originalWidth - logoLeft, newWidth));
+		const constrainedWidth = Math.round(Math.max(20, Math.min(originalWidth - logoLeft, newWidth)));
 		
 		setLogoHeight(constrainedHeight);
 		setLogoWidth(constrainedWidth);
@@ -301,18 +301,18 @@ const VideoWatermarkContent = () => {
 			
 			// Use width as primary dimension and calculate height from aspect ratio
 			const newWidth = resizeStart.logoWidth + deltaXScaled;
-			const constrainedWidth = Math.max(20, Math.min(originalWidth - logoLeft, newWidth));
+			const constrainedWidth = Math.round(Math.max(20, Math.min(originalWidth - logoLeft, newWidth)));
 			const newHeight = Math.round(constrainedWidth / logoAspectRatio);
-			const constrainedHeight = Math.max(20, Math.min(originalHeight - logoTop, newHeight));
+			const constrainedHeight = Math.round(Math.max(20, Math.min(originalHeight - logoTop, newHeight)));
 			
 			// If height constraint is more restrictive, use it to calculate width
 			if (constrainedHeight !== newHeight) {
 				const adjustedWidth = Math.round(constrainedHeight * logoAspectRatio);
-				setLogoWidth(adjustedWidth);
-				setLogoHeight(constrainedHeight);
+				setLogoWidth(Math.round(adjustedWidth));
+				setLogoHeight(Math.round(constrainedHeight));
 			} else {
-				setLogoWidth(constrainedWidth);
-				setLogoHeight(constrainedHeight);
+				setLogoWidth(Math.round(constrainedWidth));
+				setLogoHeight(Math.round(constrainedHeight));
 			}
 		}
 	};
@@ -716,22 +716,24 @@ const VideoWatermarkContent = () => {
 										<label className="block text-xs font-medium text-gray-700 mb-1">Width (px)</label>
 										<input
 											type="number"
-											value={logoWidth}
+											value={Math.round(logoWidth)}
 											onChange={(e) => handleWidthChange(parseInt(e.currentTarget.value) || 0)}
 											className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
 											min="20"
 											max={originalWidth - logoLeft}
+											step="1"
 										/>
 									</div>
 									<div>
 										<label className="block text-xs font-medium text-gray-700 mb-1">Height (px)</label>
 										<input
 											type="number"
-											value={logoHeight}
+											value={Math.round(logoHeight)}
 											onChange={(e) => handleHeightChange(parseInt(e.currentTarget.value) || 0)}
 											className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
 											min="20"
 											max={originalHeight - logoTop}
+											step="1"
 										/>
 									</div>
 								</div>
