@@ -1,55 +1,27 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
+import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
+import { fetchFile } from '@ffmpeg/util';
 
-const AudioExtractor = () => {
+const AudioExtractorContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'extracting'>('landing');
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [videoUrl, setVideoUrl] = useState<string>('');
 	const [videoDuration, setVideoDuration] = useState<number>(0);
 	const [isProcessing, setIsProcessing] = useState<boolean>(false);
 	const [processingProgress, setProcessingProgress] = useState<number>(0);
-	const [ffmpeg, setFfmpeg] = useState<any>(null);
-	const [ffmpegLoaded, setFfmpegLoaded] = useState<boolean>(false);
 	const [audioFormat, setAudioFormat] = useState<'mp3' | 'wav'>('mp3');
 	
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	// Initialize FFmpeg
-	useEffect(() => {
-		const loadFFmpeg = async () => {
-			try {
-				if (!(window as any).FFmpeg) {
-					await new Promise((resolve, reject) => {
-						const script = document.createElement('script');
-						script.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js';
-						script.onload = resolve;
-						script.onerror = reject;
-						document.head.appendChild(script);
-					});
-				}
+	// Get FFmpeg context
+	const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress, writeFile, readFile, exec } = useFFmpeg();
 
-				const { createFFmpeg, fetchFile } = (window as any).FFmpeg;
-				const ffmpegInstance = createFFmpeg({ 
-					log: true,
-					progress: ({ ratio }: { ratio: number }) => {
-						if (ratio > 0) {
-							setProcessingProgress(Math.round(ratio * 100));
-						}
-					},
-					corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
-				});
-				
-				await ffmpegInstance.load();
-				setFfmpeg(ffmpegInstance);
-				setFfmpegLoaded(true);
-			} catch (error) {
-				console.error('Failed to load FFmpeg:', error);
-			}
-		};
-		
-		loadFFmpeg();
-	}, []);
+	// Update processing progress from FFmpeg context
+	useEffect(() => {
+		setProcessingProgress(progress);
+	}, [progress]);
 
 	// Handle file selection
 	const handleFileSelect = (file: File | null) => {
@@ -93,12 +65,13 @@ const AudioExtractor = () => {
 		setProcessingProgress(0);
 
 		try {
-			const { fetchFile } = (window as any).FFmpeg;
 			const inputExt = selectedFile.name.split('.').pop();
 			const inputFile = `input.${inputExt}`;
 			const outputFile = `${selectedFile.name.split('.')[0]}_extracted.${audioFormat}`;
 
-			ffmpeg.FS('writeFile', inputFile, await fetchFile(selectedFile));
+			// Write file to FFmpeg filesystem using new API
+			const fileData = await fetchFile(selectedFile);
+			await writeFile(inputFile, fileData);
 
 			// Get MIME type for the output format
 			const getMimeType = (fmt: string): string => {
@@ -110,23 +83,24 @@ const AudioExtractor = () => {
 
 			// Extract audio using appropriate codec
 			if (audioFormat === 'mp3') {
-				await ffmpeg.run(
+				await exec([
 					'-i', inputFile,
 					'-vn', // No video
 					'-acodec', 'libmp3lame',
 					'-ab', '192k', // Audio bitrate
 					outputFile
-				);
+				]);
 			} else {
-				await ffmpeg.run(
+				await exec([
 					'-i', inputFile,
 					'-vn', // No video
 					'-acodec', 'pcm_s16le',
 					outputFile
-				);
+				]);
 			}
 
-			const data = ffmpeg.FS('readFile', outputFile);
+			// Read the output file using new API
+			const data = await readFile(outputFile);
 			const blob = new Blob([data.buffer], { type: getMimeType(audioFormat) });
 			
 			// Download file
@@ -136,9 +110,7 @@ const AudioExtractor = () => {
 			a.click();
 			URL.revokeObjectURL(a.href);
 
-			// Cleanup
-			ffmpeg.FS('unlink', inputFile);
-			ffmpeg.FS('unlink', outputFile);
+			// Note: Cleanup is handled automatically by the new FFmpeg implementation
 
 		} catch (error) {
 			console.error('Error extracting audio:', error);
@@ -332,6 +304,15 @@ const AudioExtractor = () => {
 				</div>
 			</div>
 		</div>
+	);
+};
+
+// Main AudioExtractor component with FFmpegProvider
+const AudioExtractor = () => {
+	return (
+		<FfmpegProvider>
+			<AudioExtractorContent />
+		</FfmpegProvider>
 	);
 };
 
