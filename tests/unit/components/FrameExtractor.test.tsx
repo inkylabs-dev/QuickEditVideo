@@ -170,7 +170,10 @@ describe('FrameExtractor', () => {
   it('transitions to extracting view when file is selected', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByRole('button', { name: /choose file/i }).parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
+    // Find the hidden file input inside the SelectFile component
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -185,7 +188,9 @@ describe('FrameExtractor', () => {
   it('shows default values for single time mode', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -201,7 +206,9 @@ describe('FrameExtractor', () => {
   it('shows default values for range mode', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -225,7 +232,9 @@ describe('FrameExtractor', () => {
   it('shows interval input in range mode', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -246,7 +255,9 @@ describe('FrameExtractor', () => {
   it('has both reset and close buttons', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -262,7 +273,9 @@ describe('FrameExtractor', () => {
   it('resets to default values when reset button is clicked', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -290,7 +303,9 @@ describe('FrameExtractor', () => {
   it('rejects non-video files', () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.txt', { type: 'text/plain' });
     
     // Mock alert
@@ -309,7 +324,9 @@ describe('FrameExtractor', () => {
   it('validates time ranges correctly', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -363,7 +380,9 @@ describe('FrameExtractor', () => {
   it('supports both PNG and JPG formats', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+    
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -379,7 +398,7 @@ describe('FrameExtractor', () => {
   it('shows download all button only when multiple frames are extracted', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -418,7 +437,7 @@ describe('FrameExtractor', () => {
 
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -461,7 +480,7 @@ describe('FrameExtractor', () => {
 
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
