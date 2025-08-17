@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { renderAstroComponentToString } from '../../../test-utils';
+import { renderAstroComponentToString } from '../../helpers';
 import Trim from '../../../src/pages/trim.astro';
 
 describe('Trim Page', () => {

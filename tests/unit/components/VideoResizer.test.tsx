@@ -282,7 +282,11 @@ describe('VideoResizer Component', () => {
       
       fireEvent.change(fileInput, { target: { files: null } });
       
-      expect(alertSpy).toHaveBeenCalledWith('Please select a valid video file.');
+      // With SelectFile component, null files are handled gracefully without alerts
+      expect(alertSpy).not.toHaveBeenCalled();
+      
+      // Should still be on landing view
+      expect(screen.getByText('Select your video')).toBeInTheDocument();
       
       alertSpy.mockRestore();
     });
@@ -991,7 +995,7 @@ describe('VideoResizer Component', () => {
       expect(uploadArea).toBeInTheDocument();
     });
 
-    it('handles drop events for file upload', () => {
+    it('handles drop events for file upload', async () => {
       render(<VideoResizer />);
       
       const uploadArea = screen.getByText('Drop a video file here or click to browse').closest('div');
@@ -1004,17 +1008,16 @@ describe('VideoResizer Component', () => {
         item: (index: number) => mockFiles[index] || null,
       }) as unknown as FileList;
       
-      const mockDataTransfer = {
-        files: mockFileList,
-      };
-      
       fireEvent.drop(uploadArea!, { 
-        preventDefault: vi.fn(),
-        dataTransfer: mockDataTransfer,
+        dataTransfer: {
+          files: mockFileList
+        }
       });
       
-      // Should handle the drop event without errors
-      expect(uploadArea).toBeInTheDocument();
+      // After successful drop, should transition to resizing view
+      await waitFor(() => {
+        expect(screen.queryByText('Drop a video file here or click to browse')).not.toBeInTheDocument();
+      });
     });
   });
 
