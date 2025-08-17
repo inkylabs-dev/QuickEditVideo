@@ -87,6 +87,15 @@ const VideoSpeedContent = () => {
 		return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
 	};
 
+	// Utility function to format speed display
+	const formatSpeed = (speed: number): string => {
+		if (speed >= 1) {
+			return speed % 1 === 0 ? `${speed}` : speed.toFixed(2).replace(/\.?0+$/, '');
+		} else {
+			return speed.toFixed(2).replace(/\.?0+$/, '');
+		}
+	};
+
 	// Process video with speed change
 	const processVideoSpeed = async () => {
 		if (!selectedFile || !ffmpegLoaded || !ffmpeg.current) return;
@@ -100,7 +109,7 @@ const VideoSpeedContent = () => {
 			
 			// Generate filename with speed indication
 			const nameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
-			const speedText = speed < 1 ? `${speed}x_slow` : `${speed}x_fast`;
+			const speedText = speed < 1 ? `${formatSpeed(speed)}x_slow` : `${formatSpeed(speed)}x_fast`;
 			const downloadName = `${nameWithoutExt}_${speedText}.${originalFormat}`;
 			
 			// Download processed video
@@ -144,7 +153,7 @@ const VideoSpeedContent = () => {
 	};
 
 	// Speed presets
-	const speedPresets = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0];
+	const speedPresets = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0];
 
 	if (currentView === 'landing') {
 		return (
@@ -185,7 +194,7 @@ const VideoSpeedContent = () => {
 									{selectedFile?.name}
 								</div>
 								<div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded whitespace-nowrap">
-									{speed}x speed
+									{formatSpeed(speed)}x speed
 								</div>
 								<div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded whitespace-nowrap">
 									{formatTime(videoDuration / speed)} final duration
@@ -209,21 +218,22 @@ const VideoSpeedContent = () => {
 					<div className="space-y-4 mb-6">
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-2">
-								Speed: {speed}x
+								Speed: {formatSpeed(speed)}x
 							</label>
 							<input
 								type="range"
-								min="0.25"
+								min="0.01"
 								max="4"
-								step="0.25"
+								step="0.01"
 								value={speed}
 								onChange={(e) => setSpeed(parseFloat((e.target as HTMLInputElement).value))}
 								className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
 							/>
 							<div className="relative text-xs text-gray-500 mt-1">
-								<span className="absolute left-0">0.25x</span>
-								<span className="absolute" style="left: 20%">1x</span>
-								<span className="absolute" style="left: 46.67%">2x</span>
+								<span className="absolute left-0">0.01x</span>
+								<span className="absolute" style="left: 6%">0.25x</span>
+								<span className="absolute" style="left: 24.8%">1x</span>
+								<span className="absolute" style="left: 49.9%">2x</span>
 								<span className="absolute right-0">4x</span>
 							</div>
 						</div>
@@ -231,7 +241,7 @@ const VideoSpeedContent = () => {
 						{/* Speed Presets */}
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-2">Quick presets</label>
-							<div className="grid grid-cols-3 gap-1">
+							<div className="grid grid-cols-4 gap-1">
 								{speedPresets.map((preset) => (
 									<button
 										key={preset}
@@ -242,7 +252,7 @@ const VideoSpeedContent = () => {
 												: 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
 										}`}
 									>
-										{preset}x
+										{formatSpeed(preset)}x
 									</button>
 								))}
 							</div>
@@ -304,7 +314,7 @@ const VideoSpeedContent = () => {
 									<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
 										<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
 									</svg>
-									<span>Download {speed}x Speed Video</span>
+									<span>Download {formatSpeed(speed)}x Speed Video</span>
 								</div> :
 								<span>Loading FFmpeg...</span>
 						}
