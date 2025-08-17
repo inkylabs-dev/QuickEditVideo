@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { fetchFile } from '@ffmpeg/util';
 import { SelectFile } from './SelectFile';
-
-type FlipDirection = 'horizontal' | 'vertical';
+import { flipVideo, type FlipDirection, getMimeType } from '../FFmpegUtils';
 
 const VideoFlipperContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'flipping'>('landing');
@@ -80,41 +78,15 @@ const VideoFlipperContent = () => {
 	};
 
 	// Flip and download video
-	const flipVideo = async () => {
+	const handleFlipVideo = async () => {
 		if (!ffmpeg?.current || !ffmpegLoaded || !selectedFile) return;
 
 		setIsProcessing(true);
 		setProgress(0);
 
 		try {
-			const inputExt = selectedFile.name.split('.').pop();
-			const inputFile = `input.${inputExt}`;
+			const data = await flipVideo(ffmpeg.current, selectedFile, flipDirection);
 			const outputFile = `${selectedFile.name.split('.')[0]}_flipped.${originalFormat}`;
-
-			await ffmpeg.current.writeFile(inputFile, await fetchFile(selectedFile));
-
-			// Get MIME type for the output format
-			const getMimeType = (fmt: string): string => {
-				switch (fmt) {
-					case 'mov': return 'video/quicktime';
-					case 'mkv': return 'video/x-matroska';
-					case 'avi': return 'video/x-msvideo';
-					case 'webm': return 'video/webm';
-					default: return 'video/mp4';
-				}
-			};
-
-			// Use FFmpeg flip filters
-			const flipFilter = flipDirection === 'horizontal' ? 'hflip' : 'vflip';
-			
-			await ffmpeg.current.exec([
-				'-i', inputFile,
-				'-vf', flipFilter,
-				'-c:a', 'copy', // Copy audio without re-encoding
-				outputFile
-			]);
-
-			const data = await ffmpeg.current.readFile(outputFile);
 			const blob = new Blob([data.buffer], { type: getMimeType(originalFormat) });
 			
 			// Download file
@@ -123,8 +95,6 @@ const VideoFlipperContent = () => {
 			a.download = outputFile;
 			a.click();
 			URL.revokeObjectURL(a.href);
-
-			// Cleanup would be handled automatically by the new FFmpeg API
 
 		} catch (error) {
 			console.error('Error flipping video:', error);
@@ -276,7 +246,7 @@ const VideoFlipperContent = () => {
 
 						{/* Flip Button */}
 						<button
-							onClick={flipVideo}
+							onClick={handleFlipVideo}
 							disabled={!ffmpegLoaded || isProcessing}
 							className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
 						>
