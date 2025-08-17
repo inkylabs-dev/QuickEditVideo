@@ -9,6 +9,11 @@ vi.mock('../../../src/FFmpegUtils/extractFrames', () => ({
   extractFramesInRange: vi.fn().mockResolvedValue([]),
 }));
 
+// Mock the Loading component
+vi.mock('../../../src/components/Loading', () => ({
+  default: () => <div>Loading video processing engine...</div>,
+}));
+
 // Mock the extractFrames utilities
 vi.mock('../../../src/FFmpegUtils/extractFrames', () => ({
   extractFrames: vi.fn().mockResolvedValue([
