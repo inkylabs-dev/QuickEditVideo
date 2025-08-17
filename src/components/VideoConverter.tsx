@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { convertVideo, createVideoBlob, downloadBlob } from '../FFmpegUtils';
+import { convertVideo, createVideoBlob, downloadBlob, type ConversionOptions } from '../FFmpegUtils';
 import Loading from './Loading';
 import { SelectFile } from './SelectFile';
 
@@ -25,6 +25,12 @@ const VideoConverterContent = ({ targetFormat, targetFormatName }: VideoConverte
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [originalFormat, setOriginalFormat] = useState<string>('mp4');
   const [displayProgress, setDisplayProgress] = useState<number>(0);
+  
+  // Conversion options state
+  const [conversionSize, setConversionSize] = useState<ConversionOptions['size']>('original');
+  const [conversionFps, setConversionFps] = useState<number>(10);
+  const [conversionStartTime, setConversionStartTime] = useState<number>(0);
+  const [conversionEndTime, setConversionEndTime] = useState<number>(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -76,6 +82,10 @@ const VideoConverterContent = ({ targetFormat, targetFormatName }: VideoConverte
     if (videoRef.current) {
       const duration = videoRef.current.duration;
       setVideoDuration(duration);
+      // Set default end time to video duration for GIF conversion
+      if (targetFormat === 'gif' && conversionEndTime === 0) {
+        setConversionEndTime(duration);
+      }
     }
   };
 
@@ -109,8 +119,16 @@ const VideoConverterContent = ({ targetFormat, targetFormatName }: VideoConverte
     setIsProcessing(true);
 
     try {
+      // Prepare conversion options
+      const options: ConversionOptions = {
+        size: conversionSize,
+        fps: conversionFps,
+        startTime: targetFormat === 'gif' ? conversionStartTime : undefined,
+        endTime: targetFormat === 'gif' ? conversionEndTime : undefined
+      };
+      
       // Use the convertVideo utility from FFmpegUtils
-      const data = await convertVideo(ffmpeg.current, selectedFile, targetFormat);
+      const data = await convertVideo(ffmpeg.current, selectedFile, targetFormat, [], options);
 
       // Validate data before creating blob
       if (!data || !(data instanceof Uint8Array) || data.length === 0) {
@@ -225,22 +243,89 @@ const VideoConverterContent = ({ targetFormat, targetFormatName }: VideoConverte
               </div>
             </div>
 
-            {/* Video Info */}
-            <div className="space-y-3 mb-6">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-sm text-gray-600 mb-1">Original Format</div>
-                <div className="text-lg font-medium text-gray-900 uppercase">{originalFormat}</div>
+
+            {/* Conversion Options */}
+            <div className="space-y-4 mb-6">
+              <h4 className="text-sm font-medium text-gray-900">Conversion Options</h4>
+              
+              {/* Size Selection */}
+              <div>
+                <label className="block text-sm text-gray-600 mb-2">Output Size</label>
+                <select
+                  value={conversionSize}
+                  onChange={(e) => setConversionSize(e.currentTarget.value as ConversionOptions['size'])}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="original">Original (up to 800px for GIF)</option>
+                  <option value="600xauto">600px × Auto</option>
+                  <option value="540xauto">540px × Auto</option>
+                  <option value="500xauto">500px × Auto</option>
+                  <option value="480xauto">480px × Auto</option>
+                  <option value="320xauto">320px × Auto</option>
+                  <option value="autox480">Auto × 480px</option>
+                  <option value="autox320">Auto × 320px</option>
+                </select>
               </div>
 
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-sm text-gray-600 mb-1" data-testid="converting-to-label">Converting to</div>
-                <div className="text-lg font-medium text-gray-900 uppercase" data-testid="target-format">{targetFormatName}</div>
+              {/* FPS Control */}
+              <div>
+                <label className="block text-sm text-gray-600 mb-2">Frame Rate (FPS)</label>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="5"
+                    max="30"
+                    value={conversionFps}
+                    onChange={(e) => setConversionFps(parseInt(e.currentTarget.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>5</span>
+                    <input
+                      type="number"
+                      min="5"
+                      max="30"
+                      value={conversionFps}
+                      onChange={(e) => setConversionFps(Math.max(5, Math.min(30, parseInt(e.currentTarget.value) || 10)))}
+                      className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                    />
+                    <span>30</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-sm text-gray-600 mb-1">Duration</div>
-                <div className="text-lg font-medium text-gray-900">{formatTime(videoDuration)}</div>
-              </div>
+              {/* Time Range (GIF only) */}
+              {targetFormat === 'gif' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-2">Start Time (seconds)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={videoDuration || 0}
+                      step="0.1"
+                      value={conversionStartTime}
+                      onChange={(e) => setConversionStartTime(Math.max(0, Math.min(videoDuration || 0, parseFloat(e.currentTarget.value) || 0)))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-2">End Time (seconds)</label>
+                    <input
+                      type="number"
+                      min={conversionStartTime}
+                      max={videoDuration || 0}
+                      step="0.1"
+                      value={conversionEndTime}
+                      onChange={(e) => setConversionEndTime(Math.max(conversionStartTime, Math.min(videoDuration || 0, parseFloat(e.currentTarget.value) || videoDuration || 0)))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Duration: {((conversionEndTime - conversionStartTime) || 0).toFixed(1)}s
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -280,6 +365,13 @@ const VideoConverterContent = ({ targetFormat, targetFormatName }: VideoConverte
                     'Loading...'
                 }
               </button>
+              
+              {/* Video info hint */}
+              <div className="text-xs text-gray-500 text-center mt-3 space-y-1">
+                <div>Original: {originalFormat.toUpperCase()}</div>
+                <div>Converting to: {targetFormatName}</div>
+                <div>Duration: {formatTime(videoDuration)}</div>
+              </div>
             </div>
           </div>
         </div>
