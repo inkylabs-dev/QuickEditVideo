@@ -68,31 +68,6 @@ const createElementSpy = vi.spyOn(document, 'createElement');
 describe('FrameExtractor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Mock HTMLVideoElement
-    Object.defineProperty(HTMLVideoElement.prototype, 'duration', {
-      writable: true,
-      value: 10,
-    });
-    
-    // Mock custom events
-    Object.defineProperty(document, 'dispatchEvent', {
-      writable: true,
-      value: vi.fn(),
-    });
-
-    // Mock for download functionality
-    createElementSpy.mockReturnValue({
-      href: '',
-      download: '',
-      click: vi.fn(),
-    } as any);
-
-    // Mock FileList
-    Object.defineProperty(window, 'FileList', {
-      writable: true,
-      value: vi.fn().mockImplementation(() => []),
-    });
 
     // Mock window.alert
     global.alert = vi.fn();
@@ -176,13 +151,19 @@ describe('FrameExtractor', () => {
     
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
+    // Trigger file change event
     await act(async () => {
-      fireEvent.change(fileInput, { target: { files: [file] } });
+      Object.defineProperty(fileInput, 'files', {
+        value: [file],
+        configurable: true,
+      });
+      fireEvent.change(fileInput);
     });
 
+    // Wait for the component to transition to extracting view
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /extract frames/i })).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
   });
 
   it('shows default values for single time mode', async () => {

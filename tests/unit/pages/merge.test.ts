@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { renderAstroComponentToString } from '../../../test-utils';
+import { renderAstroComponentToString } from '../../helpers';
 import Merge from '../../../src/pages/merge.astro';
 
 describe('Merge Page', () => {
