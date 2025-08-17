@@ -4,6 +4,7 @@ import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { SelectFile } from './SelectFile';
 import { extractFrames, extractFramesInRange } from '../FFmpegUtils/extractFrames';
 import Loading from './Loading';
+import ControlPanel, { type Tab } from './ControlPanel';
 import JSZip from 'jszip';
 
 interface ExtractedFrame {
