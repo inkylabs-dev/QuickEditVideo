@@ -3,30 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { act } from 'preact/test-utils';
 import FrameExtractor from '../../../src/components/FrameExtractor';
 
-// Mock the FFmpeg core module
-vi.mock('../../../src/FFmpegCore', () => ({
-  FfmpegProvider: ({ children }: { children: any }) => children,
-  useFFmpeg: () => ({
-    ffmpeg: {
-      current: {
-        writeFile: vi.fn().mockResolvedValue(undefined),
-        readFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
-        exec: vi.fn().mockResolvedValue(undefined),
-      }
-    },
-    loaded: true,
-    isLoaded: true,
-    loading: false,
-    isLoading: false,
-    error: null,
-    message: '',
-    progress: 0,
-    load: vi.fn().mockResolvedValue(undefined),
-    writeFile: vi.fn().mockResolvedValue(undefined),
-    readFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
-    exec: vi.fn().mockResolvedValue(undefined),
-    setProgress: vi.fn(),
-  }),
+// Mock the frame extraction functions
+vi.mock('../../../src/FFmpegUtils/extractFrames', () => ({
+  extractFrames: vi.fn().mockResolvedValue([]),
+  extractFramesInRange: vi.fn().mockResolvedValue([]),
 }));
 
 // Mock the extractFrames utilities
@@ -110,39 +90,7 @@ describe('FrameExtractor', () => {
   });
 
   it('renders landing view initially', () => {
-    // Create a simple test version of the component for this test
-    const SimpleFrameExtractor = () => {
-      return (
-        <div className="bg-white rounded-lg border-4 border-dashed border-gray-900 hover:border-gray-900 transition-colors">
-          <div className="p-16 text-center cursor-pointer">
-            <input
-              type="file"
-              accept="video/*"
-              className="hidden"
-              id="video-upload"
-            />
-            <div className="mb-6">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-gray-400">
-                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                <polyline points="14,2 14,8 20,8"/>
-                <path d="M10 15.5L16 12L10 8.5V15.5Z"/>
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Select your video</h3>
-            <p className="text-gray-600 mb-6">Drop a video file here or click to browse</p>
-            <div className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium transition-colors">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-              </svg>
-              Choose file
-            </div>
-            <p className="text-xs text-gray-500 mt-4">Supports MP4, WebM, AVI, MOV and more</p>
-          </div>
-        </div>
-      );
-    };
-    
-    render(<SimpleFrameExtractor />);
+    render(<FrameExtractor />);
     
     expect(screen.getByText('Select your video')).toBeInTheDocument();
     expect(screen.getByText('Drop a video file here or click to browse')).toBeInTheDocument();
@@ -370,6 +318,23 @@ describe('FrameExtractor', () => {
     
     await act(async () => {
       fireEvent.change(fileInput, { target: { files: [file] } });
+    });
+
+    // Simulate video loading and set duration
+    await waitFor(() => {
+      const video = document.querySelector('video');
+      expect(video).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      const video = document.querySelector('video') as HTMLVideoElement;
+      // Mock the video duration property
+      Object.defineProperty(video, 'duration', {
+        get: () => 10, // 10 seconds duration
+        configurable: true,
+      });
+      // Trigger the loadedmetadata event
+      fireEvent.loadedMetadata(video);
     });
 
     await waitFor(() => {
