@@ -1,5 +1,6 @@
 ---
 import NavTools from '../components/NavTools.astro';
+import Adsterra from '../components/Adsterra.astro';
 
 export interface Props {
 	title?: string;
@@ -420,8 +421,7 @@ const currentUrl = canonicalUrl || Astro.url.href;
 	
 	<slot />
 
-	<script async data-cfasync="false" src="https://pl27432156.profitableratecpm.com/dcd98c5173d8cb7b028f645ea697ef2f/invoke.js"></script>
-    <div id="container-dcd98c5173d8cb7b028f645ea697ef2f"></div>
+	<Adsterra />
 
 
 	<!-- Footer -->
@@ -446,15 +446,19 @@ const currentUrl = canonicalUrl || Astro.url.href;
 		</div>
 	</footer>
 
-	<!-- Google tag (gtag.js) -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=G-KLKN56SHLB" crossorigin="anonymous"></script>
-	<script is:inline>
-	window.dataLayer = window.dataLayer || [];
-	function gtag(){dataLayer.push(arguments);}
-	gtag('js', new Date());
+	<!-- Google tag (gtag.js) - Only in production -->
+	{import.meta.env.PROD && (
+		<>
+			<script async src="https://www.googletagmanager.com/gtag/js?id=G-KLKN56SHLB" crossorigin="anonymous"></script>
+			<script is:inline>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
 
-	gtag('config', 'G-KLKN56SHLB');
-	</script>
+			gtag('config', 'G-KLKN56SHLB');
+			</script>
+		</>
+	)}
 
 
 		<!-- Tools Dropdown Script -->
