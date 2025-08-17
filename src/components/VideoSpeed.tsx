@@ -220,6 +220,37 @@ const VideoSpeedContent = () => {
 							<label className="block text-sm font-medium text-gray-700 mb-2">
 								Speed: {formatSpeed(speed)}x
 							</label>
+							
+							{/* Speed Input Field */}
+							<div className="mb-3">
+								<div className="flex items-center gap-2">
+									<input
+										type="number"
+										min="0.01"
+										max="4"
+										step="0.01"
+										value={speed}
+										onChange={(e) => {
+											const value = parseFloat((e.target as HTMLInputElement).value);
+											if (!isNaN(value) && value >= 0.01 && value <= 4) {
+												setSpeed(value);
+											}
+										}}
+										onBlur={(e) => {
+											const value = parseFloat((e.target as HTMLInputElement).value);
+											if (isNaN(value) || value < 0.01) {
+												setSpeed(0.01);
+											} else if (value > 4) {
+												setSpeed(4);
+											}
+										}}
+										className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+										placeholder="1.0"
+									/>
+									<span className="text-sm text-gray-500">x speed</span>
+								</div>
+							</div>
+							
 							<input
 								type="range"
 								min="0.01"
