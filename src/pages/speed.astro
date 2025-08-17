@@ -1,0 +1,285 @@
+---
+import Layout from '../layouts/Layout.astro';
+import VideoSpeed from '../components/VideoSpeed.tsx';
+import Adsterra from '../components/Adsterra.astro';
+
+// Structured data for Video Speed tool
+const speedStructuredData = {
+	"@context": "https://schema.org",
+	"@type": "SoftwareApplication",
+	"name": "Video Speed Changer",
+	"description": "Free online video speed changer. Speed up or slow down videos from 0.25x to 4x. With motion interpolation for smooth slow motion.",
+	"applicationCategory": "MultimediaApplication",
+	"operatingSystem": "Any",
+	"url": "https://quickeditvideo.com/change-speed",
+	"offers": {
+		"@type": "Offer",
+		"price": "0",
+		"priceCurrency": "USD"
+	},
+	"featureList": [
+		"Variable speed control (0.25x to 4x)",
+		"Motion interpolation for smooth slow motion",
+		"Real-time preview with playback rate adjustment",
+		"Original format preservation",
+		"Privacy-focused (no uploads)",
+		"Browser-based processing"
+	],
+	"screenshot": "https://quickeditvideo.com/logo.png"
+};
+---
+
+<Layout
+	title="Video Speed Changer - Speed Up & Slow Down Videos Online Free | QuickEditVideo"
+	description="Change video speed online! Speed up or slow down videos from 0.25x to 4x. Motion interpolation for smooth slow motion. Works with MP4, WebM, AVI, MOV files. No uploads required."
+	keywords="video speed changer, speed up video, slow down video, video accelerator, slow motion video, fast motion video, change video speed online, video playback speed"
+	ogTitle="Free Online Video Speed Changer - Speed Up & Slow Down Videos"
+	ogDescription="Professional video speed control tool. Change playback speed from 0.25x to 4x with motion interpolation. Works with all major formats. No uploads required - completely private and secure."
+	canonicalUrl="https://quickeditvideo.com/change-speed"
+	breadcrumbs={[
+		{name: "Home", url: "/"},
+		{name: "Video Speed Changer", url: "/change-speed"}
+	]}
+	structuredData={speedStructuredData}
+>
+	<main class="min-h-screen bg-gray-50">
+		<!-- Page Header -->
+		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
+			<div class="max-w-6xl mx-auto px-4 md:px-6">
+				<h1 class="text-3xl font-bold text-gray-900">Video Speed Changer</h1>
+				<p class="text-gray-600 mt-2">Speed up or slow down videos with precision and smooth motion</p>
+			</div>
+		</div>
+
+		<!-- Main Video Speed Changer -->
+		<section class="p-4 md:p-6 w-full">
+			<div class="max-w-6xl mx-auto w-full">
+				<VideoSpeed client:load />
+			</div>
+		</section>
+
+		<Adsterra />
+
+		<!-- Quick Help -->
+		<section id="quick-help" class="px-4 md:px-6 pb-16">
+			<div class="max-w-6xl mx-auto">
+				<h3 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Quick Guide</h3>
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+					<div class="text-center">
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">1</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Upload Your Video</h4>
+						<p class="text-sm text-gray-600">Select any video file from your device. We support MP4, WebM, AVI, MOV, and MKV formats.</p>
+					</div>
+					<div class="text-center">
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">2</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Adjust Speed</h4>
+						<p class="text-sm text-gray-600">Use the slider or presets to change speed from 0.25x to 4x. Enable interpolation for smoother slow motion.</p>
+					</div>
+					<div class="text-center">
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">3</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Download Result</h4>
+						<p class="text-sm text-gray-600">Preview your changes and download the speed-adjusted video in the original format.</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Content Section for SEO -->
+		<section class="bg-gray-50 py-16 px-4 md:px-6">
+			<div class="max-w-4xl mx-auto">
+				<!-- Introduction -->
+				<div class="mb-16">
+					<h2 class="text-3xl font-bold text-gray-900 mb-6">Professional Video Speed Control</h2>
+					<div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+						<p>
+							Transform your videos with our advanced speed control tool. Whether you need dramatic slow-motion effects, quick time-lapse sequences, or subtle speed adjustments, our video speed changer delivers professional results with precision and quality.
+						</p>
+						<p>
+							Our browser-based tool processes your videos entirely on your device, ensuring complete privacy and instant results. No server uploads, no waiting in queues, and no quality loss from unnecessary re-encoding.
+						</p>
+					</div>
+				</div>
+
+				<!-- Speed Control Features -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Advanced Speed Control Features</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Precise Speed Range</h4>
+							<p class="text-gray-600 mb-4">
+								Control video playback speed from 0.25x (4x slower) to 4x (4x faster) with precise 0.25x increments. Perfect for creating dramatic slow-motion sequences or quick time-lapse effects.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Motion Interpolation</h4>
+							<p class="text-gray-600 mb-4">
+								Enable motion interpolation for slow speeds to create ultra-smooth slow-motion effects. Our algorithm generates intermediate frames for professional-quality results.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Real-time Preview</h4>
+							<p class="text-gray-600 mb-4">
+								Preview your speed changes instantly with our real-time playback rate adjustment. See exactly how your video will look before processing.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Format Preservation</h4>
+							<p class="text-gray-600 mb-4">
+								Your processed video maintains the original format and quality. No unnecessary conversions or quality loss during speed adjustment.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Use Cases -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Perfect For</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Sports Analysis</h4>
+							<p class="text-gray-600 text-sm">Slow down footage to analyze technique, form, and movement in sports and fitness activities.</p>
+						</div>
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Social Media Content</h4>
+							<p class="text-gray-600 text-sm">Create engaging slow-motion or time-lapse content for Instagram, TikTok, and other platforms.</p>
+						</div>
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Educational Videos</h4>
+							<p class="text-gray-600 text-sm">Speed up lengthy explanations or slow down complex processes for better understanding.</p>
+						</div>
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Creative Projects</h4>
+							<p class="text-gray-600 text-sm">Add cinematic effects to your films and videos with professional speed control.</p>
+						</div>
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Presentation Videos</h4>
+							<p class="text-gray-600 text-sm">Adjust speaking pace and demonstration speed for optimal viewer engagement.</p>
+						</div>
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Time-lapse Creation</h4>
+							<p class="text-gray-600 text-sm">Speed up long processes like construction, cooking, or artistic creation.</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- FAQ Section -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-8">Frequently Asked Questions</h3>
+					<div class="space-y-6" itemscope itemtype="https://schema.org/FAQPage">
+						<article class="bg-white rounded-lg p-6 shadow-sm border border-gray-200" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+							<h4 class="font-semibold text-gray-900 mb-2" itemprop="name">What video formats are supported?</h4>
+							<div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+								<p class="text-gray-600" itemprop="text">We support all major video formats including MP4, WebM, AVI, MOV, and MKV. Your output video will maintain the same format as your input file.</p>
+							</div>
+						</article>
+						
+						<article class="bg-white rounded-lg p-6 shadow-sm border border-gray-200" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+							<h4 class="font-semibold text-gray-900 mb-2" itemprop="name">What is motion interpolation?</h4>
+							<div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+								<p class="text-gray-600" itemprop="text">Motion interpolation creates additional frames between existing frames to make slow-motion videos appear smoother. It's particularly effective for speeds below 1x but increases processing time.</p>
+							</div>
+						</article>
+						
+						<article class="bg-white rounded-lg p-6 shadow-sm border border-gray-200" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+							<h4 class="font-semibold text-gray-900 mb-2" itemprop="name">Does changing speed affect audio?</h4>
+							<div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+								<p class="text-gray-600" itemprop="text">Yes, audio speed is adjusted proportionally while preserving pitch. This means speech and music remain natural-sounding at different speeds.</p>
+							</div>
+						</article>
+						
+						<article class="bg-white rounded-lg p-6 shadow-sm border border-gray-200" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+							<h4 class="font-semibold text-gray-900 mb-2" itemprop="name">Is the video speed changer free to use?</h4>
+							<div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+								<p class="text-gray-600" itemprop="text">Yes, completely free! Change the speed of as many videos as you want, with no limits, watermarks, or hidden charges.</p>
+							</div>
+						</article>
+						
+						<article class="bg-white rounded-lg p-6 shadow-sm border border-gray-200" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+							<h4 class="font-semibold text-gray-900 mb-2" itemprop="name">Are my video files kept private?</h4>
+							<div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+								<p class="text-gray-600" itemprop="text">Absolutely. All processing happens locally in your browser. Your videos never get uploaded to our servers or leave your device.</p>
+							</div>
+						</article>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const pageHeader = document.getElementById('page-header');
+			
+			// Function to toggle header visibility
+			function toggleHeader(show) {
+				if (pageHeader) {
+					if (show) {
+						pageHeader.style.display = 'block';
+						pageHeader.style.opacity = '1';
+						pageHeader.style.transform = 'translateY(0)';
+					} else {
+						pageHeader.style.opacity = '0';
+						pageHeader.style.transform = 'translateY(-10px)';
+						setTimeout(() => {
+							pageHeader.style.display = 'none';
+						}, 300);
+					}
+				}
+			}
+			
+			// Listen for custom events from VideoSpeed
+			document.addEventListener('videoSpeedViewChange', function(event) {
+				const isLandingView = event.detail.currentView === 'landing';
+				toggleHeader(isLandingView);
+			});
+		});
+	</script>
+
+	<style>
+		.video-container-custom {
+			max-height: calc(100vh - 400px);
+		}
+		
+		@media (max-width: 768px) {
+			.video-container-custom {
+				max-height: 40vh;
+			}
+		}
+		
+		.progress-ring {
+			transform: rotate(-90deg);
+		}
+		
+		.progress-ring circle {
+			stroke-dasharray: 251.2;
+			stroke-dashoffset: 251.2;
+			transition: stroke-dashoffset 0.1s ease;
+		}
+
+		/* Speed slider styling */
+		.slider {
+			background: linear-gradient(to right, #14b8a6 0%, #14b8a6 25%, #e5e7eb 25%, #e5e7eb 100%);
+		}
+		
+		.slider::-webkit-slider-thumb {
+			appearance: none;
+			height: 20px;
+			width: 20px;
+			border-radius: 50%;
+			background: #14b8a6;
+			cursor: pointer;
+			border: 2px solid #ffffff;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		}
+		
+		.slider::-moz-range-thumb {
+			height: 20px;
+			width: 20px;
+			border-radius: 50%;
+			background: #14b8a6;
+			cursor: pointer;
+			border: 2px solid #ffffff;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		}
+	</style>
+</Layout>
