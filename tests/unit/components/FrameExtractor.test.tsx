@@ -142,7 +142,7 @@ describe('FrameExtractor', () => {
   it('transitions to extracting view when file is selected', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = screen.getByRole('button', { name: /choose file/i }).parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -150,14 +150,14 @@ describe('FrameExtractor', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Extract Frames')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /extract frames/i })).toBeInTheDocument();
     });
   });
 
   it('shows default values for single time mode', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -173,7 +173,7 @@ describe('FrameExtractor', () => {
   it('shows default values for range mode', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -196,7 +196,7 @@ describe('FrameExtractor', () => {
   it('does not show interval input in range mode', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -217,7 +217,7 @@ describe('FrameExtractor', () => {
   it('has both reset and close buttons', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -233,7 +233,7 @@ describe('FrameExtractor', () => {
   it('resets to default values when reset button is clicked', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -258,7 +258,7 @@ describe('FrameExtractor', () => {
   it('rejects non-video files', () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.txt', { type: 'text/plain' });
     
     // Mock alert
@@ -277,7 +277,7 @@ describe('FrameExtractor', () => {
   it('validates time ranges correctly', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -302,7 +302,7 @@ describe('FrameExtractor', () => {
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       
       // Try to extract frames
-      const extractButton = screen.getByText('Extract Frames');
+      const extractButton = screen.getByRole('button', { name: /extract frames/i });
       fireEvent.click(extractButton);
       
       expect(alertSpy).toHaveBeenCalledWith('Start time must be less than end time');
@@ -314,7 +314,7 @@ describe('FrameExtractor', () => {
   it('supports both PNG and JPG formats', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = screen.getByLabelText(/Select your video/i);
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -344,7 +344,7 @@ describe('FrameExtractor', () => {
 
     // Extract multiple frames
     await act(async () => {
-      fireEvent.click(screen.getByText('Extract Frames'));
+      fireEvent.click(screen.getByRole('button', { name: /extract frames/i }));
     });
 
     await waitFor(() => {
@@ -378,7 +378,7 @@ describe('FrameExtractor', () => {
 
     // Use single time mode (default)
     await act(async () => {
-      fireEvent.click(screen.getByText('Extract Frames'));
+      fireEvent.click(screen.getByRole('button', { name: /extract frames/i }));
     });
 
     await waitFor(() => {
@@ -426,7 +426,7 @@ describe('FrameExtractor', () => {
 
     // Extract frames
     await act(async () => {
-      fireEvent.click(screen.getByText('Extract Frames'));
+      fireEvent.click(screen.getByRole('button', { name: /extract frames/i }));
     });
 
     await waitFor(() => {
