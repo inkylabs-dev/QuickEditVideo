@@ -14,6 +14,7 @@ export { mergeVideos } from './mergeVideos';
 export { extractFrames, extractFramesInRange } from './extractFrames';
 export { addWatermark } from './addWatermark';
 export { changeVideoSpeed } from './changeVideoSpeed';
+export { flipVideo, type FlipDirection } from './flipVideo';
 
 // Utility functions  
 export { downloadVideo } from './downloadVideo';
