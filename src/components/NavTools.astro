@@ -23,7 +23,7 @@ const categories = getCategories();
 	<!-- Dropdown Menu -->
 	<div 
 		id="tools-dropdown-menu"
-		class="absolute left-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible transform scale-95 transition-all duration-200 ease-out"
+		class="absolute left-0 top-full mt-2 w-[500px] bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible transform scale-95 transition-all duration-200 ease-out"
 		role="menu"
 		aria-labelledby="tools-dropdown-trigger"
 	>
@@ -31,7 +31,7 @@ const categories = getCategories();
 			{categories.map(category => (
 				<div class={category.id !== 'audio-quality' ? 'mb-6' : ''}>
 					<h4 class="text-sm font-semibold text-gray-900 mb-3 px-2">{category.name}</h4>
-					<div class={`grid gap-1 ${category.id === 'converters' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+					<div class="grid gap-1 grid-cols-3">
 						{category.tools.map(tool => (
 							category.id === 'converters' ? (
 								<a href={tool.url} class="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-center">
@@ -80,7 +80,7 @@ const categories = getCategories();
 		{categories.map(category => (
 			<div class={category.id !== 'audio-quality' ? 'mb-6' : ''}>
 				<h4 class="text-sm font-semibold text-gray-900 mb-3 px-2">{category.name}</h4>
-				<div class={`grid gap-1 ${category.id === 'converters' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+				<div class="grid gap-1 grid-cols-3">
 					{category.tools.map(tool => (
 						category.id === 'converters' ? (
 							<a href={tool.url} class="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-center">
