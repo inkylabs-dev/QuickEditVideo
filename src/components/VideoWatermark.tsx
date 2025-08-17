@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { addWatermark } from '../FFmpegUtils';
+import { SelectFile } from './SelectFile';
 
 const VideoWatermarkContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'watermarking'>('landing');

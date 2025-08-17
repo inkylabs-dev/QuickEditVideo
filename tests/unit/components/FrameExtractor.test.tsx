@@ -42,6 +42,14 @@ vi.mock('@ffmpeg/util', () => ({
   fetchFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
 }));
 
+// Mock JSZip
+vi.mock('jszip', () => ({
+  default: vi.fn().mockImplementation(() => ({
+    file: vi.fn(),
+    generateAsync: vi.fn().mockResolvedValue(new Blob(['mock-zip-content']))
+  }))
+}));
+
 // Mock URL.createObjectURL and revokeObjectURL
 global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url');
 global.URL.revokeObjectURL = vi.fn();
@@ -162,9 +170,7 @@ describe('FrameExtractor', () => {
   it('transitions to extracting view when file is selected', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
-    expect(fileInput).toBeInTheDocument();
-    
+    const fileInput = screen.getByRole('button', { name: /choose file/i }).parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -172,17 +178,14 @@ describe('FrameExtractor', () => {
     });
 
     await waitFor(() => {
-      // Look for the button specifically, not the h3
-      expect(screen.getByRole('button', { name: /Extract Frames/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /extract frames/i })).toBeInTheDocument();
     });
   });
 
   it('shows default values for single time mode', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
-    expect(fileInput).toBeInTheDocument();
-    
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -198,9 +201,7 @@ describe('FrameExtractor', () => {
   it('shows default values for range mode', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
-    expect(fileInput).toBeInTheDocument();
-    
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -224,9 +225,7 @@ describe('FrameExtractor', () => {
   it('shows interval input in range mode', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
-    expect(fileInput).toBeInTheDocument();
-    
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -247,9 +246,7 @@ describe('FrameExtractor', () => {
   it('has both reset and close buttons', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
-    expect(fileInput).toBeInTheDocument();
-    
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -265,9 +262,7 @@ describe('FrameExtractor', () => {
   it('resets to default values when reset button is clicked', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
-    expect(fileInput).toBeInTheDocument();
-    
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -286,7 +281,7 @@ describe('FrameExtractor', () => {
 
     await waitFor(() => {
       // Should still be in extracting view, but with reset values
-      expect(screen.getByRole('button', { name: /Extract Frames/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /extract frames/i })).toBeInTheDocument();
       // Time should be reset to '0'
       expect(screen.getByDisplayValue('0')).toBeInTheDocument();
     });
@@ -295,9 +290,7 @@ describe('FrameExtractor', () => {
   it('rejects non-video files', () => {
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
-    expect(fileInput).toBeInTheDocument();
-    
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.txt', { type: 'text/plain' });
     
     // Mock alert
@@ -316,9 +309,7 @@ describe('FrameExtractor', () => {
   it('validates time ranges correctly', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
-    expect(fileInput).toBeInTheDocument();
-    
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -360,7 +351,7 @@ describe('FrameExtractor', () => {
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       
       // Try to extract frames
-      const extractButton = screen.getByRole('button', { name: /Extract Frames/i });
+      const extractButton = screen.getByRole('button', { name: /extract frames/i });
       fireEvent.click(extractButton);
       
       expect(alertSpy).toHaveBeenCalledWith('Start time must be less than end time');
@@ -372,9 +363,7 @@ describe('FrameExtractor', () => {
   it('supports both PNG and JPG formats', async () => {
     render(<FrameExtractor />);
     
-    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
-    expect(fileInput).toBeInTheDocument();
-    
+    const fileInput = screen.getElementById('video-upload') as HTMLInputElement;
     const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
     
     await act(async () => {
@@ -384,6 +373,129 @@ describe('FrameExtractor', () => {
     await waitFor(() => {
       expect(screen.getByText('PNG')).toBeInTheDocument();
       expect(screen.getByText('JPG')).toBeInTheDocument();
+    });
+  });
+
+  it('shows download all button only when multiple frames are extracted', async () => {
+    render(<FrameExtractor />);
+    
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
+    
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [file] } });
+    });
+
+    // Switch to time range mode
+    await act(async () => {
+      fireEvent.click(screen.getByText('Time Range'));
+    });
+
+    // Extract multiple frames
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /extract frames/i }));
+    });
+
+    await waitFor(() => {
+      // Should show extracted frames section
+      expect(screen.getByText('Extracted Frames (2)')).toBeInTheDocument();
+      
+      // Should show download all button for multiple frames
+      expect(screen.getByTitle('Download all frames as ZIP')).toBeInTheDocument();
+    });
+  });
+
+  it('does not show download all button for single frame', async () => {
+    // Mock extractFrames to return only one frame
+    const { extractFrames } = await import('../../../src/FFmpegUtils/extractFrames');
+    vi.mocked(extractFrames).mockResolvedValueOnce([
+      {
+        time: 0,
+        data: new Uint8Array([1, 2, 3, 4]),
+        filename: 'frame_0.00s.png'
+      }
+    ]);
+
+    render(<FrameExtractor />);
+    
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
+    
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [file] } });
+    });
+
+    // Use single time mode (default)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /extract frames/i }));
+    });
+
+    await waitFor(() => {
+      // Should show extracted frames section for 1 frame
+      expect(screen.getByText('Extracted Frames (1)')).toBeInTheDocument();
+      
+      // Should NOT show download all button for single frame
+      expect(screen.queryByTitle('Download all frames as ZIP')).not.toBeInTheDocument();
+    });
+  });
+
+  it('creates ZIP file and triggers download when download all is clicked', async () => {
+    // Mock JSZip
+    const mockZip = {
+      file: vi.fn(),
+      generateAsync: vi.fn().mockResolvedValue(new Blob(['mock-zip-content']))
+    };
+    
+    // Mock JSZip constructor
+    vi.doMock('jszip', () => ({
+      default: vi.fn().mockImplementation(() => mockZip)
+    }));
+
+    // Mock createElement to capture download link creation
+    const mockAElement = {
+      href: '',
+      download: '',
+      click: vi.fn()
+    };
+    createElementSpy.mockReturnValue(mockAElement as any);
+
+    render(<FrameExtractor />);
+    
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
+    
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [file] } });
+    });
+
+    // Switch to time range mode to get multiple frames
+    await act(async () => {
+      fireEvent.click(screen.getByText('Time Range'));
+    });
+
+    // Extract frames
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /extract frames/i }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTitle('Download all frames as ZIP')).toBeInTheDocument();
+    });
+
+    // Click download all button
+    await act(async () => {
+      fireEvent.click(screen.getByTitle('Download all frames as ZIP'));
+    });
+
+    await waitFor(() => {
+      // Verify ZIP creation
+      expect(mockZip.file).toHaveBeenCalledWith('frame_0.00s.png', expect.any(Uint8Array));
+      expect(mockZip.file).toHaveBeenCalledWith('frame_1.00s.png', expect.any(Uint8Array));
+      expect(mockZip.generateAsync).toHaveBeenCalledWith({ type: 'blob' });
+      
+      // Verify download trigger
+      expect(mockAElement.download).toBe('extracted-frames-2-frames.zip');
+      expect(mockAElement.click).toHaveBeenCalled();
     });
   });
 });
