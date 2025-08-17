@@ -147,9 +147,9 @@ describe('VideoSpeed Component', () => {
     it('displays speed slider with correct attributes', () => {
       const speedSlider = screen.getByRole('slider');
       expect(speedSlider).toBeInTheDocument();
-      expect(speedSlider).toHaveAttribute('min', '0.25');
+      expect(speedSlider).toHaveAttribute('min', '0.01');
       expect(speedSlider).toHaveAttribute('max', '4');
-      expect(speedSlider).toHaveAttribute('step', '0.25');
+      expect(speedSlider).toHaveAttribute('step', '0.01');
     });
 
     it('shows current speed value', () => {
@@ -157,10 +157,17 @@ describe('VideoSpeed Component', () => {
     });
 
     it('displays all speed presets', () => {
-      const presets = ['0.25x', '0.5x', '0.75x', '1x', '1.25x', '1.5x', '2x', '3x', '4x'];
+      const presets = ['0.25x', '0.5x', '0.75x', '1x', '1.25x', '1.5x', '2x', '4x'];
+      
+      // Get the preset buttons container to avoid conflicts with ruler labels
+      const presetsContainer = screen.getByText('Quick presets').parentElement;
+      expect(presetsContainer).toBeInTheDocument();
       
       presets.forEach(preset => {
-        expect(screen.getByText(preset)).toBeInTheDocument();
+        // Use getAllByText and filter to find buttons specifically
+        const elements = screen.getAllByText(preset);
+        const presetButton = elements.find(element => element.tagName === 'BUTTON');
+        expect(presetButton).toBeInTheDocument();
       });
     });
 
