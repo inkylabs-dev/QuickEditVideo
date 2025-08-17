@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import type { JSX } from 'preact';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { fetchFile } from '@ffmpeg/util';
 import ControlPanel from './ControlPanel';
 import { SelectFile } from './SelectFile';
 import { changeVideoSpeed, downloadVideo } from '../FFmpegUtils';
@@ -206,8 +204,8 @@ const VideoSpeedContent = () => {
 						resetTitle="Reset to normal speed"
 						closeTitle="Choose different video"
 					>
-
-					{/* Speed Slider */}
+						<div>
+							{/* Speed Slider */}
 					<div className="space-y-4 mb-6">
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-2">
@@ -219,7 +217,7 @@ const VideoSpeedContent = () => {
 								max="4"
 								step="0.25"
 								value={speed}
-								onChange={(e) => setSpeed(parseFloat(e.target.value))}
+								onChange={(e) => setSpeed(parseFloat((e.target as HTMLInputElement).value))}
 								className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
 							/>
 							<div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -256,7 +254,7 @@ const VideoSpeedContent = () => {
 									<input
 										type="checkbox"
 										checked={useInterpolation}
-										onChange={(e) => setUseInterpolation(e.target.checked)}
+										onChange={(e) => setUseInterpolation((e.target as HTMLInputElement).checked)}
 										className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
 									/>
 									<span className="ml-2 text-sm text-gray-700">
@@ -311,6 +309,7 @@ const VideoSpeedContent = () => {
 						}
 					</button>
 
+						</div>
 					</ControlPanel>
 				</div>
 			</div>
