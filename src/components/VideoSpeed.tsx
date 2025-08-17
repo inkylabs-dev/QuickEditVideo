@@ -91,14 +91,14 @@ const VideoSpeedContent = () => {
 
 	// Process video with speed change
 	const processVideoSpeed = async () => {
-		if (!selectedFile || !ffmpegLoaded) return;
+		if (!selectedFile || !ffmpegLoaded || !ffmpeg.current) return;
 		
 		setIsProcessing(true);
 		setProgress(0);
 		
 		try {
 			// Change video speed using FFmpeg
-			const outputData = await changeVideoSpeed(ffmpeg, selectedFile, speed, useInterpolation);
+			const outputData = await changeVideoSpeed(ffmpeg.current, selectedFile, speed, useInterpolation);
 			
 			// Generate filename with speed indication
 			const nameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
