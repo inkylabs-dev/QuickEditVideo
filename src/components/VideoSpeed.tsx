@@ -220,10 +220,11 @@ const VideoSpeedContent = () => {
 								onChange={(e) => setSpeed(parseFloat((e.target as HTMLInputElement).value))}
 								className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
 							/>
-							<div className="flex justify-between text-xs text-gray-500 mt-1">
-								<span>0.25x</span>
-								<span>1x</span>
-								<span>4x</span>
+							<div className="relative text-xs text-gray-500 mt-1">
+								<span className="absolute left-0">0.25x</span>
+								<span className="absolute" style="left: 20%">1x</span>
+								<span className="absolute" style="left: 46.67%">2x</span>
+								<span className="absolute right-0">4x</span>
 							</div>
 						</div>
 
