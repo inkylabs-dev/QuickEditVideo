@@ -5,12 +5,12 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    Cross-Origin-Embedder-Policy = "require-corp"
-    Cross-Origin-Opener-Policy = "same-origin"
-    # Additional security headers
-    X-Frame-Options = "DENY"
+    # Balanced security headers that allow analytics and ads
+    Cross-Origin-Embedder-Policy = "unsafe-none"
+    Cross-Origin-Opener-Policy = "unsafe-none"
+    X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
+    Referrer-Policy = "no-referrer-when-downgrade"
 
 # Enable gzip compression for better performance
 [[headers]]

@@ -142,6 +142,7 @@ const currentUrl = canonicalUrl || Astro.url.href;
 		<!-- Performance optimizations -->
 		<meta name="format-detection" content="telephone=no">
 		<meta http-equiv="x-dns-prefetch-control" content="on">
+		<meta name="referrer" content="no-referrer-when-downgrade">
 		
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -419,7 +420,7 @@ const currentUrl = canonicalUrl || Astro.url.href;
 	
 	<slot />
 
-	<script async="async" data-cfasync="false" src="//pl27432156.profitableratecpm.com/dcd98c5173d8cb7b028f645ea697ef2f/invoke.js"></script>
+	<script async data-cfasync="false" src="https://pl27432156.profitableratecpm.com/dcd98c5173d8cb7b028f645ea697ef2f/invoke.js"></script>
     <div id="container-dcd98c5173d8cb7b028f645ea697ef2f"></div>
 
 
@@ -446,8 +447,8 @@ const currentUrl = canonicalUrl || Astro.url.href;
 	</footer>
 
 	<!-- Google tag (gtag.js) -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=G-KLKN56SHLB"></script>
-	<script>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-KLKN56SHLB" crossorigin="anonymous"></script>
+	<script is:inline>
 	window.dataLayer = window.dataLayer || [];
 	function gtag(){dataLayer.push(arguments);}
 	gtag('js', new Date());
