@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import VideoWatermark from '../components/VideoWatermark.tsx';
+import Adsterra from '../components/Adsterra.astro';
 
 // Structured data for Video Watermark tool
 const watermarkStructuredData = {
@@ -55,6 +56,8 @@ const watermarkStructuredData = {
 				<VideoWatermark client:load />
 			</div>
 		</section>
+
+		<Adsterra />
 
 		<!-- Quick Help -->
 		<section id="quick-help" class="px-4 md:px-6 pb-16">

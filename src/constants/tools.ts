@@ -145,6 +145,22 @@ const TOOLS: Tool[] = [
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
   },
+  {
+    id: 'change-speed',
+    name: 'Video Speed Changer',
+    shortName: 'Speed',
+    description: 'Change video playback speed - speed up or slow down',
+    shortDescription: 'Change speed',
+    url: '/speed',
+    icon: {
+      type: 'svg',
+      content: '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'
+    },
+    category: 'video-editing',
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'group-hover:bg-teal-200',
+    iconColor: 'text-teal-600'
+  },
 
   // Format Converters
   {
@@ -262,54 +278,6 @@ const TOOLS: Tool[] = [
     icon: {
       type: 'svg',
       content: '<path d="M9 18V5L12.5 8.5L16 5V18L12.5 14.5L9 18Z"/><path d="M20 4L16 8L20 12"/>'
-    },
-    category: 'audio-quality',
-    bgColor: 'bg-orange-100',
-    hoverBgColor: 'group-hover:bg-orange-200',
-    iconColor: 'text-orange-600'
-  },
-  {
-    id: 'compress',
-    name: 'Video Compressor',
-    shortName: 'Compress',
-    description: 'Reduce video file size',
-    shortDescription: 'Reduce size',
-    url: '/compress',
-    icon: {
-      type: 'svg',
-      content: '<path d="M21 8V5C21 3.89 20.11 3 19 3H5C3.89 3 3 3.89 3 5V8M3 16V19C3 20.11 3.89 21 5 21H19C20.11 21 21 20.11 21 19V16"/><line x1="7" y1="7" x2="7" y2="17"/><line x1="17" y1="7" x2="17" y2="17"/>'
-    },
-    category: 'audio-quality',
-    bgColor: 'bg-orange-100',
-    hoverBgColor: 'group-hover:bg-orange-200',
-    iconColor: 'text-orange-600'
-  },
-  {
-    id: 'enhance',
-    name: 'Video Enhancer',
-    shortName: 'Enhance',
-    description: 'Improve video quality and appearance',
-    shortDescription: 'Enhance quality',
-    url: '/enhance',
-    icon: {
-      type: 'svg',
-      content: '<path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.27L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>'
-    },
-    category: 'audio-quality',
-    bgColor: 'bg-orange-100',
-    hoverBgColor: 'group-hover:bg-orange-200',
-    iconColor: 'text-orange-600'
-  },
-  {
-    id: 'volume',
-    name: 'Volume Control',
-    shortName: 'Volume',
-    description: 'Adjust video audio volume',
-    shortDescription: 'Adjust volume',
-    url: '/volume',
-    icon: {
-      type: 'svg',
-      content: '<path d="M11 5L6 9H2V15H6L11 19V5Z"/><path d="M19.07 4.93A10 10 0 0 1 19.07 19.07"/><path d="M15.54 8.46A5 5 0 0 1 15.54 15.54"/>'
     },
     category: 'audio-quality',
     bgColor: 'bg-orange-100',
