@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import VideoSpeed from '../components/VideoSpeed.tsx';
+import Adsterra from '../components/Adsterra.astro';
 
 // Structured data for Video Speed tool
 const speedStructuredData = {
@@ -56,6 +57,8 @@ const speedStructuredData = {
 				<VideoSpeed client:load />
 			</div>
 		</section>
+
+		<Adsterra />
 
 		<!-- Quick Help -->
 		<section id="quick-help" class="px-4 md:px-6 pb-16">
