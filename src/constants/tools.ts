@@ -145,6 +145,22 @@ const TOOLS: Tool[] = [
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
   },
+  {
+    id: 'change-speed',
+    name: 'Video Speed Changer',
+    shortName: 'Speed',
+    description: 'Change video playback speed - speed up or slow down',
+    shortDescription: 'Change speed',
+    url: '/change-speed',
+    icon: {
+      type: 'svg',
+      content: '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'
+    },
+    category: 'video-editing',
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'group-hover:bg-teal-200',
+    iconColor: 'text-teal-600'
+  },
 
   // Format Converters
   {
