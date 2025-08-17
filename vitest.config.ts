@@ -7,7 +7,7 @@ export default defineConfig(
   getViteConfig({
     plugins: [preact()],
     test: {
-      environment: 'happy-dom',
+      environment: 'jsdom',
       setupFiles: ['./tests/setup.ts'],
       globals: true,
       css: true,
