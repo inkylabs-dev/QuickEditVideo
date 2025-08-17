@@ -1,0 +1,207 @@
+---
+import Layout from '../layouts/Layout.astro';
+import VideoFlipper from '../components/VideoFlipper.tsx';
+---
+
+<Layout
+	title="Video Flipper - Flip Videos Horizontally & Vertically | QuickEditVideo"
+	description="Flip videos horizontally or vertically online for free! Mirror videos with real-time preview. Works with MP4, WebM, AVI, MOV files. No uploads, no sign-up."
+	keywords="video flipper, flip video online, mirror video, horizontal flip, vertical flip, rotate video, free video flipper, MP4 flipper, WebM flipper, AVI flipper, MOV flipper, online video editor"
+	ogTitle="Free Online Video Flipper - Flip Videos Horizontally & Vertically"
+	ogDescription="Professional video flipping tool. Flip videos horizontally or vertically with real-time preview. Works with all major formats. No uploads required - completely private and secure."
+	canonicalUrl="https://quickeditvideo.com/flip"
+	breadcrumbs={[
+		{name: "Home", url: "/"},
+		{name: "Video Flipper", url: "/flip"}
+	]}
+>
+	<main class="min-h-screen bg-gray-50">
+		<!-- Page Header -->
+		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
+			<div class="max-w-6xl mx-auto px-4 md:px-6">
+				<h1 class="text-3xl font-bold text-gray-900">Video Flipper</h1>
+				<p class="text-gray-600 mt-2">Flip videos horizontally or vertically with real-time preview</p>
+			</div>
+		</div>
+
+		<!-- Main Video Editor -->
+		<section class="p-4 md:p-6 w-full">
+			<div class="max-w-6xl mx-auto w-full">
+				<VideoFlipper client:load />
+			</div>
+		</section>
+
+		<!-- Quick Help -->
+		<section id="quick-help" class="px-4 md:px-6 pb-16">
+			<div class="max-w-6xl mx-auto">
+				<h3 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Quick Guide</h3>
+				
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<!-- Step 1: Upload -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+								<polyline points="14,2 14,8 20,8"/>
+								<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">1</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Upload Video</h4>
+						<p class="text-sm text-gray-600">Choose your video file from your device</p>
+					</div>
+
+					<!-- Step 2: Choose Direction -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M8 3H5C3.89 3 3 3.89 3 5V8M21 8V5C21 3.89 20.11 3 19 3H16"/>
+								<path d="M16 21H19C20.11 21 21 20.11 21 19V16M3 16V19C3 20.11 3.89 21 5 21H8"/>
+								<path d="M9 12L15 12M12 9L12 15"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">2</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Choose Direction</h4>
+						<p class="text-sm text-gray-600">Select horizontal or vertical flip direction</p>
+					</div>
+
+					<!-- Step 3: Download -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M21 15V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V15"/>
+								<polyline points="7,10 12,15 17,10"/>
+								<line x1="12" y1="15" x2="12" y2="3"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">3</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Download Result</h4>
+						<p class="text-sm text-gray-600">Process and download your flipped video</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Content Section for SEO -->
+		<section class="bg-gray-50 py-16 px-4 md:px-6">
+			<div class="max-w-4xl mx-auto">
+				<!-- Introduction -->
+				<div class="mb-16">
+					<h2 class="text-3xl font-bold text-gray-900 mb-6">Professional Video Flipping Made Simple</h2>
+					<div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+						<p>
+							Need to flip a video horizontally to create a mirror effect, or vertically for creative purposes? Whether you're fixing a video recorded with a front-facing camera that appears mirrored, creating artistic effects, or correcting orientation issues, our Video Flipper makes it effortless.
+						</p>
+						<p>
+							Unlike complex video editing software that requires installation and learning curves, our browser-based tool lets you flip videos instantly. Upload your file, choose your flip direction, preview the result in real-time, and download your flipped video—all in under a minute.
+						</p>
+					</div>
+				</div>
+
+				<!-- Key Features -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-bold text-gray-900 mb-8">Why Choose Our Video Flipper?</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div class="space-y-4">
+							<div class="flex gap-3">
+								<div class="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-teal-600">
+										<polyline points="20,6 9,17 4,12"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-semibold text-gray-900 mb-1">Real-Time Preview</h4>
+									<p class="text-sm text-gray-600">See your flipped video instantly before processing</p>
+								</div>
+							</div>
+							<div class="flex gap-3">
+								<div class="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-teal-600">
+										<polyline points="20,6 9,17 4,12"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-semibold text-gray-900 mb-1">No Quality Loss</h4>
+									<p class="text-sm text-gray-600">Professional-grade processing maintains original quality</p>
+								</div>
+							</div>
+						</div>
+						<div class="space-y-4">
+							<div class="flex gap-3">
+								<div class="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-teal-600">
+										<polyline points="20,6 9,17 4,12"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-semibold text-gray-900 mb-1">Universal Format Support</h4>
+									<p class="text-sm text-gray-600">Works with MP4, MOV, AVI, WebM, and more</p>
+								</div>
+							</div>
+							<div class="flex gap-3">
+								<div class="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-teal-600">
+										<polyline points="20,6 9,17 4,12"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-semibold text-gray-900 mb-1">Complete Privacy</h4>
+									<p class="text-sm text-gray-600">All processing happens in your browser—files never leave your device</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Use Cases -->
+				<div>
+					<h3 class="text-2xl font-bold text-gray-900 mb-8">Common Video Flipping Scenarios</h3>
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+						<div class="bg-white p-6 rounded-lg border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-3">Selfie Video Correction</h4>
+							<p class="text-sm text-gray-600">Fix mirror effect from front-facing camera recordings to show text and actions correctly.</p>
+						</div>
+						<div class="bg-white p-6 rounded-lg border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-3">Creative Effects</h4>
+							<p class="text-sm text-gray-600">Create artistic mirror effects or unique visual perspectives for creative projects.</p>
+						</div>
+						<div class="bg-white p-6 rounded-lg border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-3">Screen Recording Fixes</h4>
+							<p class="text-sm text-gray-600">Correct orientation issues in screen recordings or tutorial videos.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		// Listen for events from VideoFlipper component to hide/show header
+		document.addEventListener('DOMContentLoaded', function() {
+			const pageHeader = document.getElementById('page-header');
+			
+			// Function to toggle header visibility
+			function toggleHeader(show) {
+				if (pageHeader) {
+					if (show) {
+						pageHeader.style.display = 'block';
+						pageHeader.style.opacity = '1';
+						pageHeader.style.transform = 'translateY(0)';
+					} else {
+						pageHeader.style.opacity = '0';
+						pageHeader.style.transform = 'translateY(-10px)';
+						setTimeout(() => {
+							pageHeader.style.display = 'none';
+						}, 300);
+					}
+				}
+			}
+			
+			// Listen for custom events from VideoFlipper
+			document.addEventListener('videoFlipperViewChange', function(event) {
+				const isLandingView = event.detail.currentView === 'landing';
+				toggleHeader(isLandingView);
+			});
+		});
+	</script>
+</Layout>

@@ -33,20 +33,28 @@ test.describe('Page Navigation E2E Tests', () => {
       await page.getByText('Video Resizer', { exact: false }).first().click();
       await expect(page).toHaveURL('/resize');
       await expect(page.getByRole('heading', { name: 'Video Resizer', level: 1 })).toBeVisible();
+
+      // Go back to home
+      await page.goto('/');
+
+      // Test navigation to flip page
+      await page.getByText('Flipper', { exact: false }).first().click();
+      await expect(page).toHaveURL('/flip');
+      await expect(page.getByRole('heading', { name: 'Video Flipper', level: 1 })).toBeVisible();
     });
 
     test('should have working navigation menu', async ({ page }) => {
       await page.goto('/');
 
       // Check if navigation menu exists (adjust selector based on actual implementation)
-      const navigationLinks = page.locator('nav a, header a').filter({ hasText: /trim|crop|merge|resize/i });
+      const navigationLinks = page.locator('nav a, header a').filter({ hasText: /trim|crop|merge|resize|flip/i });
       
       if (await navigationLinks.count() > 0) {
         // Test first navigation link
         await navigationLinks.first().click();
         
         // Should navigate to a video processing page
-        await expect(page.url()).toMatch(/(trim|crop|merge|resize)/);
+        await expect(page.url()).toMatch(/(trim|crop|merge|resize|flip)/);
       }
     });
   });
