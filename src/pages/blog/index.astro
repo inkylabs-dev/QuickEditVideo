@@ -1,0 +1,134 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const blogPosts = [
+	{
+		title: "Introducing QuickEditVideo.com",
+		description: "Edit videos in your browser without uploads, signups, or complex software. We're reimagining video editing for everyone.",
+		slug: "2025-01-15-introducing-quickeditvideo",
+		pubDate: "2025-01-15",
+		author: "QuickEditVideo Team",
+		tags: ["announcement", "launch", "video-editing", "privacy"],
+		readingTime: "4 min read"
+	}
+];
+---
+
+<Layout 
+	title="Blog | QuickEditVideo - Video Editing Tips & Updates"
+	description="Latest updates, video editing tips, and insights from the QuickEditVideo team. Learn about new features and best practices for online video editing."
+	showBreadcrumbs={true}
+	currentPage="Blog"
+>
+	<main class="bg-white">
+		<!-- Blog Header -->
+		<div class="bg-gradient-to-br from-teal-50 to-blue-50 border-b border-gray-200">
+			<div class="max-w-6xl mx-auto px-4 md:px-6 py-12 md:py-16">
+				<div class="text-center">
+					<h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+						QuickEditVideo Blog
+					</h1>
+					<p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+						Updates, tips, and insights about video editing, privacy-first tools, and building the future of browser-based creativity.
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Blog Posts Grid -->
+		<div class="max-w-6xl mx-auto px-4 md:px-6 py-12">
+			<div class="grid gap-8 md:gap-12">
+				{blogPosts.map(post => {
+					const formattedDate = new Date(post.pubDate).toLocaleDateString('en-US', {
+						year: 'numeric',
+						month: 'long',
+						day: 'numeric'
+					});
+					
+					return (
+						<article class="group">
+							<a href={`/blog/${post.slug}`} class="block">
+								<div class="border border-gray-200 rounded-xl p-6 md:p-8 hover:shadow-lg hover:border-teal-200 transition-all duration-200">
+									<div class="flex flex-col md:flex-row md:items-start gap-6">
+										<!-- Content -->
+										<div class="flex-1">
+											<header class="mb-4">
+												<h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3 group-hover:text-teal-600 transition-colors">
+													{post.title}
+												</h2>
+												<p class="text-lg text-gray-600 leading-relaxed">
+													{post.description}
+												</p>
+											</header>
+											
+											<div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-4">
+												<div class="flex items-center gap-2">
+													<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+														<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+														<circle cx="12" cy="7" r="4"/>
+													</svg>
+													<span>{post.author}</span>
+												</div>
+												
+												<div class="flex items-center gap-2">
+													<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+														<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+														<line x1="16" y1="2" x2="16" y2="6"/>
+														<line x1="8" y1="2" x2="8" y2="6"/>
+														<line x1="3" y1="10" x2="21" y2="10"/>
+													</svg>
+													<time datetime={post.pubDate}>{formattedDate}</time>
+												</div>
+												
+												<div class="flex items-center gap-2">
+													<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+														<circle cx="12" cy="12" r="10"/>
+														<polyline points="12,6 12,12 16,14"/>
+													</svg>
+													<span>{post.readingTime}</span>
+												</div>
+											</div>
+											
+											<div class="flex flex-wrap gap-2">
+												{post.tags.map(tag => (
+													<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+														{tag}
+													</span>
+												))}
+											</div>
+										</div>
+										
+										<!-- Read More Arrow -->
+										<div class="md:flex-shrink-0 flex items-center justify-center md:justify-start">
+											<div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+												<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+													<path d="M5 12h14m-7-7l7 7-7 7"/>
+												</svg>
+											</div>
+										</div>
+									</div>
+								</div>
+							</a>
+						</article>
+					);
+				})}
+			</div>
+			
+			{blogPosts.length === 0 && (
+				<div class="text-center py-12">
+					<div class="text-gray-400 mb-4">
+						<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto">
+							<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+							<polyline points="14,2 14,8 20,8"/>
+							<line x1="16" y1="13" x2="8" y2="13"/>
+							<line x1="16" y1="17" x2="8" y2="17"/>
+							<polyline points="10,9 9,9 8,9"/>
+						</svg>
+					</div>
+					<h3 class="text-lg font-medium text-gray-900 mb-2">No blog posts yet</h3>
+					<p class="text-gray-600">Check back soon for updates and video editing tips!</p>
+				</div>
+			)}
+		</div>
+	</main>
+</Layout>
