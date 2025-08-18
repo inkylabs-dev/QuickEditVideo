@@ -37,10 +37,8 @@ const speedStructuredData = {
 	ogTitle="Change Video Speed Online - Speed Up & Slow Down Videos"
 	ogDescription="Professional video speed control tool. Change playback speed from 0.25x to 4x with motion interpolation. Works with all major formats. No uploads required - completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/change-speed"
-	breadcrumbs={[
-		{name: "Home", url: "/"},
-		{name: "Change Video Speed", url: "/change-speed"}
-	]}
+	showBreadcrumbs={true}
+	currentPage="Change Video Speed"
 	structuredData={speedStructuredData}
 >
 	<main class="min-h-screen bg-gray-50">
@@ -220,7 +218,7 @@ const speedStructuredData = {
 			const pageHeader = document.getElementById('page-header');
 			
 			// Function to toggle header visibility
-			function toggleHeader(show) {
+			function toggleHeader(show: boolean) {
 				if (pageHeader) {
 					if (show) {
 						pageHeader.style.display = 'block';
@@ -238,7 +236,7 @@ const speedStructuredData = {
 			
 			// Listen for custom events from VideoSpeed
 			document.addEventListener('videoSpeedViewChange', function(event) {
-				const isLandingView = event.detail.currentView === 'landing';
+				const isLandingView = (event as any).detail.currentView === 'landing';
 				toggleHeader(isLandingView);
 			});
 		});

@@ -12,10 +12,8 @@ import RecommendedTools from '../components/RecommendedTools.astro';
 	ogTitle="Free Online Video Merger - Combine Multiple Videos"
 	ogDescription="Professional video merging tool. Combine multiple videos with custom duration and ordering. Works with all major formats. No uploads required - completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/merge"
-	breadcrumbs={[
-		{name: "Home", url: "/"},
-		{name: "Merge Videos", url: "/merge"}
-	]}
+	showBreadcrumbs={true}
+	currentPage="Merge Videos"
 >
 	<main class="min-h-screen bg-gray-50">
 		<!-- Page Header -->
@@ -285,7 +283,7 @@ import RecommendedTools from '../components/RecommendedTools.astro';
 			const pageHeader = document.getElementById('page-header');
 			
 			// Function to toggle header visibility
-			function toggleHeader(show) {
+			function toggleHeader(show: boolean) {
 				if (pageHeader) {
 					if (show) {
 						pageHeader.style.display = 'block';
@@ -303,7 +301,8 @@ import RecommendedTools from '../components/RecommendedTools.astro';
 			
 			// Listen for custom events from VideoMerger
 			document.addEventListener('videoMergerViewChange', function(event) {
-				const isLandingView = event.detail.currentView === 'landing';
+				const customEvent = event as any;
+				const isLandingView = customEvent.detail.currentView === 'landing';
 				toggleHeader(isLandingView);
 			});
 		});

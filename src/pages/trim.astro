@@ -36,10 +36,8 @@ const trimmerStructuredData = {
 	ogTitle="Free Online Video Trimmer - Cut Videos with Precision"
 	ogDescription="Professional video trimming tool. Cut videos with frame-perfect precision. Works with all major formats. No uploads required - completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/trim"
-	breadcrumbs={[
-		{name: "Home", url: "/"},
-		{name: "Trim Video", url: "/trim"}
-	]}
+	showBreadcrumbs={true}
+	currentPage="Trim Video"
 	structuredData={trimmerStructuredData}
 >
 	<main class="min-h-screen bg-gray-50">
@@ -297,7 +295,7 @@ const trimmerStructuredData = {
 			const pageHeader = document.getElementById('page-header');
 			
 			// Function to toggle header visibility
-			function toggleHeader(show) {
+			function toggleHeader(show: boolean) {
 				if (pageHeader) {
 					if (show) {
 						pageHeader.style.display = 'block';
@@ -315,7 +313,8 @@ const trimmerStructuredData = {
 			
 			// Listen for custom events from VideoTrimmer
 			document.addEventListener('videoTrimmerViewChange', function(event) {
-				const isLandingView = event.detail.currentView === 'landing';
+				const customEvent = event as any;
+				const isLandingView = customEvent.detail.currentView === 'landing';
 				toggleHeader(isLandingView);
 			});
 		});
