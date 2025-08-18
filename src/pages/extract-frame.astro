@@ -12,6 +12,8 @@ import RecommendedTools from '../components/RecommendedTools.astro';
 	ogTitle="Free Online Frame Extractor - Extract Screenshots from Videos Instantly"
 	ogDescription="Professional frame extraction tool that works in your browser. Extract frames from videos at specific times or intervals. Supports all major video formats. No uploads, completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/extract-frame"
+	showBreadcrumbs={true}
+	currentPage="Extract Frames"
 >
 	<!-- Structured Data -->
 	<script type="application/ld+json">
@@ -90,34 +92,13 @@ import RecommendedTools from '../components/RecommendedTools.astro';
 	</script>
 
 	<main class="min-h-screen bg-gray-50">
-		<!-- Breadcrumb Navigation -->
-		<nav class="bg-white border-b border-gray-100 py-3" aria-label="Breadcrumb">
-			<div class="max-w-6xl mx-auto px-4 md:px-6">
-				<ol class="flex items-center space-x-2 text-sm" itemscope itemtype="https://schema.org/BreadcrumbList">
-					<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-						<a href="/" itemprop="item" class="text-gray-500 hover:text-gray-700">
-							<span itemprop="name">Home</span>
-						</a>
-						<meta itemprop="position" content="1" />
-					</li>
-					<li class="text-gray-400">/</li>
-					<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-						<span itemprop="name" class="text-gray-900 font-medium">Extract Frames</span>
-						<meta itemprop="position" content="2" />
-					</li>
-				</ol>
-			</div>
-		</nav>
-
 		<!-- Page Header -->
 		<header id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
 			<div class="max-w-6xl mx-auto px-4 md:px-6">
 				<h1 class="text-3xl font-bold text-gray-900">Extract Video Frames</h1>
-				<p class="text-gray-600 mt-2">Capture still images from videos at specific times</p>
+				<p class="text-gray-600 mt-2">Capture screenshots and stills from videos</p>
 			</div>
-		</header>
-
-		<!-- Main Frame Extraction Tool -->
+		</header>		<!-- Main Frame Extraction Tool -->
 		<section class="p-4 md:p-6 w-full">
 			<div class="max-w-6xl mx-auto w-full">
 				<FrameExtractor client:load />
@@ -436,7 +417,7 @@ import RecommendedTools from '../components/RecommendedTools.astro';
 			const pageHeader = document.getElementById('page-header');
 			
 			// Function to toggle header visibility
-			function toggleHeader(show) {
+			function toggleHeader(show: boolean) {
 				if (pageHeader) {
 					if (show) {
 						pageHeader.style.display = 'block';
@@ -453,7 +434,7 @@ import RecommendedTools from '../components/RecommendedTools.astro';
 			}
 			
 			// Listen for custom events from FrameExtractor
-			document.addEventListener('frameExtractorViewChange', function(event) {
+			document.addEventListener('frameExtractorViewChange', function(event: CustomEvent) {
 				const isLandingView = event.detail.currentView === 'landing';
 				toggleHeader(isLandingView);
 			});

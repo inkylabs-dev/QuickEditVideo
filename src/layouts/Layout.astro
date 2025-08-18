@@ -10,8 +10,9 @@ export interface Props {
 	ogDescription?: string;
 	ogImage?: string;
 	canonicalUrl?: string;
-	breadcrumbs?: Array<{name: string, url: string}>;
 	structuredData?: object;
+	showBreadcrumbs?: boolean;
+	currentPage?: string;
 }
 
 const {
@@ -22,8 +23,9 @@ const {
 	ogDescription = description,
 	ogImage = "/logo.png",
 	canonicalUrl,
-	breadcrumbs = [],
-	structuredData
+	structuredData,
+	showBreadcrumbs = false,
+	currentPage
 } = Astro.props;
 
 const currentUrl = canonicalUrl || Astro.url.href;
@@ -409,28 +411,22 @@ const currentUrl = canonicalUrl || Astro.url.href;
 		</nav>
 	</header>
 
-	{breadcrumbs.length > 0 && (
-		<nav class="bg-gray-50 border-b border-gray-200 py-2" aria-label="Breadcrumb">
-			<div class="max-w-7xl mx-auto px-4 lg:px-6 xl:px-8">
+	<!-- Breadcrumb Navigation - Unified version for all tool pages -->
+	{showBreadcrumbs && (
+		<nav class="bg-white border-b border-gray-100 py-3" aria-label="Breadcrumb">
+			<div class="max-w-6xl mx-auto px-4 md:px-6">
 				<ol class="flex items-center space-x-2 text-sm" itemscope itemtype="https://schema.org/BreadcrumbList">
-					{breadcrumbs.map((crumb, index) => (
-						<li class="flex items-center" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-							{index < breadcrumbs.length - 1 ? (
-								<>
-									<a href={crumb.url} class="text-gray-600 hover:text-gray-900 transition-colors" itemprop="item">
-										<span itemprop="name">{crumb.name}</span>
-									</a>
-									<meta itemprop="position" content={String(index + 1)} />
-									<svg class="ml-2 w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-									</svg>
-								</>
-							) : (
-								<span class="text-gray-900 font-medium" itemprop="name">{crumb.name}</span>
-							)}
-							<meta itemprop="position" content={String(index + 1)} />
-						</li>
-					))}
+					<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+						<a href="/" itemprop="item" class="text-gray-500 hover:text-gray-700">
+							<span itemprop="name">Home</span>
+						</a>
+						<meta itemprop="position" content="1" />
+					</li>
+					<li class="text-gray-400">/</li>
+					<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+						<span itemprop="name" class="text-gray-900 font-medium">{currentPage}</span>
+						<meta itemprop="position" content="2" />
+					</li>
 				</ol>
 			</div>
 		</nav>

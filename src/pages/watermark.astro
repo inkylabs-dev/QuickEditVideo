@@ -36,10 +36,8 @@ const watermarkStructuredData = {
 	ogTitle="Free Online Video Watermark Tool - Add Logos to Videos"
 	ogDescription="Professional video watermarking tool. Add your logo or watermark to videos with precise positioning. Works with all major formats. No uploads required - completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/watermark"
-	breadcrumbs={[
-		{name: "Home", url: "/"},
-		{name: "Add Watermark", url: "/watermark"}
-	]}
+	showBreadcrumbs={true}
+	currentPage="Add Watermark"
 	structuredData={watermarkStructuredData}
 >
 	<main class="min-h-screen bg-gray-50">
@@ -327,7 +325,7 @@ const watermarkStructuredData = {
 			const pageHeader = document.getElementById('page-header');
 			
 			// Function to toggle header visibility
-			function toggleHeader(show) {
+			function toggleHeader(show: boolean) {
 				if (pageHeader) {
 					if (show) {
 						pageHeader.style.display = 'block';
@@ -345,7 +343,7 @@ const watermarkStructuredData = {
 			
 			// Listen for custom events from VideoWatermark
 			document.addEventListener('videoWatermarkViewChange', function(event) {
-				const isLandingView = event.detail.currentView === 'landing';
+				const isLandingView = (event as any).detail.currentView === 'landing';
 				toggleHeader(isLandingView);
 			});
 		});

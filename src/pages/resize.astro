@@ -12,10 +12,8 @@ import RecommendedTools from '../components/RecommendedTools.astro';
 	ogTitle="Free Online Video Resizer - Scale Videos with Precision"
 	ogDescription="Professional video resizing tool. Scale videos and change dimensions while maintaining aspect ratio. Works with all major formats. No uploads required - completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/resize"
-	breadcrumbs={[
-		{name: "Home", url: "/"},
-		{name: "Resize Video", url: "/resize"}
-	]}
+	showBreadcrumbs={true}
+	currentPage="Resize Video"
 >
 	<main class="min-h-screen bg-gray-50">
 		<!-- Page Header -->
@@ -272,7 +270,7 @@ import RecommendedTools from '../components/RecommendedTools.astro';
 			const pageHeader = document.getElementById('page-header');
 			
 			// Function to toggle header visibility
-			function toggleHeader(show) {
+			function toggleHeader(show: boolean) {
 				if (pageHeader) {
 					if (show) {
 						pageHeader.style.display = 'block';
@@ -290,7 +288,7 @@ import RecommendedTools from '../components/RecommendedTools.astro';
 			
 			// Listen for custom events from VideoResizer
 			document.addEventListener('videoResizerViewChange', function(event) {
-				const isLandingView = event.detail.currentView === 'landing';
+				const isLandingView = (event as any).detail.currentView === 'landing';
 				toggleHeader(isLandingView);
 			});
 		});

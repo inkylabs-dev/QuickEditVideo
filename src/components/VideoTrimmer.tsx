@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import type { JSX } from 'preact';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { fetchFile } from '@ffmpeg/util';
 import ControlPanel from './ControlPanel';
@@ -16,8 +15,6 @@ const VideoTrimmerContent = () => {
 	const [endPos, setEndPos] = useState<number>(100);
 	const [isProcessing, setIsProcessing] = useState<boolean>(false);
 	const [processingProgress, setProcessingProgress] = useState<number>(0);
-	const [isDragging, setIsDragging] = useState<boolean>(false);
-	const [dragHandle, setDragHandle] = useState<string | null>(null);
 	const [isPlaying, setIsPlaying] = useState<boolean>(false);
 	const [originalFormat, setOriginalFormat] = useState<string>('mp4');
 	
@@ -99,8 +96,6 @@ const VideoTrimmerContent = () => {
 	// Handle timeline drag (mouse and touch)
 	const handlePointerDown = (e: MouseEvent | TouchEvent, handle: string) => {
 		e.preventDefault();
-		setIsDragging(true);
-		setDragHandle(handle);
 		
 		const getPosition = (event: MouseEvent | TouchEvent): number => {
 			if (!timelineRef.current) return 0;
@@ -128,8 +123,6 @@ const VideoTrimmerContent = () => {
 		};
 		
 		const handlePointerUp = () => {
-			setIsDragging(false);
-			setDragHandle(null);
 			document.removeEventListener('mousemove', handlePointerMove);
 			document.removeEventListener('mouseup', handlePointerUp);
 			document.removeEventListener('touchmove', handlePointerMove);
@@ -167,16 +160,35 @@ const VideoTrimmerContent = () => {
 				}
 			};
 
-			await ffmpeg.current.exec([
-				'-i', inputFile,
-				'-ss', startTime.toString(),
-				'-t', (endTime - startTime).toString(),
-				'-c', 'copy',
-				outputFile
-			]);
+			// Use re-encoding for short clips (<4s) to ensure frame accuracy
+			// Use stream copy for longer clips for better performance
+			const duration = endTime - startTime;
+			const shouldReencode = duration < 4;
+
+			if (shouldReencode) {
+				await ffmpeg.current.exec([
+					'-ss', startTime.toString(),
+					'-i', inputFile,
+					'-t', duration.toString(),
+					'-avoid_negative_ts', 'make_zero',
+					'-c:v', 'libx264',
+					'-preset', 'ultrafast',
+					'-c:a', 'aac',
+					outputFile
+				]);
+			} else {
+				await ffmpeg.current.exec([
+					'-i', inputFile,
+					'-ss', startTime.toString(),
+					'-t', duration.toString(),
+					'-c', 'copy',
+					outputFile
+				]);
+			}
 
 			const data = await ffmpeg.current.readFile(outputFile);
-			const blob = new Blob([data.buffer], { type: getMimeType(originalFormat) });
+			const uint8Data = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+			const blob = new Blob([uint8Data], { type: getMimeType(originalFormat) });
 			
 			// Download file
 			const a = document.createElement('a');
@@ -294,7 +306,7 @@ const VideoTrimmerContent = () => {
 									max={endTime - 0.1}
 									value={startTime.toFixed(1)}
 									onChange={(e) => {
-										const newStartTime = parseFloat(e.target.value);
+										const newStartTime = parseFloat((e.target as HTMLInputElement).value);
 										if (newStartTime >= 0 && newStartTime < endTime) {
 											setStartTime(newStartTime);
 											setStartPos((newStartTime / videoDuration) * 100);
@@ -330,7 +342,7 @@ const VideoTrimmerContent = () => {
 									max={videoDuration}
 									value={endTime.toFixed(1)}
 									onChange={(e) => {
-										const newEndTime = parseFloat(e.target.value);
+										const newEndTime = parseFloat((e.target as HTMLInputElement).value);
 										if (newEndTime > startTime && newEndTime <= videoDuration) {
 											setEndTime(newEndTime);
 											setEndPos((newEndTime / videoDuration) * 100);
