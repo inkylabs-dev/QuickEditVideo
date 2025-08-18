@@ -39,7 +39,6 @@ const VideoConfettiEffectContent = () => {
 	const [processingProgress, setProcessingProgress] = useState<number>(0);
 	const [isPlaying, setIsPlaying] = useState<boolean>(false);
 	const [confettiVideoBlob, setConfettiVideoBlob] = useState<Blob | null>(null);
-	const [isRecordingConfetti, setIsRecordingConfetti] = useState<boolean>(false);
 	
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -103,19 +102,38 @@ const VideoConfettiEffectContent = () => {
 			canvas.height = videoRef.current.videoHeight || 480;
 		}
 
-		// Create MediaRecorder for canvas
-		const stream = canvas.captureStream(60); // 60 FPS
-		const mediaRecorder = new MediaRecorder(stream, {
-			mimeType: 'video/webm; codecs=vp9'
-		});
+		// Check if MediaRecorder is supported
+		if (!MediaRecorder.isTypeSupported('video/webm; codecs=vp9')) {
+			// Fallback to vp8 if vp9 is not supported
+			if (!MediaRecorder.isTypeSupported('video/webm; codecs=vp8')) {
+				// Fallback to basic webm
+				if (!MediaRecorder.isTypeSupported('video/webm')) {
+					throw new Error('Browser does not support video recording');
+				}
+			}
+		}
+
+		// Create MediaRecorder for canvas with fallback mime types
+		const stream = canvas.captureStream(30); // Reduced to 30 FPS for better compatibility
+		let mimeType = 'video/webm; codecs=vp9';
+		if (!MediaRecorder.isTypeSupported(mimeType)) {
+			mimeType = 'video/webm; codecs=vp8';
+			if (!MediaRecorder.isTypeSupported(mimeType)) {
+				mimeType = 'video/webm';
+			}
+		}
+
+		const mediaRecorder = new MediaRecorder(stream, { mimeType });
 
 		const chunks: Blob[] = [];
 		mediaRecorder.ondataavailable = (event) => {
-			chunks.push(event.data);
+			if (event.data.size > 0) {
+				chunks.push(event.data);
+			}
 		};
 
 		// Start recording
-		mediaRecorder.start();
+		mediaRecorder.start(100); // Record in 100ms chunks for better data availability
 		
 		// Create confetti instance targeting our canvas
 		const canvasConfetti = confetti.create(canvas, {
@@ -124,58 +142,63 @@ const VideoConfettiEffectContent = () => {
 		});
 
 		// Animate confetti for the specified duration
-		const duration = (endTime - startTime) * 1000; // Convert to milliseconds
+		const duration = Math.max(1000, (endTime - startTime) * 1000); // Minimum 1 second duration
 		const animationStart = Date.now();
 		
 		const animate = () => {
 			const elapsed = Date.now() - animationStart;
 			
 			if (elapsed < duration) {
-				// Clear canvas
+				// Clear canvas with transparent background
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				
-				// Fire confetti
-				canvasConfetti({
-					...confettiConfig,
-					origin: { x: 0.5, y: 0.5 }
-				});
+				// Fire confetti with better timing
+				if (elapsed % 100 < 50) { // Fire confetti every 100ms for 50ms
+					canvasConfetti({
+						...confettiConfig,
+						origin: { x: 0.5, y: 0.5 }
+					});
+				}
 				
 				requestAnimationFrame(animate);
 			} else {
 				// Stop recording
-				mediaRecorder.stop();
+				setTimeout(() => {
+					mediaRecorder.stop();
+				}, 100); // Small delay to ensure last frames are captured
 			}
 		};
 
 		animate();
 
 		// Return promise that resolves when recording is complete
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			mediaRecorder.onstop = () => {
-				const blob = new Blob(chunks, { type: 'video/webm' });
+				if (chunks.length === 0) {
+					reject(new Error('No video data recorded'));
+					return;
+				}
+				const blob = new Blob(chunks, { type: mimeType });
 				resolve(blob);
 			};
+			
+			mediaRecorder.onerror = (event) => {
+				reject(new Error('Recording failed: ' + (event as any).error));
+			};
+			
+			// Timeout fallback
+			setTimeout(() => {
+				if (mediaRecorder.state === 'recording') {
+					mediaRecorder.stop();
+				}
+			}, duration + 2000);
 		});
-	};
-
-	// Generate confetti preview
-	const generateConfettiPreview = async () => {
-		setIsRecordingConfetti(true);
-		try {
-			const blob = await recordConfettiAnimation();
-			setConfettiVideoBlob(blob);
-		} catch (error) {
-			console.error('Error recording confetti:', error);
-			alert('Error recording confetti animation. Please try again.');
-		} finally {
-			setIsRecordingConfetti(false);
-		}
 	};
 
 	// Process video with confetti overlay
 	const processVideo = async () => {
-		if (!selectedFile || !ffmpegLoaded || !confettiVideoBlob) {
-			alert('Please ensure video is selected and confetti preview is generated.');
+		if (!selectedFile || !ffmpegLoaded) {
+			alert('Please ensure video is selected and FFmpeg is loaded.');
 			return;
 		}
 
@@ -183,10 +206,14 @@ const VideoConfettiEffectContent = () => {
 		setProgress(0);
 
 		try {
+			// Generate confetti animation first
+			const confettiBlob = await recordConfettiAnimation();
+			setConfettiVideoBlob(confettiBlob);
+
 			const result = await addConfettiOverlay(
 				ffmpeg,
 				selectedFile,
-				confettiVideoBlob,
+				confettiBlob,
 				startTime,
 				endTime
 			);
@@ -206,7 +233,7 @@ const VideoConfettiEffectContent = () => {
 
 		} catch (error) {
 			console.error('Error processing video:', error);
-			alert('Error processing video. Please try again.');
+			alert('Error processing video: ' + (error as Error).message);
 		} finally {
 			setIsProcessing(false);
 		}
@@ -280,7 +307,10 @@ const VideoConfettiEffectContent = () => {
 							<canvas
 								ref={confettiCanvasRef}
 								className="absolute inset-0 w-full h-full pointer-events-none"
-								style={{ opacity: confettiVideoBlob ? 0.7 : 0 }}
+								style={{ 
+									opacity: isProcessing ? 0.8 : 0,
+									background: 'transparent'
+								}}
 							/>
 						</div>
 
@@ -394,19 +424,11 @@ const VideoConfettiEffectContent = () => {
 							{/* Action Buttons */}
 							<div className="space-y-3">
 								<button
-									onClick={generateConfettiPreview}
-									disabled={isRecordingConfetti}
-									className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-								>
-									{isRecordingConfetti ? 'Generating Preview...' : 'Generate Confetti Preview'}
-								</button>
-
-								<button
 									onClick={processVideo}
-									disabled={!ffmpegLoaded || isProcessing || !confettiVideoBlob}
+									disabled={!ffmpegLoaded || isProcessing}
 									className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white py-3 px-4 rounded-lg font-medium transition-colors"
 								>
-									{isProcessing ? `Processing... ${Math.round(processingProgress)}%` : 'Download with Confetti'}
+									{isProcessing ? `Processing... ${Math.round(processingProgress)}%` : 'Download'}
 								</button>
 							</div>
 
