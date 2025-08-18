@@ -15,13 +15,31 @@ export async function trimVideo(
   await ffmpeg.writeFile(inputName, await fetchFile(inputFile));
 
   const duration = endTime - startTime;
-  await ffmpeg.exec([
-    "-i", inputName,
-    "-ss", startTime.toString(),
-    "-t", duration.toString(),
-    "-c", "copy",
-    outputName
-  ]);
+  
+  // Use re-encoding for short clips (<4s) to ensure frame accuracy
+  // Use stream copy for longer clips for better performance
+  const shouldReencode = duration < 4;
+
+  if (shouldReencode) {
+    await ffmpeg.exec([
+      "-ss", startTime.toString(),
+      "-i", inputName,
+      "-t", duration.toString(),
+      "-avoid_negative_ts", "make_zero",
+      "-c:v", "libx264",
+      "-preset", "ultrafast",
+      "-c:a", "aac",
+      outputName
+    ]);
+  } else {
+    await ffmpeg.exec([
+      "-i", inputName,
+      "-ss", startTime.toString(),
+      "-t", duration.toString(),
+      "-c", "copy",
+      outputName
+    ]);
+  }
 
   const data = await ffmpeg.readFile(outputName);
   return new Uint8Array(data as ArrayBuffer);

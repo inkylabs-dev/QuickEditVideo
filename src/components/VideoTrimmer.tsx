@@ -167,13 +167,31 @@ const VideoTrimmerContent = () => {
 				}
 			};
 
-			await ffmpeg.current.exec([
-				'-i', inputFile,
-				'-ss', startTime.toString(),
-				'-t', (endTime - startTime).toString(),
-				'-c', 'copy',
-				outputFile
-			]);
+			// Use re-encoding for short clips (<4s) to ensure frame accuracy
+			// Use stream copy for longer clips for better performance
+			const duration = endTime - startTime;
+			const shouldReencode = duration < 4;
+
+			if (shouldReencode) {
+				await ffmpeg.current.exec([
+					'-ss', startTime.toString(),
+					'-i', inputFile,
+					'-t', duration.toString(),
+					'-avoid_negative_ts', 'make_zero',
+					'-c:v', 'libx264',
+					'-preset', 'ultrafast',
+					'-c:a', 'aac',
+					outputFile
+				]);
+			} else {
+				await ffmpeg.current.exec([
+					'-i', inputFile,
+					'-ss', startTime.toString(),
+					'-t', duration.toString(),
+					'-c', 'copy',
+					outputFile
+				]);
+			}
 
 			const data = await ffmpeg.current.readFile(outputFile);
 			const blob = new Blob([data.buffer], { type: getMimeType(originalFormat) });
