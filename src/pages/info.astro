@@ -1,0 +1,420 @@
+---
+import Layout from '../layouts/Layout.astro';
+import VideoInfo from '../components/VideoInfo.tsx';
+import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
+
+// Structured data for Video Info tool
+const infoStructuredData = {
+	"@context": "https://schema.org",
+	"@type": "SoftwareApplication",
+	"name": "Video Info Analyzer",
+	"description": "Free online video metadata analyzer. Extract detailed information about video files including format, codec, resolution, bitrate, and duration.",
+	"applicationCategory": "MultimediaApplication",
+	"operatingSystem": "Any",
+	"url": "https://quickeditvideo.com/info",
+	"offers": {
+		"@type": "Offer",
+		"price": "0",
+		"priceCurrency": "USD"
+	},
+	"featureList": [
+		"Comprehensive video metadata extraction",
+		"Format and codec analysis",
+		"Resolution and bitrate information",
+		"Audio stream details",
+		"Privacy-focused (no uploads)",
+		"Browser-based processing"
+	],
+	"screenshot": "https://quickeditvideo.com/logo.png"
+};
+---
+
+<Layout
+	title="Video Info Analyzer - Extract Video Metadata Online Free | QuickEditVideo"
+	description="Analyze video files and extract metadata online for free! Get detailed information about video format, codec, resolution, bitrate, duration, and audio streams. Works with MP4, WebM, AVI, MOV files."
+	keywords="video info, video metadata, video analyzer, video information, codec analyzer, video format checker, video properties, mp4 info, video details online, video file analyzer"
+	ogTitle="Free Online Video Metadata Analyzer - Get Video Information"
+	ogDescription="Professional video analysis tool. Extract comprehensive metadata including format, codec, resolution, bitrate, and audio details. No uploads required - completely private and secure."
+	canonicalUrl="https://quickeditvideo.com/info"
+	showBreadcrumbs={true}
+	currentPage="Video Info"
+	structuredData={infoStructuredData}
+>
+	<main class="min-h-screen bg-gray-50">
+		<!-- Page Header -->
+		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
+			<div class="max-w-6xl mx-auto px-4 md:px-6">
+				<h1 class="text-3xl font-bold text-gray-900">Video Info</h1>
+				<p class="text-gray-600 mt-2">Analyze video files and extract detailed metadata</p>
+			</div>
+		</div>
+
+		<!-- Main Video Analyzer -->
+		<section class="p-4 md:p-6 w-full">
+			<div class="max-w-6xl mx-auto w-full">
+				<VideoInfo client:load />
+			</div>
+		</section>
+
+		<Adsterra />
+
+		<!-- Quick Help -->
+		<section id="quick-help" class="px-4 md:px-6 pb-16">
+			<div class="max-w-6xl mx-auto">
+				<h3 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Quick Guide</h3>
+				
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<!-- Step 1: Upload -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+								<polyline points="14,2 14,8 20,8"/>
+								<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">1</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Upload Video</h4>
+						<p class="text-sm text-gray-600">Upload your video file (supports MP4, WebM, AVI, MOV)</p>
+					</div>
+
+					<!-- Step 2: Analyze -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<circle cx="11" cy="11" r="8"/>
+								<path d="M21 21l-4.35-4.35"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">2</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Auto Analyze</h4>
+						<p class="text-sm text-gray-600">The tool automatically extracts all metadata from your video</p>
+					</div>
+
+					<!-- Step 3: View Results -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+								<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">3</div>
+						<h4 class="font-semibold text-gray-900 mb-2">View Information</h4>
+						<p class="text-sm text-gray-600">Review detailed metadata including format, codec, and technical specs</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Content Section for SEO with Sidebar -->
+		<section class="bg-gray-50 py-16 px-4 md:px-6">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
+				<!-- Introduction -->
+				<div class="mb-16">
+					<h2 class="text-3xl font-bold text-gray-900 mb-6">Video Metadata Analyzer - Know Your Files</h2>
+					<div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+						<p>
+							Ever wondered what's actually inside your video files? Whether you're troubleshooting playback issues, optimizing for upload, or just curious about your content's technical specifications, getting detailed video information shouldn't require expensive software or technical expertise.
+						</p>
+						<p>
+							Our video analyzer extracts comprehensive metadata from your files instantly. Find out the codec, resolution, bitrate, duration, frame rate, audio specifications, and more. All analysis happens directly in your browser—your files never leave your device, ensuring complete privacy.
+						</p>
+						<p>
+							Perfect for content creators, developers, and anyone who needs to understand their video files better. No downloads, no accounts, no complex interfaces—just drop your video and get detailed insights immediately.
+						</p>
+					</div>
+				</div>
+
+				<!-- How It Works -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">How Video Analysis Works</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Instant Metadata Extraction</h4>
+							<p class="text-gray-600 mb-4">
+								Upload your video file and our tool immediately starts analyzing using powerful FFprobe technology running directly in your browser.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Comprehensive Information</h4>
+							<p class="text-gray-600 mb-4">
+								Get detailed information about video streams, audio tracks, container format, codecs, bitrates, resolution, and technical specifications.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Privacy-First Analysis</h4>
+							<p class="text-gray-600 mb-4">
+								All analysis happens locally in your browser using WebAssembly. Your video files never get uploaded to any server.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Professional-Grade Results</h4>
+							<p class="text-gray-600 mb-4">
+								Uses the same FFprobe engine trusted by video professionals worldwide to provide accurate, detailed metadata analysis.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- What Information You Get -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">What Information You'll Discover</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-teal-600">
+									<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+									<polyline points="14,2 14,8 20,8"/>
+								</svg>
+								File Information
+							</h4>
+							<ul class="text-sm text-gray-600 space-y-1">
+								<li>• Container format (MP4, WebM, AVI, etc.)</li>
+								<li>• File size and duration</li>
+								<li>• Overall bitrate</li>
+								<li>• Number of streams</li>
+							</ul>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-teal-600">
+									<rect x="2" y="6" width="20" height="12" rx="2"/>
+									<circle cx="8" cy="12" r="2"/>
+									<path d="M14 12h6"/>
+								</svg>
+								Video Details
+							</h4>
+							<ul class="text-sm text-gray-600 space-y-1">
+								<li>• Video codec (H.264, H.265, VP9, etc.)</li>
+								<li>• Resolution (width × height)</li>
+								<li>• Frame rate (FPS)</li>
+								<li>• Video bitrate and pixel format</li>
+							</ul>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-teal-600">
+									<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+									<path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+									<line x1="12" y1="19" x2="12" y2="22"/>
+									<line x1="8" y1="22" x2="16" y2="22"/>
+								</svg>
+								Audio Information
+							</h4>
+							<ul class="text-sm text-gray-600 space-y-1">
+								<li>• Audio codec (AAC, MP3, Vorbis, etc.)</li>
+								<li>• Sample rate and channels</li>
+								<li>• Audio bitrate</li>
+								<li>• Channel layout (stereo, 5.1, etc.)</li>
+							</ul>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-teal-600">
+									<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+									<circle cx="12" cy="12" r="3"/>
+								</svg>
+								Technical Specs
+							</h4>
+							<ul class="text-sm text-gray-600 space-y-1">
+								<li>• Container format details</li>
+								<li>• Stream information</li>
+								<li>• Encoding profile</li>
+								<li>• Start time and metadata</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<!-- Why Choose This Tool -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Why Use Our Video Analyzer?</h3>
+					<div class="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Completely Free</h4>
+									<p class="text-sm text-gray-600">No subscriptions, no limits, no hidden features. Analyze unlimited videos.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Privacy Protected</h4>
+									<p class="text-sm text-gray-600">All analysis happens locally. Your files never leave your browser.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Professional Quality</h4>
+									<p class="text-sm text-gray-600">Uses FFprobe engine trusted by video professionals worldwide.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Works Everywhere</h4>
+									<p class="text-sm text-gray-600">Desktop, mobile, tablet—any device with a modern browser.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Instant Results</h4>
+									<p class="text-sm text-gray-600">Get comprehensive metadata in seconds, not minutes.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">No Software Needed</h4>
+									<p class="text-sm text-gray-600">Works in your browser. No downloads or installations required.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- FAQ Section -->
+				<div>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-8">Frequently Asked Questions</h3>
+					<div class="space-y-6">
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">What video information can I extract?</h4>
+							<p class="text-gray-600">Our tool provides comprehensive metadata including file format, video codec, resolution, frame rate, bitrate, audio codec, sample rate, channels, duration, file size, and technical specifications.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Is my video data private and secure?</h4>
+							<p class="text-gray-600">Absolutely. All analysis happens entirely in your browser using WebAssembly technology. Your video files never get uploaded to our servers—we never even see them.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">What video formats are supported?</h4>
+							<p class="text-gray-600">We support all major video formats including MP4, WebM, AVI, MOV, MKV, FLV, 3GP, and many more. If your browser can play it, we can analyze it.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">How accurate is the metadata extraction?</h4>
+							<p class="text-gray-600">Very accurate. We use FFprobe, the same professional-grade tool used by video industry experts worldwide. The metadata comes directly from the video file headers.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Can I use this tool on mobile devices?</h4>
+							<p class="text-gray-600">Yes! The tool works on any device with a modern web browser, including smartphones and tablets. The interface adapts to your screen size.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Is there a file size limit?</h4>
+							<p class="text-gray-600">The only limit is your device's available memory. Metadata analysis is very efficient and works with files of any size, including very large videos.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Why would I need video metadata?</h4>
+							<p class="text-gray-600">Video metadata helps with troubleshooting playback issues, optimizing for specific platforms, checking encoding quality, verifying file specifications, and understanding technical details for editing or distribution.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Do I need to create an account?</h4>
+							<p class="text-gray-600">No account needed! Just visit the page and start analyzing. No registration, no email required, no personal information collected.</p>
+						</div>
+					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="info" category="video-editing" />
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		// Listen for events from VideoInfo component to hide/show header
+		document.addEventListener('DOMContentLoaded', function() {
+			const pageHeader = document.getElementById('page-header');
+			
+			// Function to toggle header visibility
+			function toggleHeader(show: boolean) {
+				if (pageHeader) {
+					if (show) {
+						pageHeader.style.display = 'block';
+						pageHeader.style.opacity = '1';
+						pageHeader.style.transform = 'translateY(0)';
+					} else {
+						pageHeader.style.opacity = '0';
+						pageHeader.style.transform = 'translateY(-10px)';
+						setTimeout(() => {
+							pageHeader.style.display = 'none';
+						}, 300);
+					}
+				}
+			}
+			
+			// Listen for custom events from VideoInfo
+			document.addEventListener('videoInfoViewChange', function(event) {
+				const customEvent = event as any;
+				const isLandingView = customEvent.detail.currentView === 'landing';
+				toggleHeader(isLandingView);
+			});
+		});
+	</script>
+
+	<style>
+		.video-container {
+			aspect-ratio: 16/9;
+			max-height: calc(100vh - 250px);
+			width: 100%;
+			height: 100%;
+		}
+		
+		.video-container-custom {
+			max-height: calc(100vh - 400px);
+		}
+		
+		@media (max-width: 768px) {
+			.video-container-custom {
+				max-height: 40vh;
+			}
+		}
+
+		/* Prevent horizontal scroll */
+		* {
+			box-sizing: border-box;
+		}
+	</style>
+</Layout>

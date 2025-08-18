@@ -130,6 +130,22 @@ const TOOLS: Tool[] = [
     iconColor: 'text-teal-600'
   },
   {
+    id: 'info',
+    name: 'Video Info',
+    shortName: 'Video Info',
+    description: 'Analyze video metadata and get video information',
+    shortDescription: 'Get video info',
+    url: '/info',
+    icon: {
+      type: 'svg',
+      content: '<circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M12 6h.01"/>'
+    },
+    category: 'video-editing',
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'group-hover:bg-teal-200',
+    iconColor: 'text-teal-600'
+  },
+  {
     id: 'flip',
     name: 'Flip Video',
     shortName: 'Flip Video',
