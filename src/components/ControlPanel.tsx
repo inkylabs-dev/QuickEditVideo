@@ -1,4 +1,4 @@
-import type { JSX } from 'preact';
+import type { JSX, ComponentChildren } from 'preact';
 
 export interface Tab {
   id: string;
@@ -16,7 +16,7 @@ export interface ControlPanelProps {
   tabs?: Tab[];
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
-  children?: JSX.Element;
+  children?: ComponentChildren;
   className?: string;
 }
 
