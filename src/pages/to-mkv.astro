@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import VideoConverter from '../components/VideoConverter.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 ---
 
 <Layout
@@ -80,9 +81,12 @@ import Adsterra from '../components/Adsterra.astro';
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<div class="mb-16">
 					<h2 class="text-3xl font-bold text-gray-900 mb-6">Convert Any Video to MKV Format</h2>
@@ -158,6 +162,57 @@ import Adsterra from '../components/Adsterra.astro';
 							</div>
 						</div>
 					</div>
+				</div>
+
+				<!-- FAQ Section -->
+				<div>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-8">Frequently Asked Questions</h3>
+					<div class="space-y-6">
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Is this MKV converter completely free?</h4>
+							<p class="text-gray-600">Yes, absolutely! Convert unlimited videos to MKV with no watermarks, no time limits, and no hidden costs.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Are my videos private and secure during conversion?</h4>
+							<p class="text-gray-600">Completely. All video conversion happens locally in your browser using WebAssembly. Your videos never get uploaded to our servers.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Why should I choose MKV format?</h4>
+							<p class="text-gray-600">MKV is perfect for high-quality content with support for unlimited tracks, advanced features like chapters and menus, and virtually all video codecs. It's ideal for archival and professional use.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">What video formats can I convert to MKV?</h4>
+							<p class="text-gray-600">We support all major video formats including MP4, AVI, MOV, WebM, WMV, FLV, 3GP, and many more. If your browser can play it, we can convert it.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Will converting to MKV preserve video quality?</h4>
+							<p class="text-gray-600">Yes! MKV supports virtually all video codecs including lossless formats, ensuring maximum quality preservation. Perfect for high-definition and professional content.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Can I use this on my mobile device?</h4>
+							<p class="text-gray-600">Yes! The converter works on any device with a modern web browser, including smartphones and tablets. MKV files are supported by most modern media players.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Is there a file size limit for conversion?</h4>
+							<p class="text-gray-600">The only limit is your device's available memory. MKV is excellent for large, high-quality files thanks to its efficient container structure.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Do I need to create an account?</h4>
+							<p class="text-gray-600">No account needed! Just visit the page and start converting. No registration, no email required - just instant MKV conversion.</p>
+						</div>
+					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="to-mkv" category="converters" />
 				</div>
 			</div>
 		</section>

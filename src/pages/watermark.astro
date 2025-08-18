@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import VideoWatermark from '../components/VideoWatermark.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 
 // Structured data for Video Watermark tool
 const watermarkStructuredData = {
@@ -29,15 +30,15 @@ const watermarkStructuredData = {
 ---
 
 <Layout
-	title="Video Watermark Tool - Add Logo to Videos Online Free | QuickEditVideo"
-	description="Add watermarks and logos to videos online! Drag, resize, and position your logo exactly where you want. Works with MP4, WebM, AVI, MOV files. No uploads, completely private."
-	keywords="video watermark, add logo to video, video watermarking tool, logo overlay, brand videos, watermark video online, free video watermark, video branding"
+	title="Add Watermark Video - Put Logo on Video Online Free | QuickEditVideo"
+	description="Add watermark to video online free! Put logo on video, add text watermark, brand your videos. Video watermarking tool with drag & drop positioning. Works with MP4, AVI, MOV without upload."
+	keywords="add watermark video, put logo on video, video branding tool, watermark video online, add logo to video online, video watermark tool online, brand video, logo overlay video, video watermarking, free video watermark, online video watermark no upload"
 	ogTitle="Free Online Video Watermark Tool - Add Logos to Videos"
 	ogDescription="Professional video watermarking tool. Add your logo or watermark to videos with precise positioning. Works with all major formats. No uploads required - completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/watermark"
 	breadcrumbs={[
 		{name: "Home", url: "/"},
-		{name: "Video Watermark", url: "/watermark"}
+		{name: "Add Watermark", url: "/watermark"}
 	]}
 	structuredData={watermarkStructuredData}
 >
@@ -45,8 +46,8 @@ const watermarkStructuredData = {
 		<!-- Page Header -->
 		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
 			<div class="max-w-6xl mx-auto px-4 md:px-6">
-				<h1 class="text-3xl font-bold text-gray-900">Video Watermark Tool</h1>
-				<p class="text-gray-600 mt-2">Add logos and watermarks to your videos with precision</p>
+				<h1 class="text-3xl font-bold text-gray-900">Add Watermark to Video</h1>
+				<p class="text-gray-600 mt-2">Put logo on video and add watermarks with precision</p>
 			</div>
 		</div>
 
@@ -108,9 +109,12 @@ const watermarkStructuredData = {
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<div class="mb-16">
 					<h2 class="text-3xl font-bold text-gray-900 mb-6">Professional Video Watermarking Made Simple</h2>
@@ -307,6 +311,11 @@ const watermarkStructuredData = {
 							<p class="text-gray-600">No account required! Just visit the page, upload your files, position your watermark, and download. No registration, no email, no personal information needed.</p>
 						</div>
 					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="watermark" category="video-editing" />
 				</div>
 			</div>
 		</section>

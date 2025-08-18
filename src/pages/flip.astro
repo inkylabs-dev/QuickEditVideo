@@ -2,26 +2,27 @@
 import Layout from '../layouts/Layout.astro';
 import VideoFlipper from '../components/VideoFlipper.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 ---
 
 <Layout
-	title="Video Flipper - Flip Videos Horizontally & Vertically | QuickEditVideo"
-	description="Flip videos horizontally or vertically online for free! Mirror videos with real-time preview. Works with MP4, WebM, AVI, MOV files. No uploads, no sign-up."
-	keywords="video flipper, flip video online, mirror video, horizontal flip, vertical flip, rotate video, free video flipper, MP4 flipper, WebM flipper, AVI flipper, MOV flipper, online video editor"
+	title="Flip Video - Mirror Video Online, Rotate Video Horizontally | QuickEditVideo"
+	description="Flip video online free! Mirror video horizontally, rotate video vertically, flip videos with real-time preview. Online video flipper without upload. Works with MP4, AVI, MOV, WebM."
+	keywords="flip video, mirror video online, rotate video horizontally, vertical flip video, flip video online, horizontal flip video, video flipper online, mirror video horizontally, flip videos online free, online video flipper no upload"
 	ogTitle="Free Online Video Flipper - Flip Videos Horizontally & Vertically"
 	ogDescription="Professional video flipping tool. Flip videos horizontally or vertically with real-time preview. Works with all major formats. No uploads required - completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/flip"
 	breadcrumbs={[
 		{name: "Home", url: "/"},
-		{name: "Video Flipper", url: "/flip"}
+		{name: "Flip Video", url: "/flip"}
 	]}
 >
 	<main class="min-h-screen bg-gray-50">
 		<!-- Page Header -->
 		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
 			<div class="max-w-6xl mx-auto px-4 md:px-6">
-				<h1 class="text-3xl font-bold text-gray-900">Video Flipper</h1>
-				<p class="text-gray-600 mt-2">Flip videos horizontally or vertically with real-time preview</p>
+				<h1 class="text-3xl font-bold text-gray-900">Flip Video</h1>
+				<p class="text-gray-600 mt-2">Mirror video horizontally or vertically with real-time preview</p>
 			</div>
 		</div>
 
@@ -85,9 +86,12 @@ import Adsterra from '../components/Adsterra.astro';
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<div class="mb-16">
 					<h2 class="text-3xl font-bold text-gray-900 mb-6">Professional Video Flipping Made Simple</h2>
@@ -173,6 +177,11 @@ import Adsterra from '../components/Adsterra.astro';
 							<p class="text-sm text-gray-600">Correct orientation issues in screen recordings or tutorial videos.</p>
 						</div>
 					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="flip" category="video-editing" />
 				</div>
 			</div>
 		</section>

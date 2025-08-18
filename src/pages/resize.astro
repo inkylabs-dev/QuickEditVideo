@@ -2,26 +2,27 @@
 import Layout from '../layouts/Layout.astro';
 import VideoResizer from '../components/VideoResizer.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 ---
 
 <Layout
-	title="Video Resizer - Resize Videos Online Free | QuickEditVideo"
-	description="Resize videos online with precision! Scale videos, change dimensions while maintaining aspect ratio. Works with MP4, WebM, AVI, MOV files. No uploads, no sign-up."
-	keywords="video resizer, resize video online, scale video, video dimension changer, free video resizer, MP4 resizer, WebM resizer, AVI resizer, MOV resizer, online video editor"
+	title="Resize Video - Change Video Size, Video Resizer Online | QuickEditVideo"
+	description="Resize video online free! Change video size and adjust video dimensions without upload. Online video resizer to scale videos and maintain aspect ratio. Works with MP4, AVI, MOV, WebM."
+	keywords="resize video, change video size, video resizer online, adjust video dimensions, resize video online, video size changer, scale video online, video dimension editor, resize mp4, resize avi, resize mov, resize webm, video scaler, free video resizer, online video resizer no upload"
 	ogTitle="Free Online Video Resizer - Scale Videos with Precision"
 	ogDescription="Professional video resizing tool. Scale videos and change dimensions while maintaining aspect ratio. Works with all major formats. No uploads required - completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/resize"
 	breadcrumbs={[
 		{name: "Home", url: "/"},
-		{name: "Video Resizer", url: "/resize"}
+		{name: "Resize Video", url: "/resize"}
 	]}
 >
 	<main class="min-h-screen bg-gray-50">
 		<!-- Page Header -->
 		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
 			<div class="max-w-6xl mx-auto px-4 md:px-6">
-				<h1 class="text-3xl font-bold text-gray-900">Video Resizer</h1>
-				<p class="text-gray-600 mt-2">Resize videos while maintaining aspect ratio</p>
+				<h1 class="text-3xl font-bold text-gray-900">Resize Video</h1>
+				<p class="text-gray-600 mt-2">Change video size while maintaining aspect ratio</p>
 			</div>
 		</div>
 
@@ -83,12 +84,15 @@ import Adsterra from '../components/Adsterra.astro';
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<div class="mb-16">
-					<h2 class="text-3xl font-bold text-gray-900 mb-6">The Video Resizer That Keeps Things Simple</h2>
+					<h2 class="text-3xl font-bold text-gray-900 mb-6">Resize Video Online - Quick & Simple</h2>
 					<div class="prose prose-lg max-w-none text-gray-700 space-y-4">
 						<p>
 							Need to resize a video for social media, your website, or to reduce file size? Stop wrestling with complex video editing software. Whether you're scaling down a 4K video for faster loading or upscaling footage for a presentation, resizing should be straightforward.
@@ -104,7 +108,7 @@ import Adsterra from '../components/Adsterra.astro';
 
 				<!-- How It Works -->
 				<div class="mb-16">
-					<h3 class="text-2xl font-semibold text-gray-900 mb-6">How Our Video Resizer Works</h3>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">How to Resize Video Online</h3>
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 						<div>
 							<h4 class="text-lg font-medium text-gray-900 mb-3">Upload & Process Locally</h4>
@@ -135,7 +139,7 @@ import Adsterra from '../components/Adsterra.astro';
 
 				<!-- Why Choose This Tool -->
 				<div class="mb-16">
-					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Why Choose Our Video Resizer?</h3>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Why Resize Video With Our Tool?</h3>
 					<div class="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 							<div class="flex items-start gap-3">
@@ -252,6 +256,11 @@ import Adsterra from '../components/Adsterra.astro';
 							<p class="text-gray-600">Nope! Just visit the page and start resizing. No registration, no email required, no personal information collected.</p>
 						</div>
 					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="resize" category="video-editing" />
 				</div>
 			</div>
 		</section>

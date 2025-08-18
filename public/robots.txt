@@ -9,4 +9,4 @@ Disallow: /admin/
 Disallow: /private/
 
 # Allow all crawlers to access the main content
-# This site provides free video editing tools
+# This site provides free video editing tools: cut video, trim MP4, merge videos, resize video, crop video, convert MP4

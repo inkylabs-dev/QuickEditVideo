@@ -75,22 +75,40 @@ const currentUrl = canonicalUrl || Astro.url.href;
 			"@context": "https://schema.org",
 			"@type": "WebApplication",
 			"name": "QuickEditVideo",
-			"description": "Free online video editor for trimming, converting, and compressing videos in your browser",
+			"description": "Free online video editor with no upload required. Cut video, trim MP4, merge videos, resize video, crop video, convert to MP4/AVI/MOV, add watermark. Privacy-first video editor.",
 			"url": "https://quickeditvideo.com",
 			"applicationCategory": "MultimediaApplication",
 			"operatingSystem": "Any",
+			"browserRequirements": "HTML5, WebAssembly support",
 			"offers": {
 				"@type": "Offer",
 				"price": "0",
 				"priceCurrency": "USD"
 			},
 			"featureList": [
-				"Video trimming",
-				"Video conversion",
-				"Video compression",
-				"Privacy-focused (no uploads)",
-				"Multiple format support"
-			]
+				"Video cutter - cut video online",
+				"Video trimmer - trim MP4 online", 
+				"Video merger - combine video files",
+				"Video resizer - change video size",
+				"Video cropper - crop video frame",
+				"Video converter - convert to MP4, AVI, MOV, WebM",
+				"Video watermark - add logo to video",
+				"Video frame extractor - capture video screenshot",
+				"Video flipper - mirror video online",
+				"Video speed controller - change video speed",
+				"Extract audio - video to MP3",
+				"Privacy-focused (no upload required)",
+				"Browser-based video editing",
+				"Cross-platform compatibility",
+				"Free forever with no signup"
+			],
+			"sameAs": [
+				"https://github.com/inkylabs-dev/QuickEditVideo"
+			],
+			"publisher": {
+				"@type": "Organization",
+				"name": "InkyLabs Inc"
+			}
 		}
 		</script>
 		
@@ -223,7 +241,7 @@ const currentUrl = canonicalUrl || Astro.url.href;
 											</svg>
 										</div>
 										<div>
-											<div class="text-sm font-medium text-gray-900">Trimmer</div>
+											<div class="text-sm font-medium text-gray-900">Trim Video</div>
 											<div class="text-xs text-gray-500">Cut videos</div>
 										</div>
 									</a>
@@ -234,7 +252,7 @@ const currentUrl = canonicalUrl || Astro.url.href;
 											</svg>
 										</div>
 										<div>
-											<div class="text-sm font-medium text-gray-900">Merger</div>
+											<div class="text-sm font-medium text-gray-900">Merge Videos</div>
 											<div class="text-xs text-gray-500">Join videos</div>
 										</div>
 									</a>
@@ -245,7 +263,7 @@ const currentUrl = canonicalUrl || Astro.url.href;
 											</svg>
 										</div>
 										<div>
-											<div class="text-sm font-medium text-gray-900">Resizer</div>
+											<div class="text-sm font-medium text-gray-900">Resize Video</div>
 											<div class="text-xs text-gray-500">Change size</div>
 										</div>
 									</a>
@@ -256,7 +274,7 @@ const currentUrl = canonicalUrl || Astro.url.href;
 											</svg>
 										</div>
 										<div>
-											<div class="text-sm font-medium text-gray-900">Cropper</div>
+											<div class="text-sm font-medium text-gray-900">Crop Video</div>
 											<div class="text-xs text-gray-500">Crop area</div>
 										</div>
 									</a>
@@ -267,7 +285,7 @@ const currentUrl = canonicalUrl || Astro.url.href;
 											</svg>
 										</div>
 										<div>
-											<div class="text-sm font-medium text-gray-900">Watermark</div>
+											<div class="text-sm font-medium text-gray-900">Add Watermark</div>
 											<div class="text-xs text-gray-500">Add logos</div>
 										</div>
 									</a>
