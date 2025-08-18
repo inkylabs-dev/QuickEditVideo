@@ -161,6 +161,22 @@ const TOOLS: Tool[] = [
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
   },
+  {
+    id: 'confetti-effect',
+    name: 'Confetti Effect',
+    shortName: 'Confetti Effect',
+    description: 'Add confetti overlay animation to video',
+    shortDescription: 'Add confetti',
+    url: '/confetti-effect',
+    icon: {
+      type: 'svg',
+      content: '<path d="M12 2L13.09 8.26L20 7L14.74 11.74L21 12L14.74 12.26L20 17L13.09 15.74L12 22L10.91 15.74L4 17L9.26 12.26L3 12L9.26 11.74L4 7L10.91 8.26L12 2Z"/>'
+    },
+    category: 'video-editing',
+    bgColor: 'bg-purple-100',
+    hoverBgColor: 'group-hover:bg-purple-200',
+    iconColor: 'text-purple-600'
+  },
 
   // Format Converters
   {

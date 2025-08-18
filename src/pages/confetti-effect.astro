@@ -1,0 +1,330 @@
+---
+import Layout from '../layouts/Layout.astro';
+import VideoConfettiEffect from '../components/VideoConfettiEffect.tsx';
+import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
+
+// Structured data for Confetti Effect tool
+const confettiEffectStructuredData = {
+	"@context": "https://schema.org",
+	"@type": "SoftwareApplication",
+	"name": "Video Confetti Effect",
+	"description": "Free online video confetti effect tool. Add animated confetti overlay to videos with customizable timing and effects.",
+	"applicationCategory": "MultimediaApplication",
+	"operatingSystem": "Any",
+	"url": "https://quickeditvideo.com/confetti-effect",
+	"offers": {
+		"@type": "Offer",
+		"price": "0",
+		"priceCurrency": "USD"
+	},
+	"featureList": [
+		"Animated confetti overlay",
+		"Customizable timing controls",
+		"Multiple confetti parameters",
+		"Privacy-focused (no uploads)",
+		"Browser-based processing"
+	],
+	"screenshot": "https://quickeditvideo.com/logo.png"
+};
+---
+
+<Layout
+	title="Add Confetti Effect to Video - Animated Overlay Online Free | QuickEditVideo"
+	description="Add confetti effect to video online for free! Create animated confetti overlay with customizable timing, colors, and particle effects. No upload required - completely private and secure."
+	keywords="confetti effect video, add confetti to video, animated confetti overlay, video confetti maker, confetti animation video, celebration video effect, party video effect, animated video overlay, confetti video editor online, add effects to video"
+	ogTitle="Free Video Confetti Effect - Add Animated Confetti Overlay"
+	ogDescription="Add stunning confetti effects to your videos online. Customize timing, particles, and colors. No uploads required - completely private and secure."
+	canonicalUrl="https://quickeditvideo.com/confetti-effect"
+	showBreadcrumbs={true}
+	currentPage="Confetti Effect"
+	structuredData={confettiEffectStructuredData}
+>
+	<main class="min-h-screen bg-gray-50">
+		<!-- Page Header -->
+		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
+			<div class="max-w-6xl mx-auto px-4 md:px-6">
+				<h1 class="text-3xl font-bold text-gray-900">Confetti Effect</h1>
+				<p class="text-gray-600 mt-2">Add animated confetti overlay to your videos</p>
+			</div>
+		</div>
+
+		<!-- Main Video Editor -->
+		<section class="p-4 md:p-6 w-full">
+			<div class="max-w-6xl mx-auto w-full">
+				<VideoConfettiEffect client:load />
+			</div>
+		</section>
+
+		<Adsterra />
+
+		<!-- Quick Help -->
+		<section id="quick-help" class="px-4 md:px-6 pb-16">
+			<div class="max-w-6xl mx-auto">
+				<h3 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Quick Guide</h3>
+				
+				<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+					<!-- Step 1: Upload -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+								<polyline points="14,2 14,8 20,8"/>
+								<path d="M10 15.5L16 12L10 8.5V15.5Z"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">1</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Upload Video</h4>
+						<p class="text-sm text-gray-600">Upload your video file (supports MP4, WebM, AVI, MOV)</p>
+					</div>
+
+					<!-- Step 2: Configure -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<circle cx="12" cy="12" r="3"/>
+								<path d="M12 1v6m0 6v6"/>
+								<path d="m21 12-6-6-6 6-6-6"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">2</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Configure Effect</h4>
+						<p class="text-sm text-gray-600">Set timing, particle count, spread, and velocity</p>
+					</div>
+
+					<!-- Step 3: Preview -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<polygon points="5,3 19,12 5,21"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">3</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Generate Preview</h4>
+						<p class="text-sm text-gray-600">Generate confetti animation preview on canvas</p>
+					</div>
+
+					<!-- Step 4: Download -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+								<polyline points="7,10 12,15 17,10"/>
+								<line x1="12" y1="15" x2="12" y2="3"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">4</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Download Result</h4>
+						<p class="text-sm text-gray-600">Download video with confetti overlay effect</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Content Section for SEO with Sidebar -->
+		<section class="bg-gray-50 py-16 px-4 md:px-6">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
+				<!-- Introduction -->
+				<div class="mb-16">
+					<h2 class="text-3xl font-bold text-gray-900 mb-6">Add Confetti Effects to Videos Online</h2>
+					<div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+						<p>
+							Celebrate special moments with animated confetti effects! Whether you're creating birthday videos, celebration compilations, or party highlights, our confetti effect tool lets you add dynamic, animated confetti overlays that bring your videos to life.
+						</p>
+						<p>
+							Unlike static overlays, our tool creates realistic confetti animations with customizable particles, colors, timing, and physics. Set exactly when the confetti appears, how many particles to show, and how they move across your video. Your videos stay on your device - everything happens in your browser.
+						</p>
+					</div>
+				</div>
+
+				<!-- How It Works -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">How to Add Confetti to Video</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Upload & Process Locally</h4>
+							<p class="text-gray-600 mb-4">
+								Drop your video file directly into the browser. Everything happens on your device using WebAssembly technology—no servers involved, no waiting for uploads.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Customizable Animation</h4>
+							<p class="text-gray-600 mb-4">
+								Adjust particle count, spread angle, velocity, and timing. Create subtle celebrations or explosive confetti bursts - you control every aspect of the animation.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Perfect Timing Control</h4>
+							<p class="text-gray-600 mb-4">
+								Set exactly when confetti appears and disappears. Synchronize with key moments like blowing out candles, making announcements, or celebrating achievements.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">High-Quality Output</h4>
+							<p class="text-gray-600 mb-4">
+								Canvas-rendered confetti animation overlays maintain video quality. Export in the same format as your original with no quality loss.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Why Choose This Tool -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Why Use Our Confetti Effect Tool?</h3>
+					<div class="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Animated Effects</h4>
+									<p class="text-sm text-gray-600">Real physics-based confetti animation, not static overlays.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Precise Timing</h4>
+									<p class="text-sm text-gray-600">Set exact start and end times for confetti effects.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">No Upload Required</h4>
+									<p class="text-sm text-gray-600">Your videos never leave your device. Completely private.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Customizable Parameters</h4>
+									<p class="text-sm text-gray-600">Control particle count, spread, velocity, and colors.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Free Forever</h4>
+									<p class="text-sm text-gray-600">No subscriptions, no watermarks, no hidden fees.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">All Devices</h4>
+									<p class="text-sm text-gray-600">Works on desktop, mobile, and tablet browsers.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- FAQ Section -->
+				<div>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-8">Frequently Asked Questions</h3>
+					<div class="space-y-6">
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Can I control when the confetti appears?</h4>
+							<p class="text-gray-600">Yes! Set precise start and end times for the confetti effect. Perfect for synchronizing with special moments in your video.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">How realistic is the confetti animation?</h4>
+							<p class="text-gray-600">Very realistic! We use physics-based animation with gravity, air resistance, and particle interactions to create natural-looking confetti that moves like real confetti.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Are my videos processed on your servers?</h4>
+							<p class="text-gray-600">No, everything happens locally in your browser. Your videos never leave your device, ensuring complete privacy and security.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Can I customize the confetti colors and effects?</h4>
+							<p class="text-gray-600">Absolutely! Adjust particle count, spread angle, velocity, and colors to create the perfect confetti effect for your video.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">What video formats are supported?</h4>
+							<p class="text-gray-600">We support all major video formats including MP4, WebM, AVI, MOV, MKV. The output maintains the same format as your input video.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Will the confetti effect reduce video quality?</h4>
+							<p class="text-gray-600">No quality loss! The confetti animation is rendered at the same resolution as your video and overlaid without re-encoding the base video.</p>
+						</div>
+					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="confetti-effect" category="video-editing" />
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		// Listen for events from VideoConfettiEffect component to hide/show header
+		document.addEventListener('DOMContentLoaded', function() {
+			const pageHeader = document.getElementById('page-header');
+			
+			// Function to toggle header visibility
+			function toggleHeader(show: boolean) {
+				if (pageHeader) {
+					if (show) {
+						pageHeader.style.display = 'block';
+						pageHeader.style.opacity = '1';
+						pageHeader.style.transform = 'translateY(0)';
+					} else {
+						pageHeader.style.opacity = '0';
+						pageHeader.style.transform = 'translateY(-10px)';
+						setTimeout(() => {
+							pageHeader.style.display = 'none';
+						}, 300);
+					}
+				}
+			}
+			
+			// Listen for custom events from VideoConfettiEffect
+			document.addEventListener('videoConfettiEffectViewChange', function(event) {
+				const customEvent = event as any;
+				const isLandingView = customEvent.detail.currentView === 'landing';
+				toggleHeader(isLandingView);
+			});
+		});
+	</script>
+
+	<style>
+		/* Prevent horizontal scroll */
+		* {
+			box-sizing: border-box;
+		}
+	</style>
+</Layout>
