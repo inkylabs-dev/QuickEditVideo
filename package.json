@@ -24,6 +24,7 @@
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.2",
     "@preact/signals": "^2.2.1",
+    "@tailwindcss/typography": "^0.5.16",
     "@types/fluent-ffmpeg": "^2.1.27",
     "astro": "^5.12.9",
     "fluent-ffmpeg": "^2.1.3",
