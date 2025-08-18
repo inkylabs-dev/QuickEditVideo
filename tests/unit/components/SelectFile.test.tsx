@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
 import '@testing-library/jest-dom';
-import { SelectFile } from '../../../src/components/SelectFile';
+import { SelectFile } from 'quickeditvideo-core';
 
 // Mock window.alert
 const mockAlert = vi.fn();

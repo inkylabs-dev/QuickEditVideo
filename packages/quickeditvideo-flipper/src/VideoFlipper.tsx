@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { SelectFile } from './SelectFile';
-import { flipVideo, type FlipDirection, getMimeType } from '../FFmpegUtils';
+import { FfmpegProvider, useFFmpeg, Loading, SelectFile } from 'quickeditvideo-core';
+import { fetchFile } from '@ffmpeg/util';
 
 const VideoFlipperContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'flipping'>('landing');

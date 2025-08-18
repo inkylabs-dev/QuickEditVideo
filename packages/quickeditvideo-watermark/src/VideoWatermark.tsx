@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { addWatermark } from '../FFmpegUtils';
-import { SelectFile } from './SelectFile';
+import { FfmpegProvider, useFFmpeg, Loading, SelectFile } from 'quickeditvideo-core';
+import { fetchFile } from '@ffmpeg/util';
 
 const VideoWatermarkContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'watermarking'>('landing');

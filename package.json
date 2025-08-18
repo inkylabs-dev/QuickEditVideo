@@ -1,7 +1,11 @@
 {
   "name": "quickeditvideo",
+  "private": true,
   "type": "module",
   "version": "0.0.1",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "npm run copy-ffmpeg && astro dev",
     "build": "npm run copy-ffmpeg && astro build",
@@ -33,7 +37,18 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "tailwindcss": "^3.4.17",
-    "video.js": "^8.23.4"
+    "video.js": "^8.23.4",
+    "quickeditvideo-core": "file:./packages/quickeditvideo-core",
+    "quickeditvideo-converter": "file:./packages/quickeditvideo-converter",
+    "quickeditvideo-merger": "file:./packages/quickeditvideo-merger",
+    "quickeditvideo-trimmer": "file:./packages/quickeditvideo-trimmer",
+    "quickeditvideo-resizer": "file:./packages/quickeditvideo-resizer",
+    "quickeditvideo-cropper": "file:./packages/quickeditvideo-cropper",
+    "quickeditvideo-watermark": "file:./packages/quickeditvideo-watermark",
+    "quickeditvideo-flipper": "file:./packages/quickeditvideo-flipper",
+    "quickeditvideo-speed": "file:./packages/quickeditvideo-speed",
+    "quickeditvideo-audio-extractor": "file:./packages/quickeditvideo-audio-extractor",
+    "quickeditvideo-frame-extractor": "file:./packages/quickeditvideo-frame-extractor"
   },
   "overrides": {
     "react": "npm:@preact/compat@latest",

@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import ControlPanel from './ControlPanel';
-import { SelectFile } from './SelectFile';
-import { changeVideoSpeed, downloadVideo } from '../FFmpegUtils';
+import type { JSX } from 'preact';
+import { FfmpegProvider, useFFmpeg, Loading, SelectFile } from 'quickeditvideo-core';
+import { fetchFile } from '@ffmpeg/util';
 
 const VideoSpeedContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'editing'>('landing');

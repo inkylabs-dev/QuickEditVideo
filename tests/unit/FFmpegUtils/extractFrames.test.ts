@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { extractFrames, extractFramesInRange } from '../../../src/FFmpegUtils/extractFrames';
+import { extractFrames, extractFramesInRange } from 'quickeditvideo-core/extractFrames';
 
 // Mock @ffmpeg/util
 vi.mock('@ffmpeg/util', () => ({

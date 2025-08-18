@@ -1,0 +1,25 @@
+{
+  "name": "quickeditvideo-core",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./SelectFile": "./src/SelectFile.tsx",
+    "./Loading": "./src/Loading.tsx",
+    "./ControlPanel": "./src/ControlPanel.tsx",
+    "./FFmpegCore": "./src/FFmpegCore/index.ts",
+    "./FFmpegUtils": "./src/FFmpegUtils/index.ts"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.2",
+    "@preact/signals": "^2.2.1",
+    "preact": "^10.27.0",
+    "mp4box": "^1.4.7"
+  },
+  "peerDependencies": {
+    "preact": "^10.27.0"
+  }
+}

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { act } from 'preact/test-utils';
 import { useState } from 'preact/hooks';
-import VideoTrimmer from '../../../src/components/VideoTrimmer';
+import { VideoTrimmer } from 'quickeditvideo-trimmer';
 
 // Mock the FFmpeg core module
 vi.mock('../../../src/FFmpegCore', () => ({

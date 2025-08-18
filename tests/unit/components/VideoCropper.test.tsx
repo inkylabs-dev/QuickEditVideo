@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/preact';
 import { act } from '@testing-library/preact';
-import VideoCropper from '../../../src/components/VideoCropper.tsx';
+import { VideoCropper } from 'quickeditvideo-cropper';
 
 // Mock the FFmpeg core module
 vi.mock('../../../src/FFmpegCore', () => ({

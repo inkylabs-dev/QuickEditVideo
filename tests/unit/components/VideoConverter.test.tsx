@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/preact';
 import { act } from '@testing-library/preact';
-import VideoConverter from '../../../src/components/VideoConverter.tsx';
+import { VideoConverter } from 'quickeditvideo-converter';
 
 // Clean up between tests
 afterEach(() => {

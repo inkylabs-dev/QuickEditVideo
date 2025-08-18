@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { NodeFFmpeg } from '../../ffmpeg-node-adapter';
 import { createTestVideoFile, createMockVideoFile } from '../../test-utils';
-import { flipVideo, type FlipDirection } from '../../../src/FFmpegUtils/flipVideo';
+import { flipVideo, type FlipDirection } from 'quickeditvideo-core/flipVideo';
 
 // Check if FFmpeg is available in the environment
 const checkFFmpegAvailable = async (): Promise<boolean> => {

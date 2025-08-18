@@ -1,11 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
+import { FfmpegProvider, useFFmpeg, SelectFile } from 'quickeditvideo-core';
 import { fetchFile } from '@ffmpeg/util';
-import { SelectFile } from './SelectFile';
-
 interface VideoClip {
 	id: string;
 	file: File;

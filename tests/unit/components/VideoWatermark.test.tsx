@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
 import { act } from 'preact/test-utils';
-import VideoWatermark from '../../../src/components/VideoWatermark';
+import { VideoWatermark } from 'quickeditvideo-watermark';
 
 // Mock the addWatermark utility specifically
 vi.mock('../../../src/FFmpegUtils/addWatermark', () => ({

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
-import VideoMerger from '../../../src/components/VideoMerger';
+import { VideoMerger } from 'quickeditvideo-merger';
 
 // Mock react-dnd and react-dnd-html5-backend
 vi.mock('react-dnd', () => ({

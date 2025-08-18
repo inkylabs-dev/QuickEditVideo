@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
+import { FfmpegProvider, useFFmpeg, Loading, SelectFile } from 'quickeditvideo-core';
 import { fetchFile } from '@ffmpeg/util';
-import { SelectFile } from './SelectFile';
 
 const AudioExtractorContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'extracting'>('landing');

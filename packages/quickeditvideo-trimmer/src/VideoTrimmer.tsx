@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
+import { FfmpegProvider, useFFmpeg, ControlPanel, SelectFile } from 'quickeditvideo-core';
 import { fetchFile } from '@ffmpeg/util';
-import ControlPanel from './ControlPanel';
-import { SelectFile } from './SelectFile';
 
 const VideoTrimmerContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'trimming'>('landing');

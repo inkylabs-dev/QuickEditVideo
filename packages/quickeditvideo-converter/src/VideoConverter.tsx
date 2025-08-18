@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { convertVideo, createVideoBlob, downloadBlob, type ConversionOptions } from '../FFmpegUtils';
-import Loading from './Loading';
-import { SelectFile } from './SelectFile';
+import { FfmpegProvider, useFFmpeg, convertVideo, createVideoBlob, downloadBlob, type ConversionOptions, Loading, SelectFile } from 'quickeditvideo-core';
+import { fetchFile } from '@ffmpeg/util';
 
 interface VideoConverterProps {
   targetFormat: string;

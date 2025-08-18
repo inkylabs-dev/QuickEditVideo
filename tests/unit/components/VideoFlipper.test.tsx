@@ -1,9 +1,9 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/preact';
-import VideoFlipper from '../../../src/components/VideoFlipper.tsx';
+import { VideoFlipper } from 'quickeditvideo-flipper';
 import { NodeFFmpeg } from '../../ffmpeg-node-adapter';
 import { createTestVideoFile, createMockVideoFile } from '../../test-utils';
-import { flipVideo, type FlipDirection } from '../../../src/FFmpegUtils';
+import { flipVideo, type FlipDirection } from 'quickeditvideo-core';
 
 // Check if FFmpeg is available in the environment
 const checkFFmpegAvailable = async (): Promise<boolean> => {

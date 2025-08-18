@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { act } from 'preact/test-utils';
-import VideoResizer from '../../../src/components/VideoResizer';
+import { VideoResizer } from 'quickeditvideo-resizer';
 
 // Mock the FFmpeg core module
 vi.mock('../../../src/FFmpegCore', () => ({
