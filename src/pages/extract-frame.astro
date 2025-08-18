@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import FrameExtractor from '../components/FrameExtractor.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 ---
 
 <Layout
@@ -175,9 +176,12 @@ import Adsterra from '../components/Adsterra.astro';
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<article class="mb-16">
 					<h2 class="text-3xl font-bold text-gray-900 mb-6">The Frame Extractor That Makes Sense</h2>
@@ -417,6 +421,11 @@ import Adsterra from '../components/Adsterra.astro';
 						</article>
 					</div>
 				</section>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="extract-frame" category="video-editing" />
+				</div>
 			</div>
 		</section>
 	</main>

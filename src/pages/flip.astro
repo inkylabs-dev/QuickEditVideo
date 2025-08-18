@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import VideoFlipper from '../components/VideoFlipper.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 ---
 
 <Layout
@@ -85,9 +86,12 @@ import Adsterra from '../components/Adsterra.astro';
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<div class="mb-16">
 					<h2 class="text-3xl font-bold text-gray-900 mb-6">Professional Video Flipping Made Simple</h2>
@@ -173,6 +177,11 @@ import Adsterra from '../components/Adsterra.astro';
 							<p class="text-sm text-gray-600">Correct orientation issues in screen recordings or tutorial videos.</p>
 						</div>
 					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="flip" category="video-editing" />
 				</div>
 			</div>
 		</section>

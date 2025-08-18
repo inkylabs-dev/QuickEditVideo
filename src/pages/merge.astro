@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import VideoMerger from '../components/VideoMerger.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 ---
 
 <Layout
@@ -96,9 +97,12 @@ import Adsterra from '../components/Adsterra.astro';
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<div class="mb-16">
 					<h2 class="text-3xl font-bold text-gray-900 mb-6">Merge Videos Online - Fast & Easy</h2>
@@ -265,6 +269,9 @@ import Adsterra from '../components/Adsterra.astro';
 							<p class="text-gray-600">We use efficient encoding to maintain the best possible quality while keeping file sizes reasonable. The output quality will be very close to your original videos.</p>
 						</div>
 					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="merge" category="video-editing" />
 				</div>
 			</div>
 		</section>

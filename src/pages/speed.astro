@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import VideoSpeed from '../components/VideoSpeed.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 
 // Structured data for Video Speed tool
 const speedStructuredData = {
@@ -84,9 +85,12 @@ const speedStructuredData = {
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<div class="mb-16">
 					<h2 class="text-3xl font-bold text-gray-900 mb-6">Professional Video Speed Control</h2>
@@ -201,6 +205,11 @@ const speedStructuredData = {
 							</div>
 						</article>
 					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="change-speed" category="video-editing" />
 				</div>
 			</div>
 		</section>

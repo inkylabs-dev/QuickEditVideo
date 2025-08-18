@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import VideoTrimmer from '../components/VideoTrimmer.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 
 // Structured data for Video Trimmer tool
 const trimmerStructuredData = {
@@ -108,9 +109,12 @@ const trimmerStructuredData = {
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<div class="mb-16">
 					<h2 class="text-3xl font-bold text-gray-900 mb-6">Trim Video Online - Simple & Fast</h2>
@@ -277,6 +281,11 @@ const trimmerStructuredData = {
 							<p class="text-gray-600">Nope! Just visit the page and start trimming. No registration, no email required, no personal information collected.</p>
 						</div>
 					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="trim" category="video-editing" />
 				</div>
 			</div>
 		</section>
