@@ -33,9 +33,9 @@ const TOOLS: Tool[] = [
   // Video Editing Tools
   {
     id: 'trim',
-    name: 'Video Trimmer',
-    shortName: 'Trimmer',
-    description: 'Cut videos with frame precision',
+    name: 'Trim Video',
+    shortName: 'Trim Video',
+    description: 'Cut video and trim MP4 with precision',
     shortDescription: 'Cut videos',
     url: '/trim',
     icon: {
@@ -50,9 +50,9 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'merge',
-    name: 'Video Merger',
-    shortName: 'Merger',
-    description: 'Combine multiple videos into one',
+    name: 'Merge Videos',
+    shortName: 'Merge Videos',
+    description: 'Merge videos and combine video files',
     shortDescription: 'Join videos',
     url: '/merge',
     icon: {
@@ -67,9 +67,9 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'resize',
-    name: 'Video Resizer',
-    shortName: 'Resizer',
-    description: 'Change video dimensions and resolution',
+    name: 'Resize Video',
+    shortName: 'Resize Video',
+    description: 'Resize video and change video size',
     shortDescription: 'Change size',
     url: '/resize',
     icon: {
@@ -83,9 +83,9 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'crop',
-    name: 'Video Cropper',
-    shortName: 'Cropper',
-    description: 'Crop and trim video frames',
+    name: 'Crop Video',
+    shortName: 'Crop Video',
+    description: 'Crop video and cut video frame',
     shortDescription: 'Crop area',
     url: '/crop',
     icon: {
@@ -99,9 +99,9 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'watermark',
-    name: 'Video Watermark',
-    shortName: 'Watermark',
-    description: 'Add logos and watermarks to videos',
+    name: 'Add Watermark',
+    shortName: 'Add Watermark',
+    description: 'Add watermark video and put logo on video',
     shortDescription: 'Add logos',
     url: '/watermark',
     icon: {
@@ -115,9 +115,9 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'extract-frame',
-    name: 'Frame Extractor',
-    shortName: 'Frame Extractor',
-    description: 'Extract individual frames from videos',
+    name: 'Extract Frames',
+    shortName: 'Extract Frames',
+    description: 'Extract video frame and capture still from video',
     shortDescription: 'Extract frames',
     url: '/extract-frame',
     icon: {
@@ -131,9 +131,9 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'flip',
-    name: 'Video Flipper',
-    shortName: 'Flipper',
-    description: 'Flip videos horizontally or vertically',
+    name: 'Flip Video',
+    shortName: 'Flip Video',
+    description: 'Flip video and mirror video online',
     shortDescription: 'Flip video',
     url: '/flip',
     icon: {
@@ -147,9 +147,9 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'change-speed',
-    name: 'Video Speed Changer',
-    shortName: 'Speed',
-    description: 'Change video playback speed - speed up or slow down',
+    name: 'Change Video Speed',
+    shortName: 'Change Speed',
+    description: 'Change video speed, speed up video or slow motion',
     shortDescription: 'Change speed',
     url: '/speed',
     icon: {
@@ -167,7 +167,7 @@ const TOOLS: Tool[] = [
     id: 'to-mp4',
     name: 'Convert to MP4',
     shortName: 'MP4',
-    description: 'Universal format converter',
+    description: 'Convert to MP4, AVI to MP4 online',
     shortDescription: 'MP4',
     url: '/to-mp4',
     icon: {
@@ -236,7 +236,7 @@ const TOOLS: Tool[] = [
     id: 'to-gif',
     name: 'Convert to GIF',
     shortName: 'GIF',
-    description: 'Convert videos to animated GIF',
+    description: 'Video to GIF, MP4 to GIF online',
     shortDescription: 'GIF',
     url: '/to-gif',
     icon: {
@@ -272,7 +272,7 @@ const TOOLS: Tool[] = [
     id: 'extract-audio',
     name: 'Extract Audio',
     shortName: 'Extract Audio',
-    description: 'Extract audio track from videos',
+    description: 'Video to MP3 and extract audio from video',
     shortDescription: 'Get audio',
     url: '/extract-audio',
     icon: {

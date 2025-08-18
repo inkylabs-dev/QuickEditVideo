@@ -7,7 +7,7 @@ import Adsterra from '../components/Adsterra.astro';
 const speedStructuredData = {
 	"@context": "https://schema.org",
 	"@type": "SoftwareApplication",
-	"name": "Video Speed Changer",
+	"name": "Change Video Speed",
 	"description": "Free online video speed changer. Speed up or slow down videos from 0.25x to 4x. With motion interpolation for smooth slow motion.",
 	"applicationCategory": "MultimediaApplication",
 	"operatingSystem": "Any",
@@ -30,15 +30,15 @@ const speedStructuredData = {
 ---
 
 <Layout
-	title="Video Speed Changer - Speed Up & Slow Down Videos Online Free | QuickEditVideo"
-	description="Change video speed online! Speed up or slow down videos from 0.25x to 4x. Motion interpolation for smooth slow motion. Works with MP4, WebM, AVI, MOV files. No uploads required."
-	keywords="video speed changer, speed up video, slow down video, video accelerator, slow motion video, fast motion video, change video speed online, video playback speed"
-	ogTitle="Free Online Video Speed Changer - Speed Up & Slow Down Videos"
+	title="Change Video Speed - Speed Up Video, Slow Motion Maker | QuickEditVideo"
+	description="Change video speed online free! Speed up video, create slow motion, adjust video playback speed from 0.25x to 4x. Online video speed controller with smooth motion. Works with MP4, AVI, MOV without upload."
+	keywords="change video speed, speed up video online, slow motion maker, video playback speed, slow down video online, video speed controller, fast motion video, video accelerator, slow motion video online, video speed changer online free"
+	ogTitle="Change Video Speed Online - Speed Up & Slow Down Videos"
 	ogDescription="Professional video speed control tool. Change playback speed from 0.25x to 4x with motion interpolation. Works with all major formats. No uploads required - completely private and secure."
 	canonicalUrl="https://quickeditvideo.com/change-speed"
 	breadcrumbs={[
 		{name: "Home", url: "/"},
-		{name: "Video Speed Changer", url: "/change-speed"}
+		{name: "Change Video Speed", url: "/change-speed"}
 	]}
 	structuredData={speedStructuredData}
 >
@@ -46,12 +46,12 @@ const speedStructuredData = {
 		<!-- Page Header -->
 		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
 			<div class="max-w-6xl mx-auto px-4 md:px-6">
-				<h1 class="text-3xl font-bold text-gray-900">Video Speed Changer</h1>
-				<p class="text-gray-600 mt-2">Speed up or slow down videos with precision and smooth motion</p>
+				<h1 class="text-3xl font-bold text-gray-900">Change Video Speed</h1>
+				<p class="text-gray-600 mt-2">Speed up video or create slow motion with precision</p>
 			</div>
 		</div>
 
-		<!-- Main Video Speed Changer -->
+		<!-- Main Video Speed Controller -->
 		<section class="p-4 md:p-6 w-full">
 			<div class="max-w-6xl mx-auto w-full">
 				<VideoSpeed client:load />
