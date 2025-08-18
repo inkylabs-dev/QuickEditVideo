@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import VideoConverter from '../components/VideoConverter.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 ---
 
 <Layout
@@ -80,9 +81,12 @@ import Adsterra from '../components/Adsterra.astro';
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<div class="mb-16">
 					<h2 class="text-3xl font-bold text-gray-900 mb-6">Convert to MP4 Online - AVI, MOV, MKV to MP4</h2>
@@ -158,6 +162,57 @@ import Adsterra from '../components/Adsterra.astro';
 							</div>
 						</div>
 					</div>
+				</div>
+
+				<!-- FAQ Section -->
+				<div>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-8">Frequently Asked Questions</h3>
+					<div class="space-y-6">
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Is this MP4 converter completely free?</h4>
+							<p class="text-gray-600">Yes, absolutely! Convert unlimited videos to MP4 with no watermarks, no time limits, and no hidden costs.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Are my videos private and secure during conversion?</h4>
+							<p class="text-gray-600">Completely. All video conversion happens locally in your browser using WebAssembly. Your videos never get uploaded to our servers.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Will converting to MP4 reduce video quality?</h4>
+							<p class="text-gray-600">We use high-quality encoding settings to maintain the best possible video quality while creating efficient MP4 files.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">What video formats can I convert to MP4?</h4>
+							<p class="text-gray-600">We support all major video formats including AVI, MOV, MKV, WebM, WMV, FLV, 3GP, and many more. If your browser can play it, we can convert it.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">How long does MP4 conversion take?</h4>
+							<p class="text-gray-600">Conversion speed depends on your device's processing power and the video size. Most conversions complete within a few minutes.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Can I use this on my phone or tablet?</h4>
+							<p class="text-gray-600">Yes! The converter works on any device with a modern web browser, including smartphones and tablets.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Is there a file size limit for conversion?</h4>
+							<p class="text-gray-600">The only limit is your device's available memory. Larger files just take a bit more time to process.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Do I need to create an account?</h4>
+							<p class="text-gray-600">No account needed! Just visit the page and start converting. No registration, no email required.</p>
+						</div>
+					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="to-mp4" category="converters" />
 				</div>
 			</div>
 		</section>

@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import VideoConverter from '../components/VideoConverter.tsx';
 import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
 ---
 
 <Layout
@@ -81,9 +82,12 @@ import Adsterra from '../components/Adsterra.astro';
 			</div>
 		</section>
 
-		<!-- Content Section for SEO -->
+		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
-			<div class="max-w-4xl mx-auto">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
 				<!-- Introduction -->
 				<div class="mb-16">
 					<h2 class="text-3xl font-bold text-gray-900 mb-6">Convert Any Video to Animated GIF</h2>
@@ -184,6 +188,47 @@ import Adsterra from '../components/Adsterra.astro';
 							</div>
 						</div>
 					</div>
+				</div>
+
+				<!-- FAQ Section -->
+				<div>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-8">Frequently Asked Questions</h3>
+					<div class="space-y-6">
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Is this GIF converter completely free?</h4>
+							<p class="text-gray-600">Yes, absolutely! Convert unlimited videos to GIF with no watermarks, no time limits, and no hidden costs.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Are my videos private and secure during conversion?</h4>
+							<p class="text-gray-600">Completely. All video conversion happens locally in your browser using WebAssembly. Your videos never get uploaded to our servers.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Why convert video to GIF?</h4>
+							<p class="text-gray-600">GIFs are perfect for sharing short video clips on social media, websites, and messaging platforms. They auto-loop and don't require a video player.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Can I control the GIF quality and file size?</h4>
+							<p class="text-gray-600">Yes! You can adjust frame rate, resolution, and duration to balance between quality and file size for your needs.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">What's the maximum length for a GIF?</h4>
+							<p class="text-gray-600">While there's no hard limit, shorter clips (2-10 seconds) work best for GIFs to keep file sizes manageable.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Will my GIF loop automatically?</h4>
+							<p class="text-gray-600">Yes! All GIFs created with our tool loop continuously by default, which is perfect for most use cases.</p>
+						</div>
+					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="to-gif" category="converters" />
 				</div>
 			</div>
 		</section>
