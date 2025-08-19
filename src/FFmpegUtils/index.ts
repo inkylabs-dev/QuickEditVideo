@@ -19,3 +19,13 @@ export { flipVideo, type FlipDirection } from './flipVideo';
 // Utility functions  
 export { downloadVideo } from './downloadVideo';
 export { getMimeType, createVideoBlob, downloadBlob } from './getMimeType';
+export { 
+  getVideoInfo, 
+  formatDuration, 
+  formatFileSize, 
+  formatBitrate,
+  type VideoMetadata,
+  type VideoStream,
+  type AudioStream,
+  type VideoFormat
+} from './getVideoInfo';
