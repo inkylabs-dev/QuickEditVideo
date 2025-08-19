@@ -21,6 +21,24 @@ jobs:
         node-version: '18'
         cache: 'npm'
         
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        
+    - name: Create Python virtual environment
+      run: |
+        python -m venv venv
+        echo "VIRTUAL_ENV=$PWD/venv" >> $GITHUB_ENV
+        echo "$PWD/venv/bin" >> $GITHUB_PATH
+        
+    - name: Install Python dependencies
+      run: |
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        
     - name: Install dependencies
       run: npm ci
 
@@ -64,6 +82,24 @@ jobs:
         node-version: '18'
         cache: 'npm'
         
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        
+    - name: Create Python virtual environment
+      run: |
+        python -m venv venv
+        echo "VIRTUAL_ENV=$PWD/venv" >> $GITHUB_ENV
+        echo "$PWD/venv/bin" >> $GITHUB_PATH
+        
+    - name: Install Python dependencies
+      run: |
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        
     - name: Install dependencies
       run: npm ci
       
@@ -89,6 +125,24 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
+        
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        
+    - name: Create Python virtual environment
+      run: |
+        python -m venv venv
+        echo "VIRTUAL_ENV=$PWD/venv" >> $GITHUB_ENV
+        echo "$PWD/venv/bin" >> $GITHUB_PATH
+        
+    - name: Install Python dependencies
+      run: |
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
         
     - name: Install dependencies
       run: npm ci

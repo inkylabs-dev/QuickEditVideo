@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "setup-assets": "node scripts/download-assets.js",
-    "download-model": "./venv/bin/hf download KittenML/kitten-tts-nano-0.1 --local-dir assets/",
+    "download-model": "hf download KittenML/kitten-tts-nano-0.1 --local-dir assets/",
     "convert-voices": "python3 scripts/convert-voices.py",
     "build": "npm run download-model && npm run convert-voices && npm run setup-assets && tsc && rollup -c",
     "build:code": "tsc && rollup -c",
