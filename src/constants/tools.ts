@@ -313,9 +313,9 @@ const TOOLS: Tool[] = [
     },
     category: 'audio-quality',
     featured: true,
-    bgColor: 'bg-purple-100',
-    hoverBgColor: 'group-hover:bg-purple-200',
-    iconColor: 'text-purple-600'
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'group-hover:bg-teal-200',
+    iconColor: 'text-teal-600'
   }
 ];
 
