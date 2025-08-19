@@ -3,10 +3,14 @@ import type { JSX } from 'preact';
 import Loading from './Loading';
 import * as mediabunny from 'mediabunny';
 import { InferenceSession, env, Tensor } from 'onnxruntime-web';
+import { phonemize } from 'phonemizer';
 
 // Use vite-plugin-wasm for WASM imports via alias
 import ortWasmSimdThreadedUrl from '@onnx-wasm/ort-wasm-simd-threaded.wasm?url';
 import ortWasmSimdThreadedJsepUrl from '@onnx-wasm/ort-wasm-simd-threaded.jsep.wasm?url';
+
+// Note: Removed basicEnglishTokenize as we're using phonemes directly
+// to avoid extra spaces that create unwanted whitespace tokens
 
 // Available voice options from KittenTTS model (based on actual voices.json)
 const VOICE_OPTIONS = [
@@ -318,16 +322,45 @@ const TextToSpeech = () => {
         tokenIds = new BigInt64Array(simpleTokens.map(id => BigInt(id)));
         console.log('Simple mode tokens:', Array.from(tokenIds));
       } else {
-        // Use the new TextCleaner implementation
-        console.log('Using TextCleaner direct conversion');
+        // Use proper phonemization like the Python implementation
+        console.log('Using phonemization-based tokenization');
         
-        // Clean the text first (basic normalization)
-        const cleanText = textCleaner.clean(text);
-        console.log('Cleaned text:', cleanText);
-        
-        // Convert directly to tokens using the TextCleaner
-        tokenIds = textCleaner.textToTokens(cleanText);
-        console.log('TextCleaner tokens:', Array.from(tokenIds));
+        try {
+          // Step 1: Phonemize the text
+          console.log('Phonemizing text...');
+          const phonemesList = await phonemize(text, 'en-us');
+          const phonemes = phonemesList[0] || '';
+          console.log('Phonemes:', phonemes);
+          
+          // Step 2: Use phonemes directly without extra tokenization/joining
+          // The phonemizer already produces the correct phoneme string
+          console.log('Direct phonemes for TextCleaner:', phonemes);
+          
+          // Step 3: Convert phonemes directly to token IDs using TextCleaner
+          const tokens = textCleaner.call(phonemes);
+          console.log('TextCleaner tokens before start/end:', tokens);
+          
+          // Step 5: Add start and end tokens (0)
+          tokens.unshift(0); // Add start token
+          tokens.push(0);    // Add end token
+          
+          tokenIds = new BigInt64Array(tokens.map((id: number) => BigInt(id)));
+          console.log('Final tokens with start/end:', Array.from(tokenIds));
+          
+        } catch (phonemeError) {
+          console.warn('Phonemization failed, falling back to TextCleaner:', phonemeError);
+          
+          // Fallback: Use TextCleaner directly (old behavior)
+          const cleanText = textCleaner.clean(text);
+          console.log('Cleaned text (fallback):', cleanText);
+          
+          const tokens = textCleaner.call(cleanText);
+          tokens.unshift(0); // Add start token
+          tokens.push(0);    // Add end token
+          
+          tokenIds = new BigInt64Array(tokens.map((id: number) => BigInt(id)));
+          console.log('Fallback tokens:', Array.from(tokenIds));
+        }
       }
       
       // Get voice embedding
