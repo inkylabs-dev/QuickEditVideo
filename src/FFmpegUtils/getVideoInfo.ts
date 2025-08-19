@@ -289,7 +289,7 @@ export async function getVideoInfo(
  * @returns Formatted duration string (e.g., "2:45" or "1:23:45")
  */
 export function formatDuration(seconds: string | number | undefined): string {
-  if (!seconds) return 'Unknown';
+  if (seconds === undefined || seconds === null) return 'Unknown';
   
   const totalSeconds = typeof seconds === 'string' ? parseFloat(seconds) : seconds;
   if (isNaN(totalSeconds)) return 'Unknown';
@@ -312,7 +312,7 @@ export function formatDuration(seconds: string | number | undefined): string {
  * @returns Formatted size string (e.g., "15.2 MB")
  */
 export function formatFileSize(bytes: string | number | undefined): string {
-  if (!bytes) return 'Unknown';
+  if (bytes === undefined || bytes === null) return 'Unknown';
   
   const totalBytes = typeof bytes === 'string' ? parseInt(bytes) : bytes;
   if (isNaN(totalBytes)) return 'Unknown';
@@ -336,7 +336,7 @@ export function formatFileSize(bytes: string | number | undefined): string {
  * @returns Formatted bitrate string (e.g., "1.5 Mbps")
  */
 export function formatBitrate(bitrate: string | number | undefined): string {
-  if (!bitrate) return 'Unknown';
+  if (bitrate === undefined || bitrate === null) return 'Unknown';
   
   const bps = typeof bitrate === 'string' ? parseInt(bitrate) : bitrate;
   if (isNaN(bps)) return 'Unknown';
