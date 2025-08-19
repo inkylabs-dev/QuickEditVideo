@@ -23,10 +23,12 @@ const TextToSpeech = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isModelLoaded, setIsModelLoaded] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generatedAudios, setGeneratedAudios] = useState<GeneratedAudio[]>([]);
+  const [processingQueue, setProcessingQueue] = useState<boolean>(false);
+  const [queueLength, setQueueLength] = useState<number>(0);
   
   const kittenTTSRef = useRef<KittenTTS | null>(null);
+  const queueRef = useRef<GeneratedAudio[]>([]);
 
   // Initialize TTS model and dependencies
   useEffect(() => {
@@ -72,17 +74,74 @@ const TextToSpeech = () => {
     }
   };
 
-  const generateSpeech = async () => {
-    if (!kittenTTSRef.current?.isReady() || !text.trim()) {
+  // Process the generation queue
+  const processQueue = async () => {
+    if (processingQueue || queueRef.current.length === 0 || !kittenTTSRef.current?.isReady()) {
       return;
     }
 
-    const textToGenerate = text.trim();
+    setProcessingQueue(true);
+
+    while (queueRef.current.length > 0) {
+      const currentItem = queueRef.current[0];
+      
+      try {
+        const kittenTTS = kittenTTSRef.current;
+        
+        console.log('Generating speech for:', currentItem.text);
+        
+        // Generate speech using KittenTTS
+        const audioData = await kittenTTS.generate(currentItem.text, {
+          voice: currentItem.voice,
+          speed: 1.0,
+          language: 'en-us'
+        });
+        
+        // Create audio URL for playback
+        const audioUrl = createAudioUrl(audioData, kittenTTS.getSampleRate());
+        
+        // Update the item in the UI
+        setGeneratedAudios(prev => 
+          prev.map(audio => 
+            audio.id === currentItem.id 
+              ? { ...audio, audioUrl, isGenerating: false }
+              : audio
+          )
+        );
+        
+        console.log('Speech generated successfully for:', currentItem.text);
+        
+      } catch (err) {
+        console.error('Failed to generate speech:', err);
+        
+        // Remove the failed item from UI
+        setGeneratedAudios(prev => prev.filter(audio => audio.id !== currentItem.id));
+        
+        // Show error for the most recent failure
+        if (queueRef.current[0]?.id === currentItem.id) {
+          setError(err instanceof Error ? err.message : 'Failed to generate speech');
+        }
+      }
+      
+      // Remove processed item from queue
+      queueRef.current = queueRef.current.slice(1);
+      setQueueLength(queueRef.current.length);
+    }
+
+    setProcessingQueue(false);
+  };
+
+  const generateSpeech = () => {
+    if (!kittenTTSRef.current?.isReady()) {
+      return;
+    }
+
+    const textToGenerate = text.trim() || 'Hello, this is a test message.';
     const voiceToUse = selectedVoice;
     const audioId = `audio_${Date.now()}`;
 
-    // Add loading item immediately
-    const loadingAudio: GeneratedAudio = {
+    // Create the queue item
+    const queueItem: GeneratedAudio = {
       id: audioId,
       text: textToGenerate,
       voice: voiceToUse,
@@ -90,47 +149,18 @@ const TextToSpeech = () => {
       timestamp: Date.now(),
       isGenerating: true
     };
-    
-    setGeneratedAudios(prev => [loadingAudio, ...prev]);
+
+    // IMMEDIATE UI UPDATES (synchronous)
     setText(''); // Clear input immediately
-    setIsGenerating(true);
-    setError('');
+    setError(''); // Clear any errors
+    setGeneratedAudios(prev => [queueItem, ...prev]); // Add to UI immediately
     
-    try {
-      const kittenTTS = kittenTTSRef.current;
-      
-      console.log('Generating speech with KittenTTS for:', textToGenerate);
-      
-      // Generate speech using KittenTTS
-      const audioData = await kittenTTS.generate(textToGenerate, {
-        voice: voiceToUse,
-        speed: 1.0,
-        language: 'en-us'
-      });
-      
-      // Create audio URL for playback
-      const audioUrl = createAudioUrl(audioData, kittenTTS.getSampleRate());
-      
-      // Update the loading item with the actual audio
-      setGeneratedAudios(prev => 
-        prev.map(audio => 
-          audio.id === audioId 
-            ? { ...audio, audioUrl, isGenerating: false }
-            : audio
-        )
-      );
-      
-      console.log('Speech generated successfully');
-      
-    } catch (err) {
-      console.error('Failed to generate speech:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate speech');
-      
-      // Remove the failed item
-      setGeneratedAudios(prev => prev.filter(audio => audio.id !== audioId));
-    } finally {
-      setIsGenerating(false);
-    }
+    // Add to processing queue
+    queueRef.current = [...queueRef.current, queueItem];
+    setQueueLength(queueRef.current.length);
+    
+    // Start processing (async, non-blocking)
+    processQueue();
   };
 
   const downloadAudio = (audio: GeneratedAudio) => {
@@ -328,9 +358,9 @@ const TextToSpeech = () => {
             {/* Generate Button */}
             <button
               onClick={generateSpeech}
-              disabled={!isModelLoaded || isGenerating}
+              disabled={!isModelLoaded}
               className={`flex items-center justify-center gap-2 px-4 py-3 border-2 transition-all rounded-lg font-medium w-full ${
-                !isModelLoaded || isGenerating
+                !isModelLoaded
                   ? 'border-gray-200 bg-white text-gray-400 cursor-not-allowed'
                   : !text.trim()
                     ? 'border-gray-900 bg-white hover:border-teal-600 hover:bg-teal-50 text-gray-900'
@@ -342,10 +372,10 @@ const TextToSpeech = () => {
                   <Loading className="scale-75" />
                   <span>Loading Model</span>
                 </>
-              ) : isGenerating ? (
+              ) : processingQueue && queueLength > 0 ? (
                 <>
                   <Loading className="scale-75" />
-                  <span>Generating...</span>
+                  <span>Processing Queue ({queueLength})</span>
                 </>
               ) : (
                 <>
