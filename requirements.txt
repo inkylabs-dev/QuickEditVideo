@@ -1,0 +1,6 @@
+numpy # for parsing npz.
+num2words
+spacy
+espeakng_loader
+onnxruntime
+soundfile
