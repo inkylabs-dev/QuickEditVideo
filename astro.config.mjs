@@ -1,6 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
+import wasm from 'vite-plugin-wasm';
+import { resolve } from 'path';
 
 import preact from '@astrojs/preact';
 
@@ -17,18 +19,21 @@ export default defineConfig({
         enabled: false,
     },
     vite: {
+        plugins: [wasm()],
         resolve: {
             alias: {
                 'react': 'preact/compat',
-                'react-dom': 'preact/compat'
+                'react-dom': 'preact/compat',
+                '@onnx-wasm': resolve('./node_modules/onnxruntime-web/dist')
             }
         },
         optimizeDeps: {
-            exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util']
+            exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util', 'onnxruntime-web']
         },
         worker: {
             format: 'es'
-        }
+        },
+        assetsInclude: ['**/*.wasm']
     },
     server: {
         headers: {

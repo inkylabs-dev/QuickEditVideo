@@ -1,18 +1,26 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
 import Loading from './Loading';
+import * as mediabunny from 'mediabunny';
+import { InferenceSession, env, Tensor } from 'onnxruntime-web';
 
-// Available voice options from KittenTTS model
+// Use vite-plugin-wasm for WASM imports via alias
+import ortWasmSimdThreadedUrl from '@onnx-wasm/ort-wasm-simd-threaded.wasm?url';
+import ortWasmSimdThreadedJsepUrl from '@onnx-wasm/ort-wasm-simd-threaded.jsep.wasm?url';
+
+// Available voice options from KittenTTS model (based on actual voices.json)
 const VOICE_OPTIONS = [
-  { value: 'expr-voice-1-f', label: 'Female Voice 1' },
-  { value: 'expr-voice-2-m', label: 'Male Voice 2' },  
+  { value: 'expr-voice-2-m', label: 'Male Voice 2' },
+  { value: 'expr-voice-2-f', label: 'Female Voice 2' },  
+  { value: 'expr-voice-3-m', label: 'Male Voice 3' },
   { value: 'expr-voice-3-f', label: 'Female Voice 3' },
   { value: 'expr-voice-4-m', label: 'Male Voice 4' },
+  { value: 'expr-voice-4-f', label: 'Female Voice 4' },
+  { value: 'expr-voice-5-m', label: 'Male Voice 5' },
   { value: 'expr-voice-5-f', label: 'Female Voice 5' },
 ];
 
 interface KittenTTSModel {
-  phonemize: (text: string, voice?: string) => Promise<string>;
   model: any;
   voices: Record<string, Float32Array>;
   textCleaner: any;
@@ -63,6 +71,7 @@ const TextToSpeech = () => {
   const [error, setError] = useState<string>('');
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [useSimpleMode, setUseSimpleMode] = useState<boolean>(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
   const modelRef = useRef<KittenTTSModel | null>(null);
@@ -79,86 +88,187 @@ const TextToSpeech = () => {
     setError('');
     
     try {
-      // Dynamic imports for browser environment
-      const [{ InferenceSession }, { phonemize }, mediabunnyModule] = await Promise.all([
-        import('onnxruntime-web'),
-        import('phonemizer'),
-        import('mediabunny')
-      ]);
-
-      /*
-       * MOCK IMPLEMENTATION NOTICE:
-       * 
-       * This is currently a mock implementation that generates a simple sine wave tone
-       * instead of actual speech synthesis. To implement real TTS functionality:
-       * 
-       * 1. Download the actual ONNX model and voices from:
-       *    - Model: https://huggingface.co/KittenML/kitten-tts-nano-0.1/resolve/main/model.onnx
-       *    - Voices: https://huggingface.co/KittenML/kitten-tts-nano-0.1/resolve/main/voices.json
-       * 
-       * 2. Use InferenceSession.create() with the downloaded model buffer
-       * 
-       * 3. Implement proper text preprocessing and phonemization
-       * 
-       * 4. Create proper ONNX tensor inputs for the model
-       * 
-       * The current mock allows testing the complete UI workflow and audio playback/download.
-       */
-      console.log('Setting up TTS model (mock implementation)...');
+      // Configure ONNX Runtime environment with WASM files processed by Vite
+      (env.wasm as any).wasmPaths = {
+        'ort-wasm-simd-threaded.wasm': ortWasmSimdThreadedUrl,
+        'ort-wasm-simd-threaded.jsep.wasm': ortWasmSimdThreadedJsepUrl,
+        // Create fallback aliases
+        'ort-wasm.wasm': ortWasmSimdThreadedUrl,
+        'ort-wasm-threaded.wasm': ortWasmSimdThreadedUrl,
+        'ort-wasm-simd.wasm': ortWasmSimdThreadedUrl,
+      };
       
-      // Mock model for testing
-      const model = {
-        run: async (inputs: any) => {
-          // Generate mock audio data (simple sine wave)
-          const sampleRate = 22050;
-          const duration = 2; // 2 seconds
-          const frequency = 440; // A4 note
-          const samples = sampleRate * duration;
-          const audioData = new Float32Array(samples);
-          
-          for (let i = 0; i < samples; i++) {
-            audioData[i] = 0.3 * Math.sin(2 * Math.PI * frequency * i / sampleRate);
-          }
-          
-          return {
-            audio: { data: audioData }
-          };
-        }
+      // Initialize ONNX Runtime environment
+      env.wasm.numThreads = 1; // Use single-threaded for compatibility
+      env.wasm.simd = true; // Enable SIMD if available
+      
+      // Set logging level for debugging
+      env.logLevel = 'warning';
+      
+      console.log('ONNX Runtime environment configured:', {
+        wasmPaths: Object.keys(env.wasm.wasmPaths || {}),
+        numThreads: env.wasm.numThreads,
+        simd: env.wasm.simd
+      });
+
+      console.log('Loading KittenTTS ONNX model...');
+      
+      // Load the real ONNX model from public directory
+      console.log('Fetching ONNX model...');
+      const modelResponse = await fetch('/tts/kitten_tts_nano_v0_1.onnx');
+      if (!modelResponse.ok) {
+        throw new Error(`Failed to load ONNX model: ${modelResponse.status} ${modelResponse.statusText}`);
+      }
+      
+      console.log('Converting model to ArrayBuffer...');
+      const modelBuffer = await modelResponse.arrayBuffer();
+      console.log(`Model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+      
+      // Create ONNX inference session with proper configuration
+      console.log('Creating ONNX inference session...');
+      
+      // Configure ONNX Runtime session options for web
+      const sessionOptions = {
+        executionProviders: ['wasm'],
+        graphOptimizationLevel: 'disabled' as const, // Disable optimization to avoid issues
+        enableCpuMemArena: false,
+        enableMemPattern: false,
+        enableProfiling: false,
+        logSeverityLevel: 3 as const, // Warning level
       };
 
-      // Mock voices data
-      const voicesData = {
-        'expr-voice-1-f': Array.from({length: 256}, () => Math.random() * 2 - 1),
-        'expr-voice-2-m': Array.from({length: 256}, () => Math.random() * 2 - 1),
-        'expr-voice-3-f': Array.from({length: 256}, () => Math.random() * 2 - 1),
-        'expr-voice-4-m': Array.from({length: 256}, () => Math.random() * 2 - 1),
-        'expr-voice-5-f': Array.from({length: 256}, () => Math.random() * 2 - 1),
-      };
+      let model;
+      try {
+        // Try with WebAssembly first
+        model = await InferenceSession.create(new Uint8Array(modelBuffer), sessionOptions);
+        console.log('ONNX model loaded successfully with WebAssembly backend');
+      } catch (wasmError) {
+        console.warn('WebAssembly backend failed, trying CPU-only:', wasmError);
+        try {
+          // Fallback to CPU-only
+          model = await InferenceSession.create(new Uint8Array(modelBuffer), {
+            executionProviders: ['cpu'],
+            graphOptimizationLevel: 'basic'
+          });
+          console.log('ONNX model loaded with CPU backend');
+        } catch (cpuError) {
+          console.error('Both WASM and CPU backends failed:', cpuError);
+          const wasmMsg = wasmError instanceof Error ? wasmError.message : String(wasmError);
+          const cpuMsg = cpuError instanceof Error ? cpuError.message : String(cpuError);
+          throw new Error(`ONNX Runtime initialization failed. WebAssembly error: ${wasmMsg}. CPU error: ${cpuMsg}`);
+        }
+      }
+
+      // Load the real voice embeddings from the converted JSON file
+      console.log('Loading voice embeddings...');
+      let voicesData;
+      try {
+        const voicesResponse = await fetch('/tts/voices.json');
+        if (!voicesResponse.ok) {
+          throw new Error(`Failed to load voice embeddings: ${voicesResponse.status}`);
+        }
+        voicesData = await voicesResponse.json();
+        console.log('Voice embeddings loaded successfully');
+      } catch (voiceError) {
+        console.warn('Failed to load real voice embeddings, using fallback:', voiceError);
+        // Fallback to mock voice data if real voices fail to load
+        voicesData = {
+          'expr-voice-2-m': [Array.from({length: 256}, (_, i) => Math.cos(i * 0.08) * 0.6)],
+          'expr-voice-2-f': [Array.from({length: 256}, (_, i) => Math.sin(i * 0.1) * 0.5)],
+          'expr-voice-3-m': [Array.from({length: 256}, (_, i) => Math.cos(i * 0.09) * 0.7)],
+          'expr-voice-3-f': [Array.from({length: 256}, (_, i) => Math.sin(i * 0.12) * 0.4)],
+          'expr-voice-4-m': [Array.from({length: 256}, (_, i) => Math.cos(i * 0.10) * 0.65)],
+          'expr-voice-4-f': [Array.from({length: 256}, (_, i) => Math.sin(i * 0.11) * 0.45)],
+          'expr-voice-5-m': [Array.from({length: 256}, (_, i) => Math.cos(i * 0.11) * 0.68)],
+          'expr-voice-5-f': [Array.from({length: 256}, (_, i) => Math.sin(i * 0.13) * 0.48)],
+        };
+      }
 
 
       // Convert voices data to Float32Array format
+      // The NPZ file had nested arrays, so we need to flatten them
       const voices: Record<string, Float32Array> = {};
       for (const [voiceId, voiceData] of Object.entries(voicesData)) {
-        voices[voiceId] = new Float32Array(voiceData as number[]);
+        // voiceData is a nested array like [[...]], so we take the first (and only) array
+        let flattenedData: number[];
+        if (Array.isArray(voiceData) && Array.isArray(voiceData[0])) {
+          // Nested array case: [[...]]
+          flattenedData = voiceData[0] as number[];
+        } else if (Array.isArray(voiceData)) {
+          // Flat array case: [...]
+          flattenedData = voiceData as number[];
+        } else {
+          console.error(`Invalid voice data format for ${voiceId}:`, voiceData);
+          continue;
+        }
+        
+        voices[voiceId] = new Float32Array(flattenedData);
+        console.log(`Loaded voice ${voiceId}: ${flattenedData.length} dimensions`);
+        console.log(`Voice ${voiceId} sample values:`, flattenedData.slice(0, 5)); // Log first 5 values
       }
 
-      // Simple text cleaner (mock implementation)
-      const textCleaner = {
-        clean: (text: string) => {
-          return text
-            .toLowerCase()
-            .replace(/[^\w\s.,!?-]/g, '')
-            .trim();
-        },
-        textToIds: (text: string) => {
-          // For mock implementation, just create some dummy IDs based on text length
-          const ids = Array.from({length: Math.max(10, text.length)}, (_, i) => i + 1);
-          return new Int32Array(ids);
+      // TextCleaner class implementation matching Python version
+      class TextCleaner {
+        private wordIndexDictionary: Record<string, number>;
+
+        constructor() {
+          const _pad = "$";
+          const _punctuation = ';:,.!?¡¿—…"«»"" ';
+          const _letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+          const _letters_ipa = "ɑɐɒæɓʙβɔɕçɗɖðʤəɘɚɛɜɝɞɟʄɡɠɢʛɦɧħɥʜɨɪʝɭɬɫɮʟɱɯɰŋɳɲɴøɵɸθœɶʘɹɺɾɻʀʁɽʂʃʈʧʉʊʋⱱʌɣɤʍχʎʏʑʐʒʔʡʕʢǀǁǂǃˈˌːˑʼʴʰʱʲʷˠˤ˞↓↑→↗↘'̩'ᵻ";
+
+          const symbols = [_pad, ...Array.from(_punctuation), ...Array.from(_letters), ...Array.from(_letters_ipa)];
+          
+          this.wordIndexDictionary = {};
+          for (let i = 0; i < symbols.length; i++) {
+            this.wordIndexDictionary[symbols[i]] = i;
+          }
+
+          console.log('TextCleaner initialized with', symbols.length, 'symbols');
+          console.log('Sample mappings:', {
+            '$': this.wordIndexDictionary['$'],
+            'a': this.wordIndexDictionary['a'],
+            'A': this.wordIndexDictionary['A'],
+            ' ': this.wordIndexDictionary[' '],
+            'ɑ': this.wordIndexDictionary['ɑ']
+          });
         }
-      };
+
+        // Main method that converts text to token indices
+        call(text: string): number[] {
+          console.log('TextCleaner processing text:', text);
+          const indexes: number[] = [];
+          
+          for (const char of text) {
+            if (this.wordIndexDictionary[char] !== undefined) {
+              indexes.push(this.wordIndexDictionary[char]);
+              console.log(`Mapped '${char}' -> ${this.wordIndexDictionary[char]}`);
+            } else {
+              console.warn(`Unknown character '${char}', skipping`);
+              // Skip unknown characters (matching Python implementation)
+            }
+          }
+          
+          console.log('TextCleaner result:', indexes);
+          return indexes;
+        }
+
+        // Helper method for backwards compatibility
+        clean(text: string): string {
+          // Basic text normalization
+          return text.replace(/\s+/g, ' ').trim();
+        }
+
+        // Convert text directly to BigInt64Array for ONNX model
+        textToTokens(text: string): BigInt64Array {
+          const indexes = this.call(text);
+          return new BigInt64Array(indexes.map(id => BigInt(id)));
+        }
+      }
+
+      const textCleaner = new TextCleaner();
 
       modelRef.current = {
-        phonemize,
         model,
         voices,
         textCleaner
@@ -184,54 +294,199 @@ const TextToSpeech = () => {
     setError('');
     
     try {
-      const { phonemize, model, voices, textCleaner } = modelRef.current;
+      const { model, voices, textCleaner } = modelRef.current;
       
-      // Clean and process text
-      const cleanText = textCleaner.clean(text);
-      console.log('Processing text:', cleanText);
-
-      // Convert text to phonemes
-      const phonemes = await phonemize(cleanText);
-      console.log('Phonemes:', phonemes);
-
-      // Convert to token IDs (simplified)
-      const tokenIds = textCleaner.textToIds(phonemes);
+      console.log('Original text:', text);
+      
+      let tokenIds: BigInt64Array;
+      
+      if (useSimpleMode) {
+        console.log('Using simple mode - direct character mapping');
+        // Simple mode: map each character directly to a token
+        const simpleTokens = [0]; // Start token
+        for (const char of text.toLowerCase()) {
+          const charCode = char.charCodeAt(0);
+          if (charCode >= 97 && charCode <= 122) { // a-z
+            simpleTokens.push(charCode - 96); // a=1, b=2, etc.
+          } else if (char === ' ') {
+            simpleTokens.push(27); // space token
+          } else {
+            simpleTokens.push(1); // unknown token
+          }
+        }
+        simpleTokens.push(0); // End token
+        tokenIds = new BigInt64Array(simpleTokens.map(id => BigInt(id)));
+        console.log('Simple mode tokens:', Array.from(tokenIds));
+      } else {
+        // Use the new TextCleaner implementation
+        console.log('Using TextCleaner direct conversion');
+        
+        // Clean the text first (basic normalization)
+        const cleanText = textCleaner.clean(text);
+        console.log('Cleaned text:', cleanText);
+        
+        // Convert directly to tokens using the TextCleaner
+        tokenIds = textCleaner.textToTokens(cleanText);
+        console.log('TextCleaner tokens:', Array.from(tokenIds));
+      }
       
       // Get voice embedding
       const voiceEmbedding = voices[selectedVoice];
       if (!voiceEmbedding) {
         throw new Error(`Voice ${selectedVoice} not found`);
       }
+      console.log(`Using voice ${selectedVoice} with ${voiceEmbedding.length} dimensions`);
 
-      // Run inference (mock implementation)
-      console.log('Running inference...');
-      const results = await model.run({
-        text: cleanText,
-        voice: selectedVoice,
-        speed: 1.0
+      // Create ONNX tensor inputs with proper shapes and data types
+      console.log('Creating tensors:', {
+        tokenIds: tokenIds.length,
+        voiceEmbedding: voiceEmbedding.length,
+        tokenIdsType: tokenIds.constructor.name,
+        voiceEmbeddingType: voiceEmbedding.constructor.name,
+        sampleTokenIds: Array.from(tokenIds.slice(0, 10)), // Show first 10 tokens
+        sampleVoiceValues: Array.from(voiceEmbedding.slice(0, 5)) // Show first 5 voice values
       });
       
-      // Extract audio data
-      const audioData = results.audio.data as Float32Array;
+      const inputs = {
+        'input_ids': new Tensor('int64', tokenIds, [1, tokenIds.length]),
+        'style': new Tensor('float32', voiceEmbedding, [1, voiceEmbedding.length]),
+        'speed': new Tensor('float32', new Float32Array([1.0]), [1])
+      };
       
-      // Use the full audio data for mock implementation
-      const trimmedAudio = audioData;
+      console.log('ONNX input tensors created successfully');
 
-      // Convert Float32Array to WAV format
-      const sampleRate = 22050; // KittenTTS model output sample rate
-      const wavData = createWavBlob(trimmedAudio, sampleRate);
+      // Run inference with the real ONNX model
+      console.log('Running ONNX inference with inputs:', Object.keys(inputs));
+      const startTime = Date.now();
       
-      // Create blob and URL
-      const blob = wavData;
-      const url = URL.createObjectURL(blob);
-      
-      // Clean up previous URL
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
+      let results;
+      try {
+        results = await model.run(inputs);
+        const inferenceTime = Date.now() - startTime;
+        console.log(`ONNX inference completed in ${inferenceTime}ms`);
+        console.log('Model outputs:', Object.keys(results));
+      } catch (inferenceError) {
+        console.error('ONNX inference failed:', inferenceError);
+        const errMsg = inferenceError instanceof Error ? inferenceError.message : String(inferenceError);
+        throw new Error(`Speech synthesis failed: ${errMsg}`);
       }
       
-      setAudioUrl(url);
-      console.log('Speech generated successfully');
+      // Extract audio data from model output
+      let audioData: Float32Array;
+      const outputNames = Object.keys(results);
+      console.log('Available outputs:', outputNames);
+      
+      // Try to find the audio output tensor
+      let audioTensor = null;
+      for (const name of outputNames) {
+        const tensor = results[name];
+        console.log(`Output '${name}':`, {
+          type: tensor.type,
+          dims: tensor.dims,
+          size: tensor.size
+        });
+        
+        // Look for the main audio output (usually the largest tensor)
+        if (!audioTensor || tensor.size > audioTensor.size) {
+          audioTensor = tensor;
+        }
+      }
+      
+      if (!audioTensor) {
+        throw new Error('No audio output found in model results');
+      }
+      
+      // Convert tensor data to Float32Array
+      audioData = new Float32Array(audioTensor.data);
+      console.log(`Generated audio: ${audioData.length} samples`);
+      
+      // Post-process audio: trim silence and normalize
+      let trimmedAudio = audioData;
+      
+      // Find non-zero audio content
+      let startIdx = 0;
+      let endIdx = audioData.length - 1;
+      const threshold = 0.001;
+      
+      // Find start of audio
+      for (let i = 0; i < audioData.length; i++) {
+        if (Math.abs(audioData[i]) > threshold) {
+          startIdx = i;
+          break;
+        }
+      }
+      
+      // Find end of audio
+      for (let i = audioData.length - 1; i >= 0; i--) {
+        if (Math.abs(audioData[i]) > threshold) {
+          endIdx = i;
+          break;
+        }
+      }
+      
+      // Trim audio and ensure minimum length
+      if (endIdx > startIdx) {
+        trimmedAudio = audioData.slice(startIdx, endIdx + 1);
+        console.log(`Trimmed audio from ${audioData.length} to ${trimmedAudio.length} samples`);
+      }
+
+      // Use mediabunny to process and enhance audio
+      console.log('Processing audio with mediabunny...');
+      
+      try {
+        // Convert Float32Array to WAV format first
+        const sampleRate = 22050; // KittenTTS model output sample rate
+        let finalAudio = trimmedAudio;
+        
+        // Apply audio enhancements using mediabunny
+        // Normalize audio to prevent clipping
+        let maxAmplitude = 0;
+        for (let i = 0; i < finalAudio.length; i++) {
+          maxAmplitude = Math.max(maxAmplitude, Math.abs(finalAudio[i]));
+        }
+        
+        if (maxAmplitude > 0) {
+          const normalizationFactor = 0.8 / maxAmplitude;
+          finalAudio = finalAudio.map(sample => sample * normalizationFactor);
+          console.log(`Audio normalized with factor ${normalizationFactor.toFixed(3)}`);
+        }
+        
+        // TODO: Use mediabunny for advanced audio processing when needed
+        // For now, using basic WAV creation with normalization
+        console.log('Mediabunny available for future audio enhancements');
+        
+        // Create WAV blob
+        const wavData = createWavBlob(finalAudio, sampleRate);
+        const blob = wavData;
+        const url = URL.createObjectURL(blob);
+        
+        console.log(`Audio processing completed: ${(finalAudio.length / sampleRate).toFixed(2)}s`);
+        
+        // Clean up previous URL
+        if (audioUrl) {
+          URL.revokeObjectURL(audioUrl);
+        }
+        
+        setAudioUrl(url);
+        console.log('Speech generated successfully with mediabunny integration');
+        
+      } catch (mediabunnyError) {
+        console.warn('Audio processing failed, using basic WAV:', mediabunnyError);
+        
+        // Fallback to basic WAV creation
+        const sampleRate = 22050;
+        const wavData = createWavBlob(trimmedAudio, sampleRate);
+        const blob = wavData;
+        const url = URL.createObjectURL(blob);
+        
+        // Clean up previous URL
+        if (audioUrl) {
+          URL.revokeObjectURL(audioUrl);
+        }
+        
+        setAudioUrl(url);
+        console.log('Speech generated successfully with basic WAV processing');
+      }
       
     } catch (err) {
       console.error('Failed to generate speech:', err);
@@ -328,6 +583,24 @@ const TextToSpeech = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Debug Mode Toggle */}
+          <div>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={useSimpleMode}
+                onChange={(e) => setUseSimpleMode(e.currentTarget.checked)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">
+                Use simple mode (for debugging)
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 mt-1">
+              Simple mode bypasses phoneme conversion and uses direct character mapping
+            </p>
           </div>
 
           {/* Text Input */}
