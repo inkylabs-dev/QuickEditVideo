@@ -256,18 +256,6 @@ const TextToSpeech = () => {
             <p className="text-sm text-gray-600">Enter text and select a voice to generate speech</p>
           </div>
 
-          {/* Model Status */}
-          {isModelLoaded && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                <span className="text-green-800 text-sm font-medium">TTS model ready</span>
-              </div>
-            </div>
-          )}
-
           <div className="space-y-6">
             {/* Voice Selection */}
             <div>
@@ -310,10 +298,21 @@ const TextToSpeech = () => {
             {/* Generate Button */}
             <button
               onClick={generateSpeech}
-              disabled={!text.trim() || !isModelLoaded || isGenerating}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm"
+              disabled={!isModelLoaded || isGenerating}
+              className={`flex items-center justify-center gap-2 px-4 py-3 border-2 transition-all rounded-lg font-medium w-full ${
+                !isModelLoaded || isGenerating
+                  ? 'border-gray-200 bg-white text-gray-400 cursor-not-allowed'
+                  : !text.trim()
+                    ? 'border-gray-900 bg-white hover:border-teal-600 hover:bg-teal-50 text-gray-900'
+                    : 'border-teal-600 bg-teal-50 text-teal-900'
+              }`}
             >
-              {isGenerating ? (
+              {!isModelLoaded ? (
+                <>
+                  <Loading className="scale-75" />
+                  <span>Loading Model</span>
+                </>
+              ) : isGenerating ? (
                 <>
                   <Loading className="scale-75" />
                   <span>Generating...</span>
