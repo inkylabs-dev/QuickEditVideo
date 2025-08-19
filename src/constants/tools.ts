@@ -299,6 +299,23 @@ const TOOLS: Tool[] = [
     bgColor: 'bg-orange-100',
     hoverBgColor: 'group-hover:bg-orange-200',
     iconColor: 'text-orange-600'
+  },
+  {
+    id: 'tts',
+    name: 'Text to Speech',
+    shortName: 'Text to Speech',
+    description: 'Convert text to high-quality speech using AI voice synthesis',
+    shortDescription: 'Text to speech',
+    url: '/tts',
+    icon: {
+      type: 'svg',
+      content: '<path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.824a1 1 0 011.617.824zM14 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clipRule="evenodd"/><path d="M16.5 6A1.5 1.5 0 0118 7.5v5a1.5 1.5 0 11-3 0v-5A1.5 1.5 0 0116.5 6z"/>'
+    },
+    category: 'audio-quality',
+    featured: true,
+    bgColor: 'bg-purple-100',
+    hoverBgColor: 'group-hover:bg-purple-200',
+    iconColor: 'text-purple-600'
   }
 ];
 
