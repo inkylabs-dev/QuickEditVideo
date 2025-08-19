@@ -1,6 +1,12 @@
 import { InferenceSession, env, Tensor } from 'onnxruntime-web';
 import { phonemize } from 'phonemizer';
 import { TextCleaner } from './TextCleaner.js';
+import { 
+  getEmbeddedModel, 
+  getEmbeddedVoices, 
+  hasEmbeddedAssets,
+  EMBEDDED_VOICES 
+} from './embeddedAssets.js';
 
 export interface VoiceEmbeddings {
   [voiceId: string]: Float32Array;
@@ -11,6 +17,7 @@ export interface KittenTTSConfig {
   voicesPath?: string;
   wasmPaths?: Record<string, string>;
   sampleRate?: number;
+  useEmbeddedAssets?: boolean;
 }
 
 export interface GenerateOptions {
@@ -52,6 +59,7 @@ export class KittenTTS {
       voicesPath: '/tts/voices.json',
       wasmPaths: {},
       sampleRate: 22050,
+      useEmbeddedAssets: true,
       ...config
     };
     
@@ -88,15 +96,24 @@ export class KittenTTS {
     console.log('Loading KittenTTS model...');
 
     try {
-      // Load the ONNX model
-      console.log('Fetching ONNX model from:', this.config.modelPath);
-      const modelResponse = await fetch(this.config.modelPath);
-      if (!modelResponse.ok) {
-        throw new Error(`Failed to load ONNX model: ${modelResponse.status} ${modelResponse.statusText}`);
-      }
+      let modelBuffer: ArrayBuffer;
       
-      const modelBuffer = await modelResponse.arrayBuffer();
-      console.log(`Model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+      // Check if we should use embedded assets
+      if (this.config.useEmbeddedAssets && hasEmbeddedAssets()) {
+        console.log('Using embedded ONNX model...');
+        modelBuffer = getEmbeddedModel();
+        console.log(`Embedded model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+      } else {
+        // Fallback to fetch
+        console.log('Fetching ONNX model from:', this.config.modelPath);
+        const modelResponse = await fetch(this.config.modelPath);
+        if (!modelResponse.ok) {
+          throw new Error(`Failed to load ONNX model: ${modelResponse.status} ${modelResponse.statusText}`);
+        }
+        
+        modelBuffer = await modelResponse.arrayBuffer();
+        console.log(`Model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+      }
       
       // Create ONNX inference session
       const sessionOptions = {
@@ -121,30 +138,54 @@ export class KittenTTS {
       }
 
       // Load voice embeddings
-      console.log('Loading voice embeddings from:', this.config.voicesPath);
-      const voicesResponse = await fetch(this.config.voicesPath);
-      if (!voicesResponse.ok) {
-        throw new Error(`Failed to load voice embeddings: ${voicesResponse.status}`);
-      }
-      
-      const voicesData = await voicesResponse.json();
-      
-      // Convert voices data to Float32Array format
-      for (const [voiceId, voiceData] of Object.entries(voicesData)) {
-        let flattenedData: number[];
-        if (Array.isArray(voiceData) && Array.isArray((voiceData as any)[0])) {
-          // Nested array case: [[...]]
-          flattenedData = (voiceData as number[][])[0];
-        } else if (Array.isArray(voiceData)) {
-          // Flat array case: [...]
-          flattenedData = voiceData as number[];
-        } else {
-          console.error(`Invalid voice data format for ${voiceId}:`, voiceData);
-          continue;
+      if (this.config.useEmbeddedAssets && hasEmbeddedAssets()) {
+        console.log('Using embedded voice embeddings...');
+        const voicesData = getEmbeddedVoices();
+        
+        // Convert voices data to Float32Array format
+        for (const [voiceId, voiceData] of Object.entries(voicesData)) {
+          let flattenedData: number[];
+          if (Array.isArray(voiceData) && Array.isArray((voiceData as any)[0])) {
+            // Nested array case: [[...]]
+            flattenedData = (voiceData as number[][])[0];
+          } else if (Array.isArray(voiceData)) {
+            // Flat array case: [...]
+            flattenedData = voiceData as number[];
+          } else {
+            console.error(`Invalid voice data format for ${voiceId}:`, voiceData);
+            continue;
+          }
+          
+          this.voices[voiceId] = new Float32Array(flattenedData);
+          console.log(`Loaded voice ${voiceId}: ${flattenedData.length} dimensions`);
+        }
+      } else {
+        // Fallback to fetch
+        console.log('Loading voice embeddings from:', this.config.voicesPath);
+        const voicesResponse = await fetch(this.config.voicesPath);
+        if (!voicesResponse.ok) {
+          throw new Error(`Failed to load voice embeddings: ${voicesResponse.status}`);
         }
         
-        this.voices[voiceId] = new Float32Array(flattenedData);
-        console.log(`Loaded voice ${voiceId}: ${flattenedData.length} dimensions`);
+        const voicesData = await voicesResponse.json();
+        
+        // Convert voices data to Float32Array format
+        for (const [voiceId, voiceData] of Object.entries(voicesData)) {
+          let flattenedData: number[];
+          if (Array.isArray(voiceData) && Array.isArray((voiceData as any)[0])) {
+            // Nested array case: [[...]]
+            flattenedData = (voiceData as number[][])[0];
+          } else if (Array.isArray(voiceData)) {
+            // Flat array case: [...]
+            flattenedData = voiceData as number[];
+          } else {
+            console.error(`Invalid voice data format for ${voiceId}:`, voiceData);
+            continue;
+          }
+          
+          this.voices[voiceId] = new Float32Array(flattenedData);
+          console.log(`Loaded voice ${voiceId}: ${flattenedData.length} dimensions`);
+        }
       }
 
       this.isLoaded = true;

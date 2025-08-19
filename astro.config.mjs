@@ -33,7 +33,7 @@ export default defineConfig({
         worker: {
             format: 'es'
         },
-        assetsInclude: ['**/*.wasm']
+        assetsInclude: ['**/*.wasm', '**/*.onnx', '**/voices.json']
     },
     server: {
         headers: {

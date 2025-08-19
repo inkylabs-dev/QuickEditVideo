@@ -19,9 +19,13 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc && rollup -c",
+    "setup-assets": "node scripts/download-assets.js",
+    "download-model": "./venv/bin/hf download KittenML/kitten-tts-nano-0.1 --local-dir assets/",
+    "convert-voices": "python3 scripts/convert-voices.py",
+    "build": "npm run download-model && npm run convert-voices && npm run setup-assets && tsc && rollup -c",
+    "build:code": "tsc && rollup -c",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist assets",
     "prepublishOnly": "npm run clean && npm run build"
   },
   "keywords": [
@@ -36,13 +40,14 @@
   "author": "QuickEditVideo",
   "license": "MIT",
   "dependencies": {
-    "onnxruntime-web": "^1.22.0",
+    "onnxruntime-web": ">=1.22.0",
     "phonemizer": "^1.2.1"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.1",
     "@types/node": "^22.10.2",
     "rollup": "^4.28.1",
+    "rollup-plugin-copy": "^3.5.0",
     "tslib": "^2.8.1",
     "typescript": "^5.7.2"
   },
