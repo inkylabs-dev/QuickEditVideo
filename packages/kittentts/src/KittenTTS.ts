@@ -18,6 +18,7 @@ export interface KittenTTSConfig {
   wasmPaths?: Record<string, string>;
   sampleRate?: number;
   useEmbeddedAssets?: boolean;
+  verbose?: boolean;
 }
 
 export interface GenerateOptions {
@@ -60,10 +61,22 @@ export class KittenTTS {
       wasmPaths: {},
       sampleRate: 22050,
       useEmbeddedAssets: true,
+      verbose: false,
       ...config
     };
     
     this.textCleaner = new TextCleaner();
+  }
+
+  /**
+   * Log messages only when verbose mode is enabled
+   * @param message Message to log
+   * @param optionalParams Additional parameters
+   */
+  private log(message?: any, ...optionalParams: any[]): void {
+    if (this.config.verbose) {
+      console.log(message, ...optionalParams);
+    }
   }
 
   /**
@@ -79,7 +92,7 @@ export class KittenTTS {
     env.wasm.simd = true; // Enable SIMD if available
     env.logLevel = 'warning';
     
-    console.log('ONNX Runtime environment configured:', {
+    this.log('ONNX Runtime environment configured:', {
       wasmPaths: Object.keys(wasmPaths),
       numThreads: env.wasm.numThreads,
       simd: env.wasm.simd
@@ -93,26 +106,26 @@ export class KittenTTS {
   async load(): Promise<void> {
     if (this.isLoaded) return;
 
-    console.log('Loading KittenTTS model...');
+    this.log('Loading KittenTTS model...');
 
     try {
       let modelBuffer: ArrayBuffer;
       
       // Check if we should use embedded assets
       if (this.config.useEmbeddedAssets && hasEmbeddedAssets()) {
-        console.log('Using embedded ONNX model...');
+        this.log('Using embedded ONNX model...');
         modelBuffer = getEmbeddedModel();
-        console.log(`Embedded model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+        this.log(`Embedded model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
       } else {
         // Fallback to fetch
-        console.log('Fetching ONNX model from:', this.config.modelPath);
+        this.log('Fetching ONNX model from:', this.config.modelPath);
         const modelResponse = await fetch(this.config.modelPath);
         if (!modelResponse.ok) {
           throw new Error(`Failed to load ONNX model: ${modelResponse.status} ${modelResponse.statusText}`);
         }
         
         modelBuffer = await modelResponse.arrayBuffer();
-        console.log(`Model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+        this.log(`Model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
       }
       
       // Create ONNX inference session
@@ -127,19 +140,19 @@ export class KittenTTS {
 
       try {
         this.model = await InferenceSession.create(new Uint8Array(modelBuffer), sessionOptions);
-        console.log('ONNX model loaded successfully with WebAssembly backend');
+        this.log('ONNX model loaded successfully with WebAssembly backend');
       } catch (wasmError) {
         console.warn('WebAssembly backend failed, trying CPU-only:', wasmError);
         this.model = await InferenceSession.create(new Uint8Array(modelBuffer), {
           executionProviders: ['cpu'],
           graphOptimizationLevel: 'basic'
         });
-        console.log('ONNX model loaded with CPU backend');
+        this.log('ONNX model loaded with CPU backend');
       }
 
       // Load voice embeddings
       if (this.config.useEmbeddedAssets && hasEmbeddedAssets()) {
-        console.log('Using embedded voice embeddings...');
+        this.log('Using embedded voice embeddings...');
         const voicesData = getEmbeddedVoices();
         
         // Convert voices data to Float32Array format
@@ -157,11 +170,11 @@ export class KittenTTS {
           }
           
           this.voices[voiceId] = new Float32Array(flattenedData);
-          console.log(`Loaded voice ${voiceId}: ${flattenedData.length} dimensions`);
+          this.log(`Loaded voice ${voiceId}: ${flattenedData.length} dimensions`);
         }
       } else {
         // Fallback to fetch
-        console.log('Loading voice embeddings from:', this.config.voicesPath);
+        this.log('Loading voice embeddings from:', this.config.voicesPath);
         const voicesResponse = await fetch(this.config.voicesPath);
         if (!voicesResponse.ok) {
           throw new Error(`Failed to load voice embeddings: ${voicesResponse.status}`);
@@ -184,12 +197,12 @@ export class KittenTTS {
           }
           
           this.voices[voiceId] = new Float32Array(flattenedData);
-          console.log(`Loaded voice ${voiceId}: ${flattenedData.length} dimensions`);
+          this.log(`Loaded voice ${voiceId}: ${flattenedData.length} dimensions`);
         }
       }
 
       this.isLoaded = true;
-      console.log('KittenTTS model loaded successfully');
+      this.log('KittenTTS model loaded successfully');
       
     } catch (error) {
       console.error('Failed to load KittenTTS model:', error);
@@ -226,29 +239,29 @@ export class KittenTTS {
       throw new Error(`Voice '${voice}' not available. Choose from: ${this.getAvailableVoices()}`);
     }
 
-    console.log('Preparing inputs for text:', text);
+    this.log('Preparing inputs for text:', text);
 
     try {
       // Step 1: Phonemize the text
-      console.log('Phonemizing text...');
+      this.log('Phonemizing text...');
       const phonemesList = await phonemize(text, language);
       const phonemes = phonemesList[0] || '';
-      console.log('Phonemes:', phonemes);
+      this.log('Phonemes:', phonemes);
       
       // Step 2: Convert phonemes to token IDs using TextCleaner
       const tokens = this.textCleaner.call(phonemes);
-      console.log('TextCleaner tokens before start/end:', tokens);
+      this.log('TextCleaner tokens before start/end:', tokens);
       
       // Step 3: Add start and end tokens (0)
       tokens.unshift(0); // Add start token
       tokens.push(0);    // Add end token
       
       const tokenIds = new BigInt64Array(tokens.map((id: number) => BigInt(id)));
-      console.log('Final tokens with start/end:', Array.from(tokenIds));
+      this.log('Final tokens with start/end:', Array.from(tokenIds));
       
       // Get voice embedding
       const voiceEmbedding = this.voices[voice];
-      console.log(`Using voice ${voice} with ${voiceEmbedding.length} dimensions`);
+      this.log(`Using voice ${voice} with ${voiceEmbedding.length} dimensions`);
 
       // Create ONNX tensor inputs
       return {
@@ -257,7 +270,7 @@ export class KittenTTS {
         'speed': new Tensor('float32', new Float32Array([speed]), [1])
       };
       
-    } catch (phonemeError) {
+      } catch (phonemeError) {
       console.warn('Phonemization failed, falling back to TextCleaner:', phonemeError);
       
       // Fallback: Use TextCleaner directly
@@ -267,9 +280,7 @@ export class KittenTTS {
       tokens.push(0);    // Add end token
       
       const tokenIds = new BigInt64Array(tokens.map((id: number) => BigInt(id)));
-      const voiceEmbedding = this.voices[voice];
-      
-      return {
+      const voiceEmbedding = this.voices[voice];      return {
         'input_ids': new Tensor('int64', tokenIds, [1, tokenIds.length]),
         'style': new Tensor('float32', voiceEmbedding, [1, voiceEmbedding.length]),
         'speed': new Tensor('float32', new Float32Array([speed]), [1])
@@ -288,29 +299,29 @@ export class KittenTTS {
       throw new Error('KittenTTS model is not loaded. Call load() first.');
     }
 
-    console.log('Generating speech for text:', text);
+    this.log('Generating speech for text:', text);
     
     try {
       // Prepare model inputs
       const inputs = await this.prepareInputs(text, options);
-      console.log('ONNX input tensors created successfully');
+      this.log('ONNX input tensors created successfully');
 
       // Run inference
-      console.log('Running ONNX inference...');
+      this.log('Running ONNX inference...');
       const startTime = Date.now();
       const results = await this.model!.run(inputs);
       const inferenceTime = Date.now() - startTime;
-      console.log(`ONNX inference completed in ${inferenceTime}ms`);
+      this.log(`ONNX inference completed in ${inferenceTime}ms`);
       
       // Extract audio data from model output
       const outputNames = Object.keys(results);
-      console.log('Available outputs:', outputNames);
+      this.log('Available outputs:', outputNames);
       
       // Find the main audio output tensor (usually the largest)
       let audioTensor = null;
       for (const name of outputNames) {
         const tensor = results[name];
-        console.log(`Output '${name}':`, {
+        this.log(`Output '${name}':`, {
           type: tensor.type,
           dims: tensor.dims,
           size: tensor.size
@@ -327,11 +338,11 @@ export class KittenTTS {
       
       // Convert tensor data to Float32Array
       const audioData = new Float32Array(audioTensor.data as Float32Array);
-      console.log(`Generated audio: ${audioData.length} samples`);
+      this.log(`Generated audio: ${audioData.length} samples`);
       
       // Post-process audio: trim silence and normalize
       const trimmedAudio = this.postProcessAudio(audioData);
-      console.log(`Audio processing completed: ${(trimmedAudio.length / this.config.sampleRate).toFixed(2)}s`);
+      this.log(`Audio processing completed: ${(trimmedAudio.length / this.config.sampleRate).toFixed(2)}s`);
       
       return trimmedAudio;
       
@@ -372,7 +383,7 @@ export class KittenTTS {
     let trimmedAudio = audioData;
     if (endIdx > startIdx) {
       trimmedAudio = audioData.slice(startIdx, endIdx + 1);
-      console.log(`Trimmed audio from ${audioData.length} to ${trimmedAudio.length} samples`);
+      this.log(`Trimmed audio from ${audioData.length} to ${trimmedAudio.length} samples`);
     }
 
     // Normalize audio to prevent clipping
@@ -384,7 +395,7 @@ export class KittenTTS {
     if (maxAmplitude > 0) {
       const normalizationFactor = 0.8 / maxAmplitude;
       const normalizedAudio = trimmedAudio.map(sample => sample * normalizationFactor);
-      console.log(`Audio normalized with factor ${normalizationFactor.toFixed(3)}`);
+      this.log(`Audio normalized with factor ${normalizationFactor.toFixed(3)}`);
       return normalizedAudio;
     }
     
@@ -408,6 +419,6 @@ export class KittenTTS {
     }
     this.voices = {};
     this.isLoaded = false;
-    console.log('KittenTTS resources disposed');
+    this.log('KittenTTS resources disposed');
   }
 }
