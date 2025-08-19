@@ -12,8 +12,9 @@ interface GeneratedAudio {
   id: string;
   text: string;
   voice: VoiceId;
-  audioUrl: string;
+  audioUrl: string | null; // null when generating
   timestamp: number;
+  isGenerating?: boolean;
 }
 
 const TextToSpeech = () => {
@@ -76,17 +77,33 @@ const TextToSpeech = () => {
       return;
     }
 
+    const textToGenerate = text.trim();
+    const voiceToUse = selectedVoice;
+    const audioId = `audio_${Date.now()}`;
+
+    // Add loading item immediately
+    const loadingAudio: GeneratedAudio = {
+      id: audioId,
+      text: textToGenerate,
+      voice: voiceToUse,
+      audioUrl: null,
+      timestamp: Date.now(),
+      isGenerating: true
+    };
+    
+    setGeneratedAudios(prev => [loadingAudio, ...prev]);
+    setText(''); // Clear input immediately
     setIsGenerating(true);
     setError('');
     
     try {
       const kittenTTS = kittenTTSRef.current;
       
-      console.log('Generating speech with KittenTTS for:', text);
+      console.log('Generating speech with KittenTTS for:', textToGenerate);
       
       // Generate speech using KittenTTS
-      const audioData = await kittenTTS.generate(text, {
-        voice: selectedVoice,
+      const audioData = await kittenTTS.generate(textToGenerate, {
+        voice: voiceToUse,
         speed: 1.0,
         language: 'en-us'
       });
@@ -94,28 +111,31 @@ const TextToSpeech = () => {
       // Create audio URL for playback
       const audioUrl = createAudioUrl(audioData, kittenTTS.getSampleRate());
       
-      // Add to generated audios list
-      const newAudio: GeneratedAudio = {
-        id: `audio_${Date.now()}`,
-        text: text.trim(),
-        voice: selectedVoice,
-        audioUrl,
-        timestamp: Date.now()
-      };
+      // Update the loading item with the actual audio
+      setGeneratedAudios(prev => 
+        prev.map(audio => 
+          audio.id === audioId 
+            ? { ...audio, audioUrl, isGenerating: false }
+            : audio
+        )
+      );
       
-      setGeneratedAudios(prev => [newAudio, ...prev]);
-      setText(''); // Clear input after generation
       console.log('Speech generated successfully');
       
     } catch (err) {
       console.error('Failed to generate speech:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate speech');
+      
+      // Remove the failed item
+      setGeneratedAudios(prev => prev.filter(audio => audio.id !== audioId));
     } finally {
       setIsGenerating(false);
     }
   };
 
   const downloadAudio = (audio: GeneratedAudio) => {
+    if (!audio.audioUrl) return;
+    
     const link = document.createElement('a');
     link.href = audio.audioUrl;
     link.download = `tts_${audio.voice}_${audio.id}.wav`;
@@ -127,7 +147,7 @@ const TextToSpeech = () => {
   const removeAudio = (audioId: string) => {
     setGeneratedAudios(prev => {
       const audioToRemove = prev.find(a => a.id === audioId);
-      if (audioToRemove) {
+      if (audioToRemove && audioToRemove.audioUrl) {
         URL.revokeObjectURL(audioToRemove.audioUrl);
       }
       return prev.filter(a => a.id !== audioId);
@@ -138,7 +158,9 @@ const TextToSpeech = () => {
   useEffect(() => {
     return () => {
       generatedAudios.forEach(audio => {
-        URL.revokeObjectURL(audio.audioUrl);
+        if (audio.audioUrl) {
+          URL.revokeObjectURL(audio.audioUrl);
+        }
       });
     };
   }, []);
@@ -222,18 +244,26 @@ const TextToSpeech = () => {
                       </button>
                     </div>
                     
-                    <audio 
-                      src={audio.audioUrl} 
-                      controls 
-                      className="w-full mb-3"
-                      style={{ height: '32px' }}
-                    >
-                      Your browser does not support the audio element.
-                    </audio>
+                    {audio.isGenerating ? (
+                      <div className="w-full mb-3 bg-gray-100 rounded p-3 flex items-center justify-center gap-2">
+                        <Loading className="scale-75" />
+                        <span className="text-sm text-gray-600">Generating...</span>
+                      </div>
+                    ) : (
+                      <audio 
+                        src={audio.audioUrl || undefined} 
+                        controls 
+                        className="w-full mb-3"
+                        style={{ height: '32px' }}
+                      >
+                        Your browser does not support the audio element.
+                      </audio>
+                    )}
                     
                     <button
                       onClick={() => downloadAudio(audio)}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm rounded-md transition-colors"
+                      disabled={audio.isGenerating}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-gray-700 text-sm rounded-md transition-colors"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
