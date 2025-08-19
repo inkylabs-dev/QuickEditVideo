@@ -74,50 +74,143 @@ export async function getVideoInfo(
     // Write input file to FFmpeg virtual filesystem
     await ffmpeg.writeFile(inputFileName, await fetchFile(file));
 
-    // Execute ffprobe command to extract metadata as JSON
-    // Use ffprobe-specific exec method if available, otherwise use regular exec
-    // -v quiet: suppress verbose output
-    // -print_format json: output in JSON format
-    // -show_format: show format/container information
-    // -show_streams: show stream information
-    const ffprobeArgs = [
-      '-v', 'quiet',
-      '-print_format', 'json',
-      '-show_format',
-      '-show_streams',
-      inputFileName
-    ];
-
-    // Use ffprobe if available, otherwise try with regular exec
-    if (typeof ffmpeg.ffprobe === 'function') {
-      await ffmpeg.ffprobe(...ffprobeArgs);
-    } else {
-      await ffmpeg.exec(ffprobeArgs);
-    }
-
-    // Try to read the JSON output from various possible locations
-    let outputData: Uint8Array | string;
-    try {
-      // Try reading from stdout or typical ffprobe output locations
-      outputData = await ffmpeg.readFile('ffprobe.json');
-    } catch (e) {
-      // If ffprobe.json doesn't exist, try other common output patterns
-      try {
-        outputData = await ffmpeg.readFile('output.json');
-      } catch (e2) {
-        throw new Error('Could not find ffprobe output. Ensure FFmpeg.wasm supports metadata extraction.');
-      }
-    }
-    let jsonText: string;
+    // Try to use ffprobe if available, otherwise fall back to log parsing
+    // Note: ffprobe method will be available in @ffmpeg/ffmpeg version 0.12.14+
+    // Current version (0.12.10) doesn't have this feature yet
+    let probeResult: any;
     
-    if (outputData instanceof Uint8Array) {
-      jsonText = new TextDecoder().decode(outputData);
+    // First, try to use direct ffprobe access if available
+    const ffmpegAny = ffmpeg as any;
+    if (typeof ffmpegAny.ffprobe === 'function') {
+      try {
+        console.log('Using direct ffprobe method');
+        // Try using ffprobe directly - this should return JSON output
+        const output = await ffmpegAny.ffprobe(
+          '-v', 'quiet',
+          '-print_format', 'json', 
+          '-show_format',
+          '-show_streams',
+          inputFileName
+        );
+        
+        if (typeof output === 'string') {
+          probeResult = JSON.parse(output);
+        } else {
+          throw new Error('ffprobe did not return string output');
+        }
+      } catch (error) {
+        console.warn('Direct ffprobe failed:', error);
+        // Fall back to log parsing method
+        probeResult = await extractMetadataFromLogs();
+      }
     } else {
-      jsonText = outputData as string;
+      console.log('ffprobe method not available, using log parsing');
+      // Fall back to log parsing method
+      probeResult = await extractMetadataFromLogs();
+    }
+    
+    // Helper function to extract metadata from FFmpeg logs
+    async function extractMetadataFromLogs() {
+      const logMessages: string[] = [];
+      
+      // Set up log collection
+      const logHandler = (event: any) => {
+        logMessages.push(event.message);
+      };
+      
+      ffmpeg.on('log', logHandler);
+      
+      try {
+        // Run FFmpeg command that will output metadata information
+        await ffmpeg.exec([
+          '-i', inputFileName,
+          '-f', 'null',
+          '-'
+        ]);
+      } catch (error) {
+        // Expected to "fail" since we're outputting to null, but we get the metadata in logs
+      }
+      
+      // Remove the log handler
+      ffmpeg.off('log', logHandler);
+      
+      // Parse the collected log messages to extract metadata
+      const logText = logMessages.join('\n');
+      
+      // Extract key information using regex patterns
+      const durationMatch = logText.match(/Duration: (\d{2}:\d{2}:\d{2}\.\d{2})/);
+      const bitrateMatch = logText.match(/bitrate: (\d+) kb\/s/);
+      const videoMatch = logText.match(/Video: ([^,]+)(?:, ([^,]+))?, (\d+x\d+)/);
+      const audioMatch = logText.match(/Audio: ([^,]+), (\d+) Hz, ([^,]+)/);
+      
+      // Helper functions
+      const convertTimeToSeconds = (timeStr: string): number => {
+        const parts = timeStr.split(':');
+        return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseFloat(parts[2]);
+      };
+      
+      const parseChannelInfo = (channelStr: string): number => {
+        if (channelStr.includes('stereo')) return 2;
+        if (channelStr.includes('mono')) return 1;
+        if (channelStr.includes('5.1')) return 6;
+        if (channelStr.includes('7.1')) return 8;
+        return 2; // default
+      };
+      
+      // Create metadata structure
+      const metadata = {
+        format: {
+          filename: file.name,
+          nb_streams: (videoMatch ? 1 : 0) + (audioMatch ? 1 : 0),
+          nb_programs: 0,
+          format_name: file.name.split('.').pop()?.toLowerCase() || 'unknown',
+          format_long_name: `${file.name.split('.').pop()?.toUpperCase() || 'Unknown'} format`,
+          start_time: '0.000000',
+          duration: durationMatch ? convertTimeToSeconds(durationMatch[1]).toString() : undefined,
+          size: file.size.toString(),
+          bit_rate: bitrateMatch ? (parseInt(bitrateMatch[1]) * 1000).toString() : undefined,
+          probe_score: 100
+        },
+        streams: [] as any[]
+      };
+      
+      // Add video stream if detected
+      if (videoMatch) {
+        const [, codec, pixfmt, resolution] = videoMatch;
+        const [width, height] = resolution.split('x').map(Number);
+        metadata.streams.push({
+          index: 0,
+          codec_name: codec.split('(')[0].trim(),
+          codec_long_name: codec,
+          codec_type: 'video',
+          width,
+          height,
+          pix_fmt: pixfmt || 'yuv420p',
+          duration: metadata.format.duration,
+          bit_rate: bitrateMatch ? Math.round(parseInt(bitrateMatch[1]) * 1000 * 0.8).toString() : undefined,
+          avg_frame_rate: '30/1' // Default estimate
+        });
+      }
+      
+      // Add audio stream if detected
+      if (audioMatch) {
+        const [, codec, sampleRate, channels] = audioMatch;
+        metadata.streams.push({
+          index: metadata.streams.length,
+          codec_name: codec.split('(')[0].trim(),
+          codec_long_name: codec,
+          codec_type: 'audio',
+          sample_rate: sampleRate,
+          channels: parseChannelInfo(channels),
+          channel_layout: channels,
+          duration: metadata.format.duration,
+          bit_rate: bitrateMatch ? Math.round(parseInt(bitrateMatch[1]) * 1000 * 0.2).toString() : undefined
+        });
+      }
+      
+      return metadata;
     }
 
-    // Parse JSON output
-    const probeResult = JSON.parse(jsonText);
 
     // Extract and organize the metadata
     const videoStreams: VideoStream[] = [];
@@ -171,7 +264,6 @@ export async function getVideoInfo(
     // Clean up temporary files
     try {
       await ffmpeg.deleteFile(inputFileName);
-      await ffmpeg.deleteFile('ffprobe.json');
     } catch (error) {
       // Ignore cleanup errors - files might not exist
       console.warn('Cleanup warning:', error);
