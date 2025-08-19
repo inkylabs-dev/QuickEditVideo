@@ -23,16 +23,7 @@ npm install @quickeditvideo/kittentts
 import { KittenTTS, createAudioUrl, VOICE_OPTIONS } from '@quickeditvideo/kittentts';
 
 // Initialize KittenTTS
-const tts = new KittenTTS({
-  modelPath: '/path/to/kitten_tts_nano_v0_1.onnx',
-  voicesPath: '/path/to/voices.json'
-});
-
-// Configure WASM paths (if using vite-plugin-wasm)
-tts.configureWasmPaths({
-  'ort-wasm-simd-threaded.wasm': '/path/to/ort-wasm-simd-threaded.wasm',
-  'ort-wasm-simd-threaded.jsep.wasm': '/path/to/ort-wasm-simd-threaded.jsep.wasm'
-});
+const tts = new KittenTTS();
 
 // Load the model
 await tts.load();
@@ -142,8 +133,8 @@ import { VOICE_OPTIONS } from '@quickeditvideo/kittentts';
 
 MIT
 
-## Related
+## Credits
 
-- [KittenTTS Python package](https://github.com/TTS-Models/KittenTTS) - Original Python implementation
+- [KittenTTS Python package](https://github.com/KittenML/KittenTTS/) - Original Python implementation
 - [ONNX Runtime Web](https://onnxruntime.ai/docs/get-started/with-javascript/web.html) - WebAssembly ML inference
 - [phonemizer.js](https://github.com/xenova/phonemizer.js) - Text-to-phoneme conversion
