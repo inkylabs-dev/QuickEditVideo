@@ -1,6 +1,9 @@
 ---
 import NavTools from '../components/NavTools.astro';
 import Adsterra from '../components/Adsterra.astro';
+import { getCategories } from '../constants/tools';
+
+const categories = getCategories();
 
 export interface Props {
 	title?: string;
@@ -208,8 +211,13 @@ const currentUrl = canonicalUrl || Astro.url.href;
 							</a>
 						</div>
 						
-						<!-- Mobile Badges (Right) -->
-						<div class="mobile-badges flex items-center gap-1 text-xs text-gray-600 flex-shrink-0">
+						<!-- Mobile Blog Link and Badges (Right) -->
+						<div class="mobile-badges flex items-center gap-2 text-xs text-gray-600 flex-shrink-0">
+							<!-- Blog Link -->
+							<a href="/blog" class="p-2 text-gray-700 hover:text-gray-900 transition-colors touch-manipulation">
+								<span class="text-sm font-medium">Blog</span>
+							</a>
+							
 							<div class="relative group">
 								<div class="flex items-center justify-center bg-green-100 p-3 rounded-full hover:bg-green-200 transition-colors touch-manipulation">
 									<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
@@ -234,145 +242,45 @@ const currentUrl = canonicalUrl || Astro.url.href;
 						aria-labelledby="mobile-tools-trigger"
 					>
 						<div class="p-4">
-							<!-- Video Editing -->
-							<div class="mb-6">
-								<h4 class="text-sm font-semibold text-gray-900 mb-3 px-2">Video Editing</h4>
-								<div class="grid grid-cols-2 gap-1">
-									<a href="/trim" class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group">
-										<div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 transition-colors">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
-												<path d="M20 4L3 11l3 3l4-2l2 4Z"/>
-											</svg>
-										</div>
-										<div>
-											<div class="text-sm font-medium text-gray-900">Trim Video</div>
-											<div class="text-xs text-gray-500">Cut videos</div>
-										</div>
-									</a>
-									<a href="/merge" class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group">
-										<div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 transition-colors">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
-												<path d="M8 3L4 7L8 11M16 21L20 17L16 13M4 7H16M20 17H8"/>
-											</svg>
-										</div>
-										<div>
-											<div class="text-sm font-medium text-gray-900">Merge Videos</div>
-											<div class="text-xs text-gray-500">Join videos</div>
-										</div>
-									</a>
-									<a href="/resize" class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group">
-										<div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 transition-colors">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
-												<path d="M8 3H5C3.89 3 3 3.89 3 5V8M21 8V5C21 3.89 20.11 3 19 3H16M16 21H19C20.11 21 21 20.11 21 19V16M3 16V19C3 20.11 3.89 21 5 21H8"/>
-											</svg>
-										</div>
-										<div>
-											<div class="text-sm font-medium text-gray-900">Resize Video</div>
-											<div class="text-xs text-gray-500">Change size</div>
-										</div>
-									</a>
-									<a href="/crop" class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group">
-										<div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 transition-colors">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
-												<path d="M6 2V6H2V8H6V18C6 19.1 6.9 20 8 20H18V24H20V20H24V18H20V8C20 6.9 19.1 6 18 6H8V2H6Z"/>
-											</svg>
-										</div>
-										<div>
-											<div class="text-sm font-medium text-gray-900">Crop Video</div>
-											<div class="text-xs text-gray-500">Crop area</div>
-										</div>
-									</a>
-									<a href="/watermark" class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group">
-										<div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 transition-colors">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
-												<path d="M15 3H6A2 2 0 0 0 4 4V16A2 2 0 0 0 6 18H15A2 2 0 0 0 17 16V4A2 2 0 0 0 15 3ZM8 16L6 14L11 9L13 11L17 7L19 9V14A2 2 0 0 1 17 16H8Z"/>
-											</svg>
-										</div>
-										<div>
-											<div class="text-sm font-medium text-gray-900">Add Watermark</div>
-											<div class="text-xs text-gray-500">Add logos</div>
-										</div>
-									</a>
+							{categories.map(category => (
+								<div class={category.id !== 'audio-quality' ? 'mb-6' : ''}>
+									<h4 class="text-sm font-semibold text-gray-900 mb-3 px-2">{category.name}</h4>
+									<div class={category.id === 'converters' ? 'grid gap-1 grid-cols-3' : 'grid gap-1 grid-cols-2'}>
+										{category.tools.map(tool => (
+											category.id === 'converters' ? (
+												<a href={tool.url} class="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-center">
+													<div class={`w-8 h-8 ${tool.bgColor} rounded-lg flex items-center justify-center ${tool.hoverBgColor} transition-colors`}>
+														<span class={`${tool.icon.className || ''} ${tool.iconColor}`}>
+															{tool.icon.content}
+														</span>
+													</div>
+													<div class="text-xs text-gray-600">{tool.shortDescription}</div>
+												</a>
+											) : (
+												<a href={tool.url} class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group">
+													<div class={`w-8 h-8 ${tool.bgColor} rounded-lg flex items-center justify-center ${tool.hoverBgColor} transition-colors`}>
+														{tool.icon.type === 'svg' ? (
+															<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class={tool.iconColor}>
+																<Fragment set:html={tool.icon.content} />
+															</svg>
+														) : (
+															<span class={`${tool.icon.className || ''} ${tool.iconColor}`}>
+																{tool.icon.content}
+															</span>
+														)}
+													</div>
+													<div>
+														<div class="text-sm font-medium text-gray-900">{tool.shortName || tool.name}</div>
+														<div class="text-xs text-gray-500">{tool.shortDescription}</div>
+													</div>
+												</a>
+											)
+										))}
+									</div>
 								</div>
-							</div>
-
-							<!-- Converters -->
-							<div class="mb-6">
-								<h4 class="text-sm font-semibold text-gray-900 mb-3 px-2">Format Converters</h4>
-								<div class="grid grid-cols-3 gap-1">
-									<a href="/to-mp4" class="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-center">
-										<div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center hover:bg-orange-200 transition-colors">
-											<span class="text-xs font-bold text-orange-700">MP4</span>
-										</div>
-										<div class="text-xs text-gray-600">MP4</div>
-									</a>
-									<a href="/to-avi" class="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-center">
-										<div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center hover:bg-orange-200 transition-colors">
-											<span class="text-xs font-bold text-orange-700">AVI</span>
-										</div>
-										<div class="text-xs text-gray-600">AVI</div>
-									</a>
-									<a href="/to-mov" class="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-center">
-										<div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center hover:bg-orange-200 transition-colors">
-											<span class="text-xs font-bold text-orange-700">MOV</span>
-										</div>
-										<div class="text-xs text-gray-600">MOV</div>
-									</a>
-									<a href="/to-webm" class="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-center">
-										<div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center hover:bg-orange-200 transition-colors">
-											<span class="text-xs font-bold text-orange-700">WEB</span>
-										</div>
-										<div class="text-xs text-gray-600">WebM</div>
-									</a>
-									<a href="/to-gif" class="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-center">
-										<div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center hover:bg-orange-200 transition-colors">
-											<span class="text-xs font-bold text-orange-700">GIF</span>
-										</div>
-										<div class="text-xs text-gray-600">GIF</div>
-									</a>
-									<a href="/to-mkv" class="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-center">
-										<div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center hover:bg-orange-200 transition-colors">
-											<span class="text-xs font-bold text-orange-700">MKV</span>
-										</div>
-										<div class="text-xs text-gray-600">MKV</div>
-									</a>
-								</div>
-							</div>
-
-							<!-- Audio & Quality -->
-							<div>
-								<h4 class="text-sm font-semibold text-gray-900 mb-3 px-2">Audio & Quality</h4>
-								<div class="grid grid-cols-2 gap-1">
-									<a href="/compress" class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group">
-										<div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-orange-600">
-												<path d="M21 8V5C21 3.89 20.11 3 19 3H5C3.89 3 3 3.89 3 5V8M3 16V19C3 20.11 3.89 21 5 21H19C20.11 21 21 20.11 21 19V16"/>
-												<line x1="7" y1="7" x2="7" y2="17"/>
-												<line x1="17" y1="7" x2="17" y2="17"/>
-											</svg>
-										</div>
-										<div>
-											<div class="text-sm font-medium text-gray-900">Compress</div>
-											<div class="text-xs text-gray-500">Reduce size</div>
-										</div>
-									</a>
-									<a href="/extract-audio" class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group">
-										<div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-orange-600">
-												<path d="M9 18V5L12.5 8.5L16 5V18L12.5 14.5L9 18Z"/>
-												<path d="M20 4L16 8L20 12"/>
-											</svg>
-										</div>
-										<div>
-											<div class="text-sm font-medium text-gray-900">Extract Audio</div>
-											<div class="text-xs text-gray-500">Get audio</div>
-										</div>
-									</a>
-								</div>
-							</div>
+							))}
 						</div>
 					</div>
-					
 					
 					<!-- Desktop Layout -->
 					<div class="hidden md:flex items-center justify-between">
