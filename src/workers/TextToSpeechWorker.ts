@@ -42,7 +42,8 @@ let isProcessing = false;
 async function initializeModel(): Promise<void> {
   try {
     kittenTTS = new KittenTTS({
-      sampleRate: 22050
+      sampleRate: 22050,
+      enableBrowserCache: true
     });
 
     // Configure WASM paths

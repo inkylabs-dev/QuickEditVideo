@@ -19,6 +19,7 @@ export interface KittenTTSConfig {
   sampleRate?: number;
   useEmbeddedAssets?: boolean;
   verbose?: boolean;
+  enableBrowserCache?: boolean;
 }
 
 export interface GenerateOptions {
@@ -44,6 +45,114 @@ export const VOICE_OPTIONS = [
 export type VoiceId = typeof VOICE_OPTIONS[number]['value'];
 
 /**
+ * Simple IndexedDB cache for model files
+ */
+class ModelCache {
+  private dbName: string;
+  private storeName: string;
+  private version: number;
+  private db: IDBDatabase | null = null;
+
+  constructor() {
+    this.dbName = 'kitten-tts-cache';
+    this.storeName = 'models';
+    this.version = 1;
+  }
+
+  async init(): Promise<IDBDatabase> {
+    if (this.db) return this.db;
+
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, this.version);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve(this.db);
+      };
+
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains(this.storeName)) {
+          const store = db.createObjectStore(this.storeName, { keyPath: 'key' });
+          store.createIndex('timestamp', 'timestamp', { unique: false });
+        }
+      };
+    });
+  }
+
+  async get(key: string): Promise<ArrayBuffer | null> {
+    await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.storeName], 'readonly');
+      const store = transaction.objectStore(this.storeName);
+      const request = store.get(key);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const result = request.result;
+        if (result) {
+          // Check if cache is still valid (7 days)
+          const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+          if (Date.now() - result.timestamp < maxAge) {
+            resolve(result.data);
+            return;
+          } else {
+            // Cache expired, remove it
+            this.delete(key);
+          }
+        }
+        resolve(null);
+      };
+    });
+  }
+
+  async set(key: string, data: ArrayBuffer): Promise<void> {
+    await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+      const request = store.put({
+        key,
+        data,
+        timestamp: Date.now()
+      });
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async delete(key: string): Promise<void> {
+    await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+      const request = store.delete(key);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async clear(): Promise<void> {
+    await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+      const request = store.clear();
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+}
+
+/**
  * Mapping from named voice IDs to numeric voice IDs in the model
  */
 const VOICE_ID_MAPPING: Record<string, string> = {
@@ -67,6 +176,7 @@ export class KittenTTS {
   private textCleaner: TextCleaner;
   private config: Required<KittenTTSConfig>;
   private isLoaded = false;
+  private modelCache: ModelCache;
 
   constructor(config: KittenTTSConfig = {}) {
     this.config = {
@@ -75,11 +185,13 @@ export class KittenTTS {
       wasmPaths: {},
       sampleRate: 22050,
       useEmbeddedAssets: true,
-      verbose: false,
+      verbose: true,
+      enableBrowserCache: false,
       ...config
     };
     
     this.textCleaner = new TextCleaner();
+    this.modelCache = new ModelCache();
   }
 
   /**
@@ -114,6 +226,46 @@ export class KittenTTS {
   }
 
   /**
+   * Save model buffer to IndexedDB cache
+   * @param modelBuffer The model buffer to cache
+   */
+  private async saveModelToCache(modelBuffer: ArrayBuffer): Promise<void> {
+    if (!this.config.enableBrowserCache) return;
+    
+    try {
+      const cacheKey = 'kitten_tts_model';
+      await this.modelCache.set(cacheKey, modelBuffer);
+      this.log(`Model cached to IndexedDB: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+    } catch (error) {
+      console.warn('Failed to cache model to IndexedDB:', error);
+    }
+  }
+
+  /**
+   * Load model buffer from IndexedDB cache
+   * @returns The cached model buffer or null if not found
+   */
+  private async loadModelFromCache(): Promise<ArrayBuffer | null> {
+    if (!this.config.enableBrowserCache) return null;
+    
+    try {
+      const cacheKey = 'kitten_tts_model';
+      const modelBuffer = await this.modelCache.get(cacheKey);
+      
+      if (modelBuffer) {
+        this.log(`Model loaded from IndexedDB cache: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+      } else {
+        this.log('No cached model found in IndexedDB');
+      }
+      
+      return modelBuffer;
+    } catch (error) {
+      console.warn('Failed to load model from IndexedDB cache:', error);
+      return null;
+    }
+  }
+
+  /**
    * Load the KittenTTS model and voice embeddings
    * @returns Promise that resolves when model is loaded
    */
@@ -123,23 +275,42 @@ export class KittenTTS {
     this.log('Loading KittenTTS model...');
 
     try {
-      let modelBuffer: ArrayBuffer;
+      let modelBuffer: ArrayBuffer | null = null;
       
-      // Check if we should use embedded assets
-      if (this.config.useEmbeddedAssets && hasEmbeddedAssets()) {
-        this.log('Using embedded ONNX model...');
-        modelBuffer = getEmbeddedModel();
-        this.log(`Embedded model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
-      } else {
-        // Fallback to fetch
-        this.log('Fetching ONNX model from:', this.config.modelPath);
-        const modelResponse = await fetch(this.config.modelPath);
-        if (!modelResponse.ok) {
-          throw new Error(`Failed to load ONNX model: ${modelResponse.status} ${modelResponse.statusText}`);
+      // Try to load from IndexedDB cache first
+      if (this.config.enableBrowserCache) {
+        this.log('Checking IndexedDB cache for model...');
+        modelBuffer = await this.loadModelFromCache();
+      }
+      
+      // If not in cache, load from embedded assets or fetch
+      if (!modelBuffer) {
+        // Check if we should use embedded assets
+        if (this.config.useEmbeddedAssets && hasEmbeddedAssets()) {
+          this.log('Using embedded ONNX model...');
+          modelBuffer = getEmbeddedModel();
+          this.log(`Embedded model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+        } else {
+          // Fallback to fetch
+          this.log('Fetching ONNX model from:', this.config.modelPath);
+          const modelResponse = await fetch(this.config.modelPath);
+          if (!modelResponse.ok) {
+            throw new Error(`Failed to load ONNX model: ${modelResponse.status} ${modelResponse.statusText}`);
+          }
+          
+          modelBuffer = await modelResponse.arrayBuffer();
+          this.log(`Model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
         }
         
-        modelBuffer = await modelResponse.arrayBuffer();
-        this.log(`Model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+        // Cache the model buffer for future use
+        if (modelBuffer && this.config.enableBrowserCache) {
+          await this.saveModelToCache(modelBuffer);
+          this.log(`Model saved: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
+        }
+      }
+      
+      if (!modelBuffer) {
+        throw new Error('Failed to load model buffer from any source');
       }
       
       // Create ONNX inference session
@@ -541,5 +712,20 @@ export class KittenTTS {
     this.voices = {};
     this.isLoaded = false;
     this.log('KittenTTS resources disposed');
+  }
+
+  /**
+   * Clear the IndexedDB cache
+   * @returns Promise that resolves when cache is cleared
+   */
+  async clearCache(): Promise<void> {
+    if (!this.config.enableBrowserCache) return;
+    
+    try {
+      await this.modelCache.clear();
+      this.log('IndexedDB cache cleared successfully');
+    } catch (error) {
+      console.warn('Failed to clear IndexedDB cache:', error);
+    }
   }
 }
