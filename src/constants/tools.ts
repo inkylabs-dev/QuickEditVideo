@@ -77,6 +77,7 @@ const TOOLS: Tool[] = [
       content: '<path d="M8 3H5C3.89 3 3 3.89 3 5V8M21 8V5C21 3.89 20.11 3 19 3H16M16 21H19C20.11 21 21 20.11 21 19V16M3 16V19C3 20.11 3.89 21 5 21H8"/>'
     },
     category: 'video-editing',
+    featured: true,
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -93,6 +94,7 @@ const TOOLS: Tool[] = [
       content: '<path d="M6 2V6H2V8H6V18C6 19.1 6.9 20 8 20H18V24H20V20H24V18H20V8C20 6.9 19.1 6 18 6H8V2H6Z"/>'
     },
     category: 'video-editing',
+    featured: true,
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
