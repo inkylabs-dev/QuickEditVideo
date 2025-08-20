@@ -256,20 +256,13 @@ const TextToSpeech = () => {
               className={`flex items-center justify-center gap-2 px-4 py-3 border-2 transition-all rounded-lg font-medium w-full ${
                 !isModelLoaded
                   ? 'border-gray-200 bg-white text-gray-400 cursor-not-allowed'
-                  : !text.trim()
-                    ? 'border-gray-900 bg-white hover:border-teal-600 hover:bg-teal-50 text-gray-900'
-                    : 'border-teal-600 bg-teal-50 text-teal-900'
+                  : 'border-black-50 bg-black-50 hover:bg-gray-100 text-teal-900'
               }`}
             >
               {!isModelLoaded ? (
                 <>
                   <Loading className="scale-75" />
                   <span>Loading Model</span>
-                </>
-              ) : processingQueue && queueLength > 0 ? (
-                <>
-                  <Loading className="scale-75" />
-                  <span>Processing Queue ({queueLength})</span>
                 </>
               ) : (
                 <>
