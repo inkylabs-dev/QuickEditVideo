@@ -367,20 +367,6 @@ const ttsStructuredData = {
 				}
 			});
 			
-			// Test the worker with "Hello world" after a delay
-			setTimeout(() => {
-				if (ttsWorker) {
-					console.log('Sending generate-speech request for "Hello world"');
-					ttsWorker.postMessage({
-						type: 'generate-speech',
-						data: {
-							id: 'test-hello-world',
-							text: 'Hello world',
-							voice: 'expr-voice-2-m'
-						}
-					});
-				}
-			}, 3000); // Give the model time to load
 			
 		} catch (error) {
 			console.error('Failed to initialize TTS worker:', error);
@@ -390,23 +376,4 @@ const ttsStructuredData = {
 	// Initialize the worker when the page loads
 	initializeTTSWorker();
 	
-	// Expose a global function for testing
-	declare global {
-		interface Window {
-			generateTTS: (text: string, voice?: string) => string | null;
-		}
-	}
-	
-	window.generateTTS = function(text: string, voice: string = 'expr-voice-2-m'): string | null {
-		if (ttsWorker) {
-			const id = 'manual-' + Date.now();
-			ttsWorker.postMessage({
-				type: 'generate-speech',
-				data: { id, text, voice }
-			});
-			return id;
-		}
-		console.error('TTS worker not initialized');
-		return null;
-	};
 </script>

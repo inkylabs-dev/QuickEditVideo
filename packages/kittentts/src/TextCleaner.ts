@@ -18,7 +18,7 @@ export class TextCleaner {
       this.wordIndexDictionary[symbols[i]] = i;
     }
 
-    console.log('TextCleaner initialized with', symbols.length, 'symbols');
+    // console.log('TextCleaner initialized with', symbols.length, 'symbols');
   }
 
   /**
@@ -27,20 +27,20 @@ export class TextCleaner {
    * @returns Array of token indices
    */
   call(text: string): number[] {
-    console.log('TextCleaner processing text:', text);
+    // console.log('TextCleaner processing text:', text);
     const indexes: number[] = [];
     
     for (const char of text) {
       if (this.wordIndexDictionary[char] !== undefined) {
         indexes.push(this.wordIndexDictionary[char]);
-        console.log(`Mapped '${char}' -> ${this.wordIndexDictionary[char]}`);
+        // console.log(`Mapped '${char}' -> ${this.wordIndexDictionary[char]}`);
       } else {
         console.warn(`Unknown character '${char}', skipping`);
         // Skip unknown characters (matching Python implementation)
       }
     }
     
-    console.log('TextCleaner result:', indexes);
+    // console.log('TextCleaner result:', indexes);
     return indexes;
   }
 
