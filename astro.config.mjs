@@ -8,13 +8,15 @@ import preact from '@astrojs/preact';
 
 import sitemap from '@astrojs/sitemap';
 
+import partytown from '@astrojs/partytown';
+
 // https://astro.build/config
 export default defineConfig({
     site: 'https://quickeditvideo.com',
     integrations: [tailwind(), preact({
         compat: true,
         devtools: true,
-    }), sitemap()],
+    }), sitemap(), partytown()],
     devToolbar: {
         enabled: false,
     },
