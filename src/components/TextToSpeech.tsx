@@ -253,10 +253,10 @@ const TextToSpeech = () => {
             <button
               onClick={generateSpeech}
               disabled={!isModelLoaded}
-              className={`flex items-center justify-center gap-2 px-4 py-3 border-2 transition-all rounded-lg font-medium w-full ${
+              className={`flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 transition-colors w-full justify-center ${
                 !isModelLoaded
                   ? 'border-gray-200 bg-white text-gray-400 cursor-not-allowed'
-                  : 'border-black-50 bg-black-50 hover:bg-gray-100 text-teal-900'
+                  : ''
               }`}
             >
               {!isModelLoaded ? (
