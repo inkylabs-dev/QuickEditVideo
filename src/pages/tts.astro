@@ -327,21 +327,86 @@ const ttsStructuredData = {
 	</main>
 </Layout>
 
-<script type="text/partytown">
-	// Listen for messages in the Partytown worker context
-	self.addEventListener('message', function(e) {
-		if (e.data === 'Hello world') {
-			console.log('Worker received: Hello world');
-			self.postMessage('Worker received: Hello world');
+<script>
+	// Import the worker using ?worker&url pattern
+	import TextToSpeechWorkerUrl from '../workers/TextToSpeechWorker.ts?worker&url';
+	
+	let ttsWorker: Worker | null = null;
+	
+	function initializeTTSWorker(): void {
+		try {
+			// Create worker from the TextToSpeechWorker file
+			ttsWorker = new Worker(TextToSpeechWorkerUrl, { type: 'module' });
+			
+			// Listen for worker responses
+			ttsWorker.addEventListener('message', function(e: MessageEvent) {
+				const response = e.data;
+				
+				switch (response.type) {
+					case 'model-loaded':
+						console.log('TTS model loaded successfully');
+						break;
+					case 'model-error':
+						console.error('TTS model failed to load:', response.error);
+						break;
+					case 'speech-generated':
+						console.log('Speech generated for ID:', response.id);
+						console.log('Audio URL:', response.audioUrl);
+						
+						// You can dispatch custom events here to communicate with other parts of the page
+						window.dispatchEvent(new CustomEvent('tts-speech-generated', {
+							detail: { id: response.id, audioUrl: response.audioUrl }
+						}));
+						break;
+					case 'speech-error':
+						console.error('Speech generation failed for ID:', response.id, ':', response.error);
+						break;
+					default:
+						console.log('Unknown response from worker:', response);
+						break;
+				}
+			});
+			
+			// Test the worker with "Hello world" after a delay
+			setTimeout(() => {
+				if (ttsWorker) {
+					console.log('Sending generate-speech request for "Hello world"');
+					ttsWorker.postMessage({
+						type: 'generate-speech',
+						data: {
+							id: 'test-hello-world',
+							text: 'Hello world',
+							voice: 'expr-voice-2-m'
+						}
+					});
+				}
+			}, 3000); // Give the model time to load
+			
+		} catch (error) {
+			console.error('Failed to initialize TTS worker:', error);
 		}
-	});
+	}
 	
-	// Send "Hello world" to trigger the listener
-	self.postMessage('Hello world');
+	// Initialize the worker when the page loads
+	initializeTTSWorker();
 	
-	// Also create a custom event to demonstrate worker functionality
-	setTimeout(() => {
-		console.log('Worker is running in Partytown context');
-		self.postMessage('Hello world');
-	}, 1000);
+	// Expose a global function for testing
+	declare global {
+		interface Window {
+			generateTTS: (text: string, voice?: string) => string | null;
+		}
+	}
+	
+	window.generateTTS = function(text: string, voice: string = 'expr-voice-2-m'): string | null {
+		if (ttsWorker) {
+			const id = 'manual-' + Date.now();
+			ttsWorker.postMessage({
+				type: 'generate-speech',
+				data: { id, text, voice }
+			});
+			return id;
+		}
+		console.error('TTS worker not initialized');
+		return null;
+	};
 </script>

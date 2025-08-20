@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
 import Loading from './Loading';
-import * as mediabunny from 'mediabunny';
-import { KittenTTS, VOICE_OPTIONS, createAudioUrl, type VoiceId } from '@quickeditvideo/kittentts';
-
-// Use vite-plugin-wasm for WASM imports via alias
-import ortWasmSimdThreadedUrl from '@onnx-wasm/ort-wasm-simd-threaded.wasm?url';
-import ortWasmSimdThreadedJsepUrl from '@onnx-wasm/ort-wasm-simd-threaded.jsep.wasm?url';
+import { VOICE_OPTIONS, type VoiceId } from '@quickeditvideo/kittentts';
+import TextToSpeechWorkerUrl from '../workers/TextToSpeechWorker.ts?worker&url';
+import type { WorkerResponse, QueueItem } from '../workers/TextToSpeechWorker';
 
 interface GeneratedAudio {
   id: string;
@@ -20,119 +17,88 @@ interface GeneratedAudio {
 const TextToSpeech = () => {
   const [text, setText] = useState<string>('');
   const [selectedVoice, setSelectedVoice] = useState<VoiceId>('expr-voice-2-m');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isModelLoaded, setIsModelLoaded] = useState<boolean>(false);
+  const [isModelLoading, setIsModelLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [generatedAudios, setGeneratedAudios] = useState<GeneratedAudio[]>([]);
   const [processingQueue, setProcessingQueue] = useState<boolean>(false);
   const [queueLength, setQueueLength] = useState<number>(0);
   
-  const kittenTTSRef = useRef<KittenTTS | null>(null);
-  const queueRef = useRef<GeneratedAudio[]>([]);
+  const workerRef = useRef<Worker | null>(null);
 
-  // Initialize TTS model and dependencies
+  // Initialize worker
   useEffect(() => {
-    loadModel();
+    try {
+      const worker = new Worker(TextToSpeechWorkerUrl, { type: 'module' });
+      workerRef.current = worker;
+      
+      // Listen for worker messages
+      worker.addEventListener('message', handleWorkerMessage);
+      
+      return () => {
+        worker.removeEventListener('message', handleWorkerMessage);
+        worker.terminate();
+      };
+    } catch (err) {
+      console.error('Failed to initialize TTS worker:', err);
+      setError('Failed to initialize text-to-speech worker');
+      setIsModelLoading(false);
+    }
   }, []);
 
-  const loadModel = async () => {
-    if (kittenTTSRef.current?.isReady()) return; // Already loaded
+  const handleWorkerMessage = (e: MessageEvent<WorkerResponse>) => {
+    const response = e.data;
     
-    setIsLoading(true);
-    setError('');
-    
-    try {
-      // Initialize KittenTTS
-      const kittenTTS = new KittenTTS({
-        modelPath: '/tts/kitten_tts_nano_v0_1.onnx',
-        voicesPath: '/tts/voices.json',
-        sampleRate: 22050
-      });
-
-      // Configure WASM paths
-      kittenTTS.configureWasmPaths({
-        'ort-wasm-simd-threaded.wasm': ortWasmSimdThreadedUrl,
-        'ort-wasm-simd-threaded.jsep.wasm': ortWasmSimdThreadedJsepUrl,
-        // Create fallback aliases
-        'ort-wasm.wasm': ortWasmSimdThreadedUrl,
-        'ort-wasm-threaded.wasm': ortWasmSimdThreadedUrl,
-        'ort-wasm-simd.wasm': ortWasmSimdThreadedUrl,
-      });
-
-      // Load the model
-      await kittenTTS.load();
-      
-      kittenTTSRef.current = kittenTTS;
-      setIsModelLoaded(true);
-      console.log('KittenTTS model loaded successfully');
-      
-    } catch (err) {
-      console.error('Failed to load KittenTTS model:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load KittenTTS model');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Process the generation queue
-  const processQueue = async () => {
-    if (processingQueue || queueRef.current.length === 0 || !kittenTTSRef.current?.isReady()) {
-      return;
-    }
-
-    setProcessingQueue(true);
-
-    while (queueRef.current.length > 0) {
-      const currentItem = queueRef.current[0];
-      
-      try {
-        const kittenTTS = kittenTTSRef.current;
+    switch (response.type) {
+      case 'model-loaded':
+        setIsModelLoaded(true);
+        setIsModelLoading(false);
+        setError('');
+        console.log('TTS model loaded successfully');
+        break;
         
-        console.log('Generating speech for:', currentItem.text);
+      case 'model-error':
+        setIsModelLoaded(false);
+        setIsModelLoading(false);
+        setError(response.error || 'Failed to load TTS model');
+        console.error('TTS model failed to load:', response.error);
+        break;
         
-        // Generate speech using KittenTTS
-        const audioData = await kittenTTS.generate(currentItem.text, {
-          voice: currentItem.voice,
-          speed: 1.0,
-          language: 'en-us'
-        });
+      case 'queue-updated':
+        setQueueLength(response.queueLength || 0);
+        setProcessingQueue(response.processing || false);
+        break;
         
-        // Create audio URL for playback
-        const audioUrl = createAudioUrl(audioData, kittenTTS.getSampleRate());
-        
-        // Update the item in the UI
-        setGeneratedAudios(prev => 
-          prev.map(audio => 
-            audio.id === currentItem.id 
-              ? { ...audio, audioUrl, isGenerating: false }
-              : audio
-          )
-        );
-        
-        console.log('Speech generated successfully for:', currentItem.text);
-        
-      } catch (err) {
-        console.error('Failed to generate speech:', err);
-        
-        // Remove the failed item from UI
-        setGeneratedAudios(prev => prev.filter(audio => audio.id !== currentItem.id));
-        
-        // Show error for the most recent failure
-        if (queueRef.current[0]?.id === currentItem.id) {
-          setError(err instanceof Error ? err.message : 'Failed to generate speech');
+      case 'speech-generated':
+        if (response.id && response.audioUrl) {
+          // Update the audio item with the generated URL
+          setGeneratedAudios(prev => 
+            prev.map(audio => 
+              audio.id === response.id 
+                ? { ...audio, audioUrl: response.audioUrl!, isGenerating: false }
+                : audio
+            )
+          );
+          console.log('Speech generated for ID:', response.id);
         }
-      }
-      
-      // Remove processed item from queue
-      queueRef.current = queueRef.current.slice(1);
-      setQueueLength(queueRef.current.length);
+        break;
+        
+      case 'speech-error':
+        if (response.id) {
+          // Remove the failed audio item
+          setGeneratedAudios(prev => prev.filter(audio => audio.id !== response.id));
+          console.error('Speech generation failed for ID:', response.id, ':', response.error);
+        }
+        break;
+        
+      default:
+        console.log('Unknown response from worker:', response);
+        break;
     }
-
-    setProcessingQueue(false);
   };
 
   const generateSpeech = () => {
-    if (!kittenTTSRef.current?.isReady()) {
+    if (!workerRef.current || !isModelLoaded) {
       return;
     }
 
@@ -140,8 +106,8 @@ const TextToSpeech = () => {
     const voiceToUse = selectedVoice;
     const audioId = `audio_${Date.now()}`;
 
-    // Create the queue item
-    const queueItem: GeneratedAudio = {
+    // Create the UI item immediately
+    const audioItem: GeneratedAudio = {
       id: audioId,
       text: textToGenerate,
       voice: voiceToUse,
@@ -153,14 +119,21 @@ const TextToSpeech = () => {
     // IMMEDIATE UI UPDATES (synchronous)
     setText(''); // Clear input immediately
     setError(''); // Clear any errors
-    setGeneratedAudios(prev => [queueItem, ...prev]); // Add to UI immediately
+    setGeneratedAudios(prev => [audioItem, ...prev]); // Add to UI immediately
     
-    // Add to processing queue
-    queueRef.current = [...queueRef.current, queueItem];
-    setQueueLength(queueRef.current.length);
+    // Send to worker for processing
+    const queueItem: QueueItem = {
+      id: audioId,
+      text: textToGenerate,
+      voice: voiceToUse,
+      speed: 1.0,
+      language: 'en-us'
+    };
     
-    // Start processing (async, non-blocking)
-    processQueue();
+    workerRef.current.postMessage({
+      type: 'generate-speech',
+      data: queueItem
+    });
   };
 
   const downloadAudio = (audio: GeneratedAudio) => {
@@ -208,17 +181,17 @@ const TextToSpeech = () => {
         <button
           onClick={() => {
             setError('');
-            loadModel();
+            window.location.reload();
           }}
           className="mt-3 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-md text-sm"
         >
-          Try Again
+          Reload Page
         </button>
       </div>
     );
   }
 
-  if (isLoading) {
+  if (isModelLoading) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-12">
         <Loading />
@@ -236,6 +209,12 @@ const TextToSpeech = () => {
           <div className="p-6 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Generated Audio</h3>
             <p className="text-sm text-gray-600 mt-1">Your text-to-speech conversions</p>
+            {processingQueue && queueLength > 0 && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
+                <Loading className="scale-50" />
+                <span>Processing queue ({queueLength})</span>
+              </div>
+            )}
           </div>
           
           <div className="p-6">
