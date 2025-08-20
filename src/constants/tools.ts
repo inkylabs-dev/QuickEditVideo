@@ -17,6 +17,7 @@ export interface Tool {
   icon: ToolIcon;
   category: string;
   featured?: boolean; // For homepage featured tools
+  recommendedTools?: string[]; // List of tool IDs that are most relevant to this tool
   bgColor: string;
   hoverBgColor: string;
   iconColor: string;
@@ -44,6 +45,7 @@ const TOOLS: Tool[] = [
     },
     category: 'video-editing',
     featured: true,
+    recommendedTools: ['merge', 'crop', 'resize', 'extract-frame', 'change-speed'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -61,6 +63,7 @@ const TOOLS: Tool[] = [
     },
     category: 'video-editing',
     featured: true,
+    recommendedTools: ['trim', 'resize', 'to-mp4', 'crop', 'extract-audio'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -78,6 +81,7 @@ const TOOLS: Tool[] = [
     },
     category: 'video-editing',
     featured: true,
+    recommendedTools: ['crop', 'trim', 'to-mp4', 'merge', 'flip'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -95,6 +99,7 @@ const TOOLS: Tool[] = [
     },
     category: 'video-editing',
     featured: true,
+    recommendedTools: ['resize', 'trim', 'extract-frame', 'watermark', 'flip'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -111,6 +116,7 @@ const TOOLS: Tool[] = [
       content: '<path d="M15 3H6A2 2 0 0 0 4 4V16A2 2 0 0 0 6 18H15A2 2 0 0 0 17 16V4A2 2 0 0 0 15 3ZM8 16L6 14L11 9L13 11L17 7L19 9V14A2 2 0 0 1 17 16H8Z"/>'
     },
     category: 'video-editing',
+    recommendedTools: ['crop', 'resize', 'extract-frame', 'to-mp4', 'merge'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -127,6 +133,7 @@ const TOOLS: Tool[] = [
       content: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M8 12h8"/><path d="M12 8v8"/>'
     },
     category: 'video-editing',
+    recommendedTools: ['tts', 'watermark', 'crop', 'trim', 'info'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -143,6 +150,7 @@ const TOOLS: Tool[] = [
       content: '<circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M12 6h.01"/>'
     },
     category: 'video-editing',
+    recommendedTools: ['extract-frame', 'extract-audio', 'trim', 'resize', 'to-mp4'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -159,6 +167,7 @@ const TOOLS: Tool[] = [
       content: '<path d="M8 3H5C3.89 3 3 3.89 3 5V8M21 8V5C21 3.89 20.11 3 19 3H16"/><path d="M16 21H19C20.11 21 21 20.11 21 19V16M3 16V19C3 20.11 3.89 21 5 21H8"/><path d="M9 12L15 12M12 9L12 15"/>'
     },
     category: 'video-editing',
+    recommendedTools: ['resize', 'crop', 'trim', 'watermark', 'merge'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -175,6 +184,7 @@ const TOOLS: Tool[] = [
       content: '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'
     },
     category: 'video-editing',
+    recommendedTools: ['trim', 'merge', 'extract-audio', 'to-mp4', 'resize'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -195,6 +205,7 @@ const TOOLS: Tool[] = [
     },
     category: 'converters',
     featured: true,
+    recommendedTools: ['trim', 'merge', 'resize', 'extract-audio', 'to-gif'],
     bgColor: 'bg-orange-100',
     hoverBgColor: 'hover:bg-orange-200',
     iconColor: 'text-orange-700'
@@ -212,6 +223,7 @@ const TOOLS: Tool[] = [
       className: 'text-xs font-bold'
     },
     category: 'converters',
+    recommendedTools: ['to-mp4', 'to-mov', 'to-mkv', 'trim', 'resize'],
     bgColor: 'bg-orange-100',
     hoverBgColor: 'hover:bg-orange-200',
     iconColor: 'text-orange-700'
@@ -229,6 +241,7 @@ const TOOLS: Tool[] = [
       className: 'text-xs font-bold'
     },
     category: 'converters',
+    recommendedTools: ['to-mp4', 'to-avi', 'to-mkv', 'trim', 'merge'],
     bgColor: 'bg-orange-100',
     hoverBgColor: 'hover:bg-orange-200',
     iconColor: 'text-orange-700'
@@ -246,6 +259,7 @@ const TOOLS: Tool[] = [
       className: 'text-xs font-bold'
     },
     category: 'converters',
+    recommendedTools: ['to-mp4', 'to-gif', 'trim', 'resize', 'change-speed'],
     bgColor: 'bg-orange-100',
     hoverBgColor: 'hover:bg-orange-200',
     iconColor: 'text-orange-700'
@@ -263,6 +277,7 @@ const TOOLS: Tool[] = [
       className: 'text-xs font-bold'
     },
     category: 'converters',
+    recommendedTools: ['trim', 'resize', 'crop', 'to-mp4', 'change-speed'],
     bgColor: 'bg-orange-100',
     hoverBgColor: 'hover:bg-orange-200',
     iconColor: 'text-orange-700'
@@ -280,6 +295,7 @@ const TOOLS: Tool[] = [
       className: 'text-xs font-bold'
     },
     category: 'converters',
+    recommendedTools: ['to-mp4', 'to-avi', 'to-mov', 'extract-audio', 'merge'],
     bgColor: 'bg-orange-100',
     hoverBgColor: 'hover:bg-orange-200',
     iconColor: 'text-orange-700'
@@ -298,6 +314,7 @@ const TOOLS: Tool[] = [
       content: '<path d="M9 18V5L12.5 8.5L16 5V18L12.5 14.5L9 18Z"/><path d="M20 4L16 8L20 12"/>'
     },
     category: 'audio-quality',
+    recommendedTools: ['tts', 'trim', 'merge', 'to-mp4', 'change-speed'],
     bgColor: 'bg-orange-100',
     hoverBgColor: 'group-hover:bg-orange-200',
     iconColor: 'text-orange-600'
@@ -315,6 +332,7 @@ const TOOLS: Tool[] = [
     },
     category: 'audio-quality',
     featured: true,
+    recommendedTools: ['extract-audio', 'merge', 'extract-frame', 'watermark', 'trim'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'

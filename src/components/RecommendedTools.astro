@@ -1,6 +1,6 @@
 ---
 // RecommendedTools.astro - Sidebar component for recommended tools
-import { getAllTools } from '../constants/tools';
+import { getAllTools, getToolById, type Tool } from '../constants/tools';
 
 export interface Props {
   currentToolId?: string; // To exclude current tool from recommendations
@@ -12,11 +12,32 @@ const { currentToolId, category } = Astro.props;
 // Get all tools and filter out the current one
 let allTools = getAllTools().filter(tool => tool.id !== currentToolId);
 
-// Prioritize tools from the same category, then featured tools
-let recommendedTools = [];
+// Prioritize tools based on the current tool's recommendedTools field
+let recommendedTools: Tool[] = [];
 
-if (category) {
-  // First, add tools from same category
+if (currentToolId) {
+  const currentTool = getToolById(currentToolId);
+  
+  if (currentTool?.recommendedTools) {
+    // First, add tools from current tool's recommendedTools list
+    const toolRecommendations = currentTool.recommendedTools
+      .map(toolId => allTools.find(tool => tool.id === toolId))
+      .filter((tool): tool is Tool => tool !== undefined)
+      .slice(0, 4); // Take top 4 from tool recommendations
+    
+    recommendedTools.push(...toolRecommendations);
+  }
+  
+  // Fill remaining slots with tools from same category if available
+  if (recommendedTools.length < 6 && category) {
+    const sameCategory = allTools.filter(tool => 
+      tool.category === category && 
+      !recommendedTools.find(rec => rec.id === tool.id)
+    ).slice(0, 6 - recommendedTools.length);
+    recommendedTools.push(...sameCategory);
+  }
+} else if (category) {
+  // If no current tool but category specified, prioritize same category
   const sameCategory = allTools.filter(tool => tool.category === category).slice(0, 3);
   recommendedTools.push(...sameCategory);
   
