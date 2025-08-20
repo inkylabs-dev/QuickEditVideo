@@ -77,6 +77,7 @@ const TOOLS: Tool[] = [
       content: '<path d="M8 3H5C3.89 3 3 3.89 3 5V8M21 8V5C21 3.89 20.11 3 19 3H16M16 21H19C20.11 21 21 20.11 21 19V16M3 16V19C3 20.11 3.89 21 5 21H8"/>'
     },
     category: 'video-editing',
+    featured: true,
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -93,6 +94,7 @@ const TOOLS: Tool[] = [
       content: '<path d="M6 2V6H2V8H6V18C6 19.1 6.9 20 8 20H18V24H20V20H24V18H20V8C20 6.9 19.1 6 18 6H8V2H6Z"/>'
     },
     category: 'video-editing',
+    featured: true,
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
@@ -299,6 +301,23 @@ const TOOLS: Tool[] = [
     bgColor: 'bg-orange-100',
     hoverBgColor: 'group-hover:bg-orange-200',
     iconColor: 'text-orange-600'
+  },
+  {
+    id: 'tts',
+    name: 'Text to Speech',
+    shortName: 'Text to Speech',
+    description: 'Convert text to high-quality speech using AI voice synthesis',
+    shortDescription: 'Text to speech',
+    url: '/tts',
+    icon: {
+      type: 'svg',
+      content: '<path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.824a1 1 0 011.617.824zM14 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clipRule="evenodd"/><path d="M16.5 6A1.5 1.5 0 0118 7.5v5a1.5 1.5 0 11-3 0v-5A1.5 1.5 0 0116.5 6z"/>'
+    },
+    category: 'audio-quality',
+    featured: true,
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'group-hover:bg-teal-200',
+    iconColor: 'text-teal-600'
   }
 ];
 
