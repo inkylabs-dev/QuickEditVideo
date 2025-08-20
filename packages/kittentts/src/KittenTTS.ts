@@ -75,7 +75,7 @@ export class KittenTTS {
       wasmPaths: {},
       sampleRate: 22050,
       useEmbeddedAssets: true,
-      verbose: true,
+      verbose: false,
       ...config
     };
     
