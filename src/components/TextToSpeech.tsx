@@ -15,7 +15,7 @@ interface GeneratedAudio {
 
 const TextToSpeech = () => {
   const [text, setText] = useState<string>('');
-  const [selectedVoice, setSelectedVoice] = useState<VoiceId>('expr-voice-2-m');
+  const [selectedVoice, setSelectedVoice] = useState<VoiceId>('expr-voice-3-f');
   const [isModelLoaded, setIsModelLoaded] = useState<boolean>(false);
   const [isModelLoading, setIsModelLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -203,8 +203,8 @@ const TextToSpeech = () => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
-        {/* Control Panel - First on mobile, right on desktop */}
-        <div className="p-6 order-1 lg:order-2">
+        {/* Control Panel - First on mobile, left on desktop */}
+        <div className="p-6 order-1 lg:order-1">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Text to Speech</h3>
             <p className="text-sm text-gray-600">Enter text and select a voice to generate speech</p>
@@ -284,8 +284,8 @@ const TextToSpeech = () => {
           </div>
         </div>
 
-        {/* Generated Audio List - Second on mobile, left on desktop */}
-        <div className="border-r-0 lg:border-r border-gray-200 border-t lg:border-t-0 order-2 lg:order-1">
+        {/* Generated Audio List - Second on mobile, right on desktop */}
+        <div className="border-l-0 lg:border-l border-gray-200 border-t lg:border-t-0 order-2 lg:order-2">
           <div className="p-6 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Generated Audio</h3>
             <p className="text-sm text-gray-600 mt-1">Your text-to-speech conversions</p>
