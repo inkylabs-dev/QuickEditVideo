@@ -25,6 +25,97 @@ export function cleanTextForTTS(text: string): string {
   return cleanedText.trim();
 }
 
+export function chunkText(text: string): string[] {
+    if (!text || typeof text !== 'string') {
+        return [];
+    }
+
+    const MIN_CHUNK_LENGTH = 4;
+    const MAX_CHUNK_LENGTH = 500;
+
+    // First, split by newlines
+    const lines = text.split('\n');
+    const chunks = [];
+
+    for (const line of lines) {
+        // Skip empty lines
+        if (line.trim() === '') continue;
+
+        // Check if the line already ends with punctuation
+        const endsWithPunctuation = /[.!?]$/.test(line.trim());
+
+        // If it doesn't end with punctuation and it's not empty, add a period
+        const processedLine = endsWithPunctuation ? line : line.trim() + '.';
+
+        // Now split the line into sentences based on punctuation followed by whitespace or end of line
+        // Using regex with positive lookbehind and lookahead to keep punctuation with the sentence
+        const sentences = processedLine.split(/(?<=[.!?])(?=\s+|$)/);
+
+        // Process sentences and combine short ones
+        let currentChunk = '';
+
+        for (const sentence of sentences) {
+            const trimmedSentence = sentence.trim();
+            if (!trimmedSentence) continue;
+
+            // If this sentence alone exceeds max length, split it at word boundaries
+            if (trimmedSentence.length > MAX_CHUNK_LENGTH) {
+                // Add current chunk if exists
+                if (currentChunk) {
+                    chunks.push(currentChunk);
+                    currentChunk = '';
+                }
+
+                // Split long sentence at word boundaries
+                const words = trimmedSentence.split(' ');
+                let longChunk = '';
+
+                for (const word of words) {
+                    const potentialLongChunk = longChunk + (longChunk ? ' ' : '') + word;
+                    if (potentialLongChunk.length <= MAX_CHUNK_LENGTH) {
+                        longChunk = potentialLongChunk;
+                    } else {
+                        if (longChunk) {
+                            chunks.push(longChunk);
+                        }
+                        longChunk = word;
+                    }
+                }
+
+                if (longChunk) {
+                    currentChunk = longChunk;
+                }
+                continue;
+            }
+
+            // If adding this sentence would exceed max length, finalize current chunk
+            const potentialChunk = currentChunk + (currentChunk ? ' ' : '') + trimmedSentence;
+
+            if (potentialChunk.length > MAX_CHUNK_LENGTH) {
+                if (currentChunk) {
+                    chunks.push(currentChunk);
+                }
+                currentChunk = trimmedSentence;
+            } else if (potentialChunk.length < MIN_CHUNK_LENGTH) {
+                currentChunk = potentialChunk;
+            } else {
+                // Chunk is between min and max length
+                if (currentChunk) {
+                    chunks.push(currentChunk);
+                }
+                currentChunk = trimmedSentence;
+            }
+        }
+
+        // Add any remaining chunk
+        if (currentChunk) {
+            chunks.push(currentChunk);
+        }
+    }
+
+    return chunks;
+}
+
 /**
  * TextCleaner class for converting text to token indices
  * Matches the Python KittenTTS implementation
@@ -96,5 +187,49 @@ export class TextCleaner {
    */
   getSymbolDictionary(): Record<string, number> {
     return { ...this.wordIndexDictionary };
+  }
+}
+
+// Text splitting stream to break text into chunks
+export class TextSplitterStream {
+  private chunks: string[];
+  private closed: boolean;
+
+  constructor() {
+    this.chunks = [];
+    this.closed = false;
+  }
+
+  chunkText(text: string): string[] {
+    // Clean the text first, then chunk it
+    const cleanedText = cleanTextForTTS(text);
+    return chunkText(cleanedText);
+  }
+
+  push(text: string): void {
+    if (this.closed) {
+      throw new Error('Cannot push to a closed TextSplitterStream');
+    }
+    // Simple sentence splitting for now
+    const sentences = this.chunkText(text) || [text];
+    this.chunks.push(...sentences);
+  }
+
+  close(): void {
+    this.closed = true;
+  }
+
+  isClosed(): boolean {
+    return this.closed;
+  }
+
+  getChunks(): string[] {
+    return [...this.chunks];
+  }
+
+  async *[Symbol.asyncIterator](): AsyncGenerator<string, void, unknown> {
+    for (const chunk of this.chunks) {
+      yield chunk;
+    }
   }
 }

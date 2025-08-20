@@ -1,6 +1,6 @@
 import { InferenceSession, env, Tensor } from 'onnxruntime-web';
 import { phonemize } from 'phonemizer';
-import { TextCleaner } from './TextCleaner.js';
+import { TextCleaner, cleanTextForTTS, chunkText } from './TextCleaner.js';
 import { 
   getEmbeddedModel, 
   getEmbeddedVoices, 
@@ -311,7 +311,7 @@ export class KittenTTS {
   }
 
   /**
-   * Generate speech from text
+   * Generate speech from text with automatic chunking for long texts
    * @param text Input text to synthesize
    * @param options Generation options
    * @returns Promise that resolves to audio data as Float32Array
@@ -323,6 +323,27 @@ export class KittenTTS {
 
     this.log('Generating speech for text:', text);
     
+    // Clean the text first
+    const cleanedText = cleanTextForTTS(text);
+    this.log('Cleaned text:', cleanedText);
+    
+    // Check if text needs chunking (longer than 400 characters)
+    if (cleanedText.length > 400) {
+      this.log('Text is long, using chunked generation');
+      return this.generateChunked(cleanedText, options);
+    }
+    
+    // For shorter text, use direct generation
+    return this.generateSingle(cleanedText, options);
+  }
+
+  /**
+   * Generate speech for a single chunk of text
+   * @param text Input text to synthesize (should be pre-cleaned)
+   * @param options Generation options
+   * @returns Promise that resolves to audio data as Float32Array
+   */
+  private async generateSingle(text: string, options: GenerateOptions = {}): Promise<Float32Array> {
     try {
       // Prepare model inputs
       const inputs = await this.prepareInputs(text, options);
@@ -372,6 +393,59 @@ export class KittenTTS {
       console.error('Failed to generate speech:', error);
       throw error;
     }
+  }
+
+  /**
+   * Generate speech for long text by chunking and concatenating audio
+   * @param text Input text to synthesize (should be pre-cleaned)
+   * @param options Generation options
+   * @returns Promise that resolves to concatenated audio data as Float32Array
+   */
+  private async generateChunked(text: string, options: GenerateOptions = {}): Promise<Float32Array> {
+    const chunks = chunkText(text);
+    this.log(`Split text into ${chunks.length} chunks`);
+    
+    const audioChunks: Float32Array[] = [];
+    
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      this.log(`Processing chunk ${i + 1}/${chunks.length}: "${chunk.substring(0, 50)}..."`);
+      
+      try {
+        const chunkAudio = await this.generateSingle(chunk, options);
+        audioChunks.push(chunkAudio);
+        
+        // Add a small pause between chunks (100ms of silence)
+        if (i < chunks.length - 1) {
+          const pauseSamples = Math.floor(this.config.sampleRate * 0.1); // 100ms pause
+          const pause = new Float32Array(pauseSamples);
+          audioChunks.push(pause);
+        }
+        
+      } catch (error) {
+        console.error(`Failed to generate audio for chunk ${i + 1}:`, error);
+        // Continue with other chunks rather than failing completely
+      }
+    }
+    
+    if (audioChunks.length === 0) {
+      throw new Error('Failed to generate audio for any text chunks');
+    }
+    
+    // Concatenate all audio chunks
+    const totalLength = audioChunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const concatenatedAudio = new Float32Array(totalLength);
+    
+    let offset = 0;
+    for (const chunk of audioChunks) {
+      concatenatedAudio.set(chunk, offset);
+      offset += chunk.length;
+    }
+    
+    this.log(`Concatenated ${audioChunks.length} audio chunks into ${concatenatedAudio.length} samples`);
+    this.log(`Total audio duration: ${(concatenatedAudio.length / this.config.sampleRate).toFixed(2)}s`);
+    
+    return concatenatedAudio;
   }
 
   /**
