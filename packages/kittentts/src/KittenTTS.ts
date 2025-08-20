@@ -44,6 +44,20 @@ export const VOICE_OPTIONS = [
 export type VoiceId = typeof VOICE_OPTIONS[number]['value'];
 
 /**
+ * Mapping from named voice IDs to numeric voice IDs in the model
+ */
+const VOICE_ID_MAPPING: Record<string, string> = {
+  'expr-voice-2-m': '0',
+  'expr-voice-2-f': '1',
+  'expr-voice-3-m': '2',
+  'expr-voice-3-f': '3',
+  'expr-voice-4-m': '4',
+  'expr-voice-4-f': '5',
+  'expr-voice-5-m': '6',
+  'expr-voice-5-f': '7',
+};
+
+/**
  * KittenTTS class for browser-based text-to-speech synthesis
  * JavaScript implementation of the Python KittenTTS package
  */
@@ -223,7 +237,7 @@ export class KittenTTS {
    * @returns Array of available voice IDs
    */
   getAvailableVoices(): string[] {
-    return Object.keys(this.voices);
+    return Object.keys(VOICE_ID_MAPPING);
   }
 
   /**
@@ -235,7 +249,13 @@ export class KittenTTS {
   private async prepareInputs(text: string, options: GenerateOptions): Promise<Record<string, Tensor>> {
     const { voice = 'expr-voice-2-m', speed = 1.0, language = 'en-us' } = options;
     
-    if (!this.voices[voice]) {
+    // Map named voice ID to numeric voice ID
+    const numericVoiceId = VOICE_ID_MAPPING[voice];
+    if (!numericVoiceId) {
+      throw new Error(`Voice '${voice}' not available. Choose from: ${Object.keys(VOICE_ID_MAPPING).join(', ')}`);
+    }
+    
+    if (!this.voices[numericVoiceId]) {
       throw new Error(`Voice '${voice}' not available. Choose from: ${this.getAvailableVoices()}`);
     }
 
@@ -260,8 +280,8 @@ export class KittenTTS {
       this.log('Final tokens with start/end:', Array.from(tokenIds));
       
       // Get voice embedding
-      const voiceEmbedding = this.voices[voice];
-      this.log(`Using voice ${voice} with ${voiceEmbedding.length} dimensions`);
+      const voiceEmbedding = this.voices[numericVoiceId];
+      this.log(`Using voice ${voice} (${numericVoiceId}) with ${voiceEmbedding.length} dimensions`);
 
       // Create ONNX tensor inputs
       return {
@@ -280,7 +300,9 @@ export class KittenTTS {
       tokens.push(0);    // Add end token
       
       const tokenIds = new BigInt64Array(tokens.map((id: number) => BigInt(id)));
-      const voiceEmbedding = this.voices[voice];      return {
+      const voiceEmbedding = this.voices[numericVoiceId];
+      
+      return {
         'input_ids': new Tensor('int64', tokenIds, [1, tokenIds.length]),
         'style': new Tensor('float32', voiceEmbedding, [1, voiceEmbedding.length]),
         'speed': new Tensor('float32', new Float32Array([speed]), [1])

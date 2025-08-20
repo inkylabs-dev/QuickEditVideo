@@ -1,14 +1,5 @@
 import typescript from '@rollup/plugin-typescript';
 import copy from 'rollup-plugin-copy';
-import { execSync } from 'child_process';
-
-// Pre-build: setup embedded assets
-try {
-  console.log('Setting up embedded assets...');
-  execSync('node scripts/download-assets.js', { stdio: 'inherit' });
-} catch (error) {
-  console.warn('Warning: Could not setup embedded assets:', error.message);
-}
 
 export default [
   // ESM build

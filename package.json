@@ -12,8 +12,6 @@
     "preview": "astro preview",
     "astro": "astro",
     "copy-ffmpeg": "node scripts/copy-ffmpeg.js",
-    "download-tts": "node scripts/download-tts-model.js",
-    "copy-onnx-wasm": "node scripts/copy-onnx-wasm.js",
     "postinstall": "node scripts/copy-ffmpeg.js",
     "test": "vitest run && playwright test --reporter=line",
     "test:unit": "vitest run",
