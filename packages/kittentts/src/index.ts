@@ -6,7 +6,7 @@
  */
 
 export { KittenTTS } from './KittenTTS.js';
-export { TextCleaner } from './TextCleaner.js';
+export { TextCleaner, cleanTextForTTS } from './TextCleaner.js';
 export {
   createWavBlob,
   downloadWav,

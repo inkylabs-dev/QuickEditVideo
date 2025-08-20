@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import type { JSX } from 'preact';
 import Loading from './Loading';
-import { VOICE_OPTIONS, type VoiceId } from '@quickeditvideo/kittentts';
+import { VOICE_OPTIONS, type VoiceId, cleanTextForTTS } from '@quickeditvideo/kittentts';
 import TextToSpeechWorkerUrl from '../workers/TextToSpeechWorker.ts?worker&url';
 import type { WorkerResponse, QueueItem } from '../workers/TextToSpeechWorker';
 
@@ -102,14 +102,15 @@ const TextToSpeech = () => {
       return;
     }
 
-    const textToGenerate = text.trim() || 'Hello, this is a test message.';
+    const rawText = text.trim() || 'Hello, this is a test message.';
+    const textToGenerate = cleanTextForTTS(rawText);
     const voiceToUse = selectedVoice;
     const audioId = `audio_${Date.now()}`;
 
-    // Create the UI item immediately
+    // Create the UI item immediately (show original text to user)
     const audioItem: GeneratedAudio = {
       id: audioId,
-      text: textToGenerate,
+      text: rawText,
       voice: voiceToUse,
       audioUrl: null,
       timestamp: Date.now(),
