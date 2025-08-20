@@ -49,7 +49,8 @@ export function chunkText(text: string): string[] {
 
         // Now split the line into sentences based on punctuation followed by whitespace or end of line
         // Using regex with positive lookbehind and lookahead to keep punctuation with the sentence
-        const sentences = processedLine.split(/(?<=[.!?])(?=\s+|$)/);
+        // Avoid splitting on abbreviations like "i.e.", "e.g.", "Mr.", "Dr.", etc.
+        const sentences = processedLine.split(/(?<=[.!?])(?=\s+[A-Z]|$)/);
 
         // Process sentences and combine short ones
         let currentChunk = '';
@@ -99,11 +100,8 @@ export function chunkText(text: string): string[] {
             } else if (potentialChunk.length < MIN_CHUNK_LENGTH) {
                 currentChunk = potentialChunk;
             } else {
-                // Chunk is between min and max length
-                if (currentChunk) {
-                    chunks.push(currentChunk);
-                }
-                currentChunk = trimmedSentence;
+                // Chunk is between min and max length - keep building it
+                currentChunk = potentialChunk;
             }
         }
 

@@ -75,7 +75,7 @@ export class KittenTTS {
       wasmPaths: {},
       sampleRate: 22050,
       useEmbeddedAssets: true,
-      verbose: false,
+      verbose: true,
       ...config
     };
     
@@ -265,14 +265,18 @@ export class KittenTTS {
       // Step 1: Phonemize the text
       this.log('Phonemizing text...');
       const phonemesList = await phonemize(text, language);
-      const phonemes = phonemesList[0] || '';
+      const phonemes = phonemesList.join('') || '';
       this.log('Phonemes:', phonemes);
       
-      // Step 2: Convert phonemes to token IDs using TextCleaner
-      const tokens = this.textCleaner.call(phonemes);
+      // Step 2: Add boundary markers to phonemes (like in working example)
+      const tokensWithBoundaries = `${phonemes}`;
+      this.log('Phonemes with boundaries:', tokensWithBoundaries);
+      
+      // Step 3: Convert phonemes to token IDs using TextCleaner
+      const tokens = this.textCleaner.call(tokensWithBoundaries);
       this.log('TextCleaner tokens before start/end:', tokens);
       
-      // Step 3: Add start and end tokens (0)
+      // Step 4: Add start and end tokens (0)
       tokens.unshift(0); // Add start token
       tokens.push(0);    // Add end token
       
@@ -293,7 +297,7 @@ export class KittenTTS {
       } catch (phonemeError) {
       console.warn('Phonemization failed, falling back to TextCleaner:', phonemeError);
       
-      // Fallback: Use TextCleaner directly
+      // Fallback: Use TextCleaner directly on cleaned text
       const cleanText = this.textCleaner.clean(text);
       const tokens = this.textCleaner.call(cleanText);
       tokens.unshift(0); // Add start token
@@ -454,7 +458,23 @@ export class KittenTTS {
    * @returns Processed audio data
    */
   private postProcessAudio(audioData: Float32Array): Float32Array {
-    // Find non-zero audio content
+    // Clean up NaN values first (like in working example)
+    let hasNaN = false;
+    let maxAmplitude = 0;
+    for (let i = 0; i < audioData.length; i++) {
+      if (isNaN(audioData[i])) {
+        audioData[i] = 0; // Replace NaN with silence
+        hasNaN = true;
+      } else {
+        maxAmplitude = Math.max(maxAmplitude, Math.abs(audioData[i]));
+      }
+    }
+    
+    if (hasNaN) {
+      this.log('Cleaned NaN values from audio data');
+    }
+
+    // Find non-zero audio content for trimming
     let startIdx = 0;
     let endIdx = audioData.length - 1;
     const threshold = 0.001;
@@ -482,15 +502,20 @@ export class KittenTTS {
       this.log(`Trimmed audio from ${audioData.length} to ${trimmedAudio.length} samples`);
     }
 
-    // Normalize audio to prevent clipping
-    let maxAmplitude = 0;
-    for (let i = 0; i < trimmedAudio.length; i++) {
-      maxAmplitude = Math.max(maxAmplitude, Math.abs(trimmedAudio[i]));
-    }
-    
-    if (maxAmplitude > 0) {
+    // Normalize audio if it's too quiet (like in working example)
+    if (maxAmplitude > 0 && maxAmplitude < 0.1) {
+      const normalizationFactor = 0.5 / maxAmplitude;
+      for (let i = 0; i < trimmedAudio.length; i++) {
+        trimmedAudio[i] *= normalizationFactor;
+      }
+      this.log(`Audio normalized for low volume with factor ${normalizationFactor.toFixed(3)}`);
+    } else if (maxAmplitude > 0) {
+      // Standard normalization to prevent clipping
       const normalizationFactor = 0.8 / maxAmplitude;
-      const normalizedAudio = trimmedAudio.map(sample => sample * normalizationFactor);
+      const normalizedAudio = new Float32Array(trimmedAudio.length);
+      for (let i = 0; i < trimmedAudio.length; i++) {
+        normalizedAudio[i] = trimmedAudio[i] * normalizationFactor;
+      }
       this.log(`Audio normalized with factor ${normalizationFactor.toFixed(3)}`);
       return normalizedAudio;
     }
