@@ -204,8 +204,89 @@ const TextToSpeech = () => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
-        {/* Left Panel - Generated Audio List */}
-        <div className="border-r border-gray-200">
+        {/* Control Panel - First on mobile, right on desktop */}
+        <div className="p-6 order-1 lg:order-2">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Text to Speech</h3>
+            <p className="text-sm text-gray-600">Enter text and select a voice to generate speech</p>
+          </div>
+
+          <div className="space-y-6">
+            {/* Voice Selection */}
+            <div>
+              <label htmlFor="voice-select" className="block text-sm font-medium text-gray-700 mb-2">
+                Voice
+              </label>
+              <select
+                id="voice-select"
+                value={selectedVoice}
+                onChange={(e) => setSelectedVoice(e.currentTarget.value as VoiceId)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              >
+                {VOICE_OPTIONS.map(voice => (
+                  <option key={voice.value} value={voice.value}>
+                    {voice.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Text Input */}
+            <div>
+              <label htmlFor="text-input" className="block text-sm font-medium text-gray-700 mb-2">
+                Text
+              </label>
+              <textarea
+                id="text-input"
+                value={text}
+                onChange={(e) => setText(e.currentTarget.value)}
+                placeholder="Enter the text you want to convert to speech..."
+                className="w-full px-3 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+                rows={8}
+                maxLength={500}
+              />
+              <div className="text-xs text-gray-500 mt-2">
+                {text.length}/500 characters
+              </div>
+            </div>
+
+            {/* Generate Button */}
+            <button
+              onClick={generateSpeech}
+              disabled={!isModelLoaded}
+              className={`flex items-center justify-center gap-2 px-4 py-3 border-2 transition-all rounded-lg font-medium w-full ${
+                !isModelLoaded
+                  ? 'border-gray-200 bg-white text-gray-400 cursor-not-allowed'
+                  : !text.trim()
+                    ? 'border-gray-900 bg-white hover:border-teal-600 hover:bg-teal-50 text-gray-900'
+                    : 'border-teal-600 bg-teal-50 text-teal-900'
+              }`}
+            >
+              {!isModelLoaded ? (
+                <>
+                  <Loading className="scale-75" />
+                  <span>Loading Model</span>
+                </>
+              ) : processingQueue && queueLength > 0 ? (
+                <>
+                  <Loading className="scale-75" />
+                  <span>Processing Queue ({queueLength})</span>
+                </>
+              ) : (
+                <>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.824a1 1 0 011.617.824zM14 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clipRule="evenodd"/>
+                    <path d="M16.5 6A1.5 1.5 0 0118 7.5v5a1.5 1.5 0 11-3 0v-5A1.5 1.5 0 0116.5 6z"/>
+                  </svg>
+                  <span>Generate Speech</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Generated Audio List - Second on mobile, left on desktop */}
+        <div className="border-r-0 lg:border-r border-gray-200 border-t lg:border-t-0 order-2 lg:order-1">
           <div className="p-6 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Generated Audio</h3>
             <p className="text-sm text-gray-600 mt-1">Your text-to-speech conversions</p>
@@ -285,87 +366,6 @@ const TextToSpeech = () => {
                 ))}
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Right Panel - Control Panel */}
-        <div className="p-6">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Text to Speech</h3>
-            <p className="text-sm text-gray-600">Enter text and select a voice to generate speech</p>
-          </div>
-
-          <div className="space-y-6">
-            {/* Voice Selection */}
-            <div>
-              <label htmlFor="voice-select" className="block text-sm font-medium text-gray-700 mb-2">
-                Voice
-              </label>
-              <select
-                id="voice-select"
-                value={selectedVoice}
-                onChange={(e) => setSelectedVoice(e.currentTarget.value as VoiceId)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              >
-                {VOICE_OPTIONS.map(voice => (
-                  <option key={voice.value} value={voice.value}>
-                    {voice.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Text Input */}
-            <div>
-              <label htmlFor="text-input" className="block text-sm font-medium text-gray-700 mb-2">
-                Text
-              </label>
-              <textarea
-                id="text-input"
-                value={text}
-                onChange={(e) => setText(e.currentTarget.value)}
-                placeholder="Enter the text you want to convert to speech..."
-                className="w-full px-3 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
-                rows={8}
-                maxLength={500}
-              />
-              <div className="text-xs text-gray-500 mt-2">
-                {text.length}/500 characters
-              </div>
-            </div>
-
-            {/* Generate Button */}
-            <button
-              onClick={generateSpeech}
-              disabled={!isModelLoaded}
-              className={`flex items-center justify-center gap-2 px-4 py-3 border-2 transition-all rounded-lg font-medium w-full ${
-                !isModelLoaded
-                  ? 'border-gray-200 bg-white text-gray-400 cursor-not-allowed'
-                  : !text.trim()
-                    ? 'border-gray-900 bg-white hover:border-teal-600 hover:bg-teal-50 text-gray-900'
-                    : 'border-teal-600 bg-teal-50 text-teal-900'
-              }`}
-            >
-              {!isModelLoaded ? (
-                <>
-                  <Loading className="scale-75" />
-                  <span>Loading Model</span>
-                </>
-              ) : processingQueue && queueLength > 0 ? (
-                <>
-                  <Loading className="scale-75" />
-                  <span>Processing Queue ({queueLength})</span>
-                </>
-              ) : (
-                <>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.824a1 1 0 011.617.824zM14 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clipRule="evenodd"/>
-                    <path d="M16.5 6A1.5 1.5 0 0118 7.5v5a1.5 1.5 0 11-3 0v-5A1.5 1.5 0 0116.5 6z"/>
-                  </svg>
-                  <span>Generate Speech</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
       </div>
