@@ -23,6 +23,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@astrojs/partytown": "^2.1.4",
     "@astrojs/preact": "^4.1.0",
     "@astrojs/sitemap": "^3.5.0",
     "@astrojs/tailwind": "^6.0.2",
