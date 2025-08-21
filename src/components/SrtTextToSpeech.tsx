@@ -51,6 +51,8 @@ const SrtTextToSpeech = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'editor'>('landing');
   const [isMerging, setIsMerging] = useState<boolean>(false);
   const [customSpeeds, setCustomSpeeds] = useState<{[subtitleId: number]: number}>({});
+  const [userSetSpeeds, setUserSetSpeeds] = useState<{[subtitleId: number]: boolean}>({});
+  const [audioWarnings, setAudioWarnings] = useState<{[subtitleId: number]: string}>({});
   
   const workerRef = useRef<Worker | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -154,7 +156,7 @@ const SrtTextToSpeech = () => {
     }
   };
 
-  // Check audio duration and auto-regenerate if needed with increased speed
+  // Check audio duration and show warning or auto-regenerate if needed
   const checkAudioDurationAndRegenerateIfNeeded = useCallback(async (currentAudio: GeneratedAudio, audioUrl: string) => {
     try {
       // Create a temporary audio element to get duration
@@ -190,7 +192,7 @@ const SrtTextToSpeech = () => {
       // Find subtitle using ref to avoid closure issues
       const subtitle = subtitlesRef.current.find(s => s.id === currentAudio.subtitleId);
       if (!subtitle) {
-        console.warn(`Subtitle with ID ${currentAudio.subtitleId} not found for auto-regeneration`);
+        console.warn(`Subtitle with ID ${currentAudio.subtitleId} not found`);
         return;
       }
       
@@ -198,64 +200,97 @@ const SrtTextToSpeech = () => {
       const regenerationAttempts = currentAudio.regenerationAttempts || 0;
       const maxRegenerationAttempts = 5;
       
-      // Auto-regenerate if audio is too long and we haven't exceeded max attempts
-      if (audioDuration > subtitleDuration && regenerationAttempts < maxRegenerationAttempts) {
-        // Calculate optimal speed using progressive strategy:
-        // - First attempt: base calculation from duration ratio
-        // - Subsequent attempts: use previous speed and increase progressively
-        // - Ensure minimum speed progression for vigorous scenarios
-        let finalSpeed: number;
+      // Check if audio is too long
+      if (audioDuration > subtitleDuration) {
+        // Check if user has manually set a speed for this subtitle
+        const hasUserSetSpeed = userSetSpeeds[subtitle.id] === true;
         
-        if (regenerationAttempts > 0 && currentAudio.lastSpeed) {
-          // For regenerations, use the previous speed as baseline and increase progressively
-          const speedIncrease = 1 + (0.5 * regenerationAttempts); // 50% increase per attempt
-          finalSpeed = Math.min(currentAudio.lastSpeed * speedIncrease, 3.0);
-        } else {
-          // For first regeneration, calculate from audio/subtitle duration ratio
-          const baseSpeedMultiplier = audioDuration / subtitleDuration;
-          const speedWithBuffer = baseSpeedMultiplier * 1.2; // 20% safety margin
-          finalSpeed = Math.min(speedWithBuffer, 3.0);
+        console.log(`Audio duration check for subtitle ${subtitle.id}: audioDuration=${audioDuration.toFixed(2)}s, subtitleDuration=${subtitleDuration.toFixed(2)}s, hasUserSetSpeed=${hasUserSetSpeed}, userSetSpeeds=`, userSetSpeeds);
+        
+        if (hasUserSetSpeed) {
+          // User has set a speed manually - show warning instead of auto-regenerating
+          const overageTime = audioDuration - subtitleDuration;
+          setAudioWarnings(prev => ({
+            ...prev,
+            [subtitle.id]: `Audio is ${overageTime.toFixed(1)}s longer than subtitle duration. Audio will be cut off during playback.`
+          }));
+          console.warn(`Audio for subtitle ${subtitle.id} exceeds duration by ${overageTime.toFixed(1)}s but user has set custom speed. Showing warning instead of auto-regenerating.`);
+          return;
         }
         
-        // Ensure minimum speed progression for vigorous scenarios
-        const minimumSpeed = 1.5 + (regenerationAttempts * 0.3);
-        finalSpeed = Math.max(finalSpeed, minimumSpeed);
-        
-        // Final cap at maximum speed
-        finalSpeed = Math.min(finalSpeed, 3.0);
-        
-        console.log(`Auto-regenerating subtitle ${subtitle.id}: ${audioDuration.toFixed(2)}s > ${subtitleDuration.toFixed(2)}s, using ${finalSpeed.toFixed(2)}x speed (attempt ${regenerationAttempts + 1}${currentAudio.lastSpeed ? `, prev: ${currentAudio.lastSpeed.toFixed(1)}x` : ''})`);
-        
-        // Update custom speeds state to remember the calculated speed
-        setCustomSpeeds(prev => ({
-          ...prev,
-          [subtitle.id]: finalSpeed
-        }));
-        
-        // Clean up current audio and regenerate
-        URL.revokeObjectURL(audioUrl);
-        setGeneratedAudios(prev => prev.filter(a => a.id !== currentAudio.id));
-        
-        setTimeout(() => {
-          console.log(`Calling regeneration for subtitle ${subtitle.id} with speed ${finalSpeed}`);
-          if (generateSpeechRef.current) {
-            generateSpeechRef.current(subtitle, finalSpeed, regenerationAttempts + 1);
+        // User hasn't set speed manually - attempt auto-regeneration
+        if (regenerationAttempts < maxRegenerationAttempts) {
+          // Calculate optimal speed using progressive strategy
+          let finalSpeed: number;
+          
+          if (regenerationAttempts > 0 && currentAudio.lastSpeed) {
+            // For regenerations, use the previous speed as baseline and increase progressively
+            const speedIncrease = 1 + (0.5 * regenerationAttempts); // 50% increase per attempt
+            finalSpeed = Math.min(currentAudio.lastSpeed * speedIncrease, 3.0);
           } else {
-            console.error('generateSpeechRef.current is null - cannot regenerate');
+            // For first regeneration, calculate from audio/subtitle duration ratio
+            const baseSpeedMultiplier = audioDuration / subtitleDuration;
+            const speedWithBuffer = baseSpeedMultiplier * 1.2; // 20% safety margin
+            finalSpeed = Math.min(speedWithBuffer, 3.0);
           }
-        }, 50);
-        return;
-      }
-      
-      // Log if we've reached max attempts but audio is still too long
-      if (regenerationAttempts >= maxRegenerationAttempts && audioDuration > subtitleDuration) {
-        console.warn(`Audio for subtitle ${subtitle.id} still exceeds duration after ${maxRegenerationAttempts} attempts. Keeping final version.`);
+          
+          // Ensure minimum speed progression for vigorous scenarios
+          const minimumSpeed = 1.5 + (regenerationAttempts * 0.3);
+          finalSpeed = Math.max(finalSpeed, minimumSpeed);
+          
+          // Final cap at maximum speed
+          finalSpeed = Math.min(finalSpeed, 3.0);
+          
+          console.log(`Auto-regenerating subtitle ${subtitle.id}: ${audioDuration.toFixed(2)}s > ${subtitleDuration.toFixed(2)}s, using ${finalSpeed.toFixed(2)}x speed (attempt ${regenerationAttempts + 1}${currentAudio.lastSpeed ? `, prev: ${currentAudio.lastSpeed.toFixed(1)}x` : ''})`);
+          
+          // Update custom speeds state to remember the calculated speed (but don't mark as user-set)
+          setCustomSpeeds(prev => ({
+            ...prev,
+            [subtitle.id]: finalSpeed
+          }));
+          
+          // Clear any existing warning since we're regenerating
+          setAudioWarnings(prev => {
+            const newWarnings = { ...prev };
+            delete newWarnings[subtitle.id];
+            return newWarnings;
+          });
+          
+          // Clean up current audio and regenerate
+          URL.revokeObjectURL(audioUrl);
+          setGeneratedAudios(prev => prev.filter(a => a.id !== currentAudio.id));
+          
+          setTimeout(() => {
+            console.log(`Calling regeneration for subtitle ${subtitle.id} with speed ${finalSpeed}`);
+            if (generateSpeechRef.current) {
+              generateSpeechRef.current(subtitle, finalSpeed, regenerationAttempts + 1);
+            } else {
+              console.error('generateSpeechRef.current is null - cannot regenerate');
+            }
+          }, 50);
+          return;
+        } else {
+          // Reached max regeneration attempts
+          const overageTime = audioDuration - subtitleDuration;
+          setAudioWarnings(prev => ({
+            ...prev,
+            [subtitle.id]: `Audio is ${overageTime.toFixed(1)}s longer than subtitle duration after ${maxRegenerationAttempts} attempts. Audio will be cut off during playback.`
+          }));
+          console.warn(`Audio for subtitle ${subtitle.id} still exceeds duration after ${maxRegenerationAttempts} attempts. Showing warning.`);
+        }
+      } else {
+        // Audio duration is fine - clear any existing warning
+        setAudioWarnings(prev => {
+          const newWarnings = { ...prev };
+          delete newWarnings[subtitle.id];
+          return newWarnings;
+        });
       }
       
     } catch (error) {
-      console.error('Error checking audio duration for auto-regeneration:', error);
+      console.error('Error checking audio duration:', error);
     }
-  }, [setGeneratedAudios, setCustomSpeeds]);
+  }, [userSetSpeeds, setCustomSpeeds, setAudioWarnings, setGeneratedAudios]);
 
   // Parse SRT time format (HH:MM:SS,mmm) to seconds
   const parseTimeToSeconds = (timeString: string): number => {
@@ -616,6 +651,8 @@ const SrtTextToSpeech = () => {
 
   const resetSpeeds = () => {
     setCustomSpeeds({});
+    setUserSetSpeeds({});
+    setAudioWarnings({});
   };
 
   const clearAllAudios = () => {
@@ -639,6 +676,8 @@ const SrtTextToSpeech = () => {
     setSubtitles([]);
     setGeneratedAudios([]);
     setCustomSpeeds({});
+    setUserSetSpeeds({});
+    setAudioWarnings({});
     setError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -749,7 +788,30 @@ const SrtTextToSpeech = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+    <>
+      <style>{`
+        /* Black slider styling */
+        .slider-black::-webkit-slider-thumb {
+          appearance: none;
+          height: 20px;
+          width: 20px;
+          border-radius: 50%;
+          background: #374151;
+          cursor: pointer;
+          border: 2px solid #fff;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .slider-black::-moz-range-thumb {
+          height: 20px;
+          width: 20px;
+          border-radius: 50%;
+          background: #374151;
+          cursor: pointer;
+          border: 2px solid #fff;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+      `}</style>
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px] max-h-[800px]">
         {/* Left Panel - Subtitles */}
         <div className="p-6 order-2 lg:order-1 flex flex-col">
@@ -824,23 +886,73 @@ const SrtTextToSpeech = () => {
                   )}
 
                   <div className="mt-3 flex items-center gap-2">
-                    {/* Speed Input */}
-                    <div className="flex items-center gap-1">
+                    {/* Speed Controls in one row */}
+                    <div className="flex items-center gap-2 flex-1">
                       <label htmlFor={`speed-${subtitle.id}`} className="text-xs text-gray-500">Speed:</label>
+                      
+                      {/* Speed Slider */}
+                      <input
+                        type="range"
+                        min="0.5"
+                        max="3.0"
+                        step="0.01"
+                        value={customSpeeds[subtitle.id] || lastSpeed || 1.0}
+                        onChange={(e) => {
+                          const value = parseFloat(e.currentTarget.value);
+                          if (!isNaN(value)) {
+                            console.log(`User changed slider speed for subtitle ${subtitle.id} to ${value}`);
+                            setCustomSpeeds(prev => ({
+                              ...prev,
+                              [subtitle.id]: value
+                            }));
+                            // Mark as user-set speed
+                            setUserSetSpeeds(prev => {
+                              const newState = { ...prev, [subtitle.id]: true };
+                              console.log(`Marking subtitle ${subtitle.id} as user-set speed. New userSetSpeeds:`, newState);
+                              return newState;
+                            });
+                            // Clear any existing warning since user is making a change
+                            setAudioWarnings(prev => {
+                              const newWarnings = { ...prev };
+                              delete newWarnings[subtitle.id];
+                              return newWarnings;
+                            });
+                          }
+                        }}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-black"
+                        style={{
+                          background: `linear-gradient(to right, #374151 0%, #374151 ${((customSpeeds[subtitle.id] || lastSpeed || 1.0) - 0.5) / 2.5 * 100}%, #e5e7eb ${((customSpeeds[subtitle.id] || lastSpeed || 1.0) - 0.5) / 2.5 * 100}%, #e5e7eb 100%)`
+                        }}
+                      />
+                      
+                      {/* Speed Input */}
                       <input
                         id={`speed-${subtitle.id}`}
                         type="number"
                         min="0.5"
                         max="3.0"
-                        step="0.1"
+                        step="0.01"
                         value={customSpeeds[subtitle.id] || lastSpeed || 1.0}
                         onChange={(e) => {
                           const value = parseFloat(e.currentTarget.value);
-                          if (!isNaN(value)) {
+                          if (!isNaN(value) && value >= 0.5 && value <= 3.0) {
+                            console.log(`User changed input speed for subtitle ${subtitle.id} to ${value}`);
                             setCustomSpeeds(prev => ({
                               ...prev,
                               [subtitle.id]: value
                             }));
+                            // Mark as user-set speed
+                            setUserSetSpeeds(prev => {
+                              const newState = { ...prev, [subtitle.id]: true };
+                              console.log(`Marking subtitle ${subtitle.id} as user-set speed via input. New userSetSpeeds:`, newState);
+                              return newState;
+                            });
+                            // Clear any existing warning since user is making a change
+                            setAudioWarnings(prev => {
+                              const newWarnings = { ...prev };
+                              delete newWarnings[subtitle.id];
+                              return newWarnings;
+                            });
                           }
                         }}
                         className="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
@@ -864,6 +976,18 @@ const SrtTextToSpeech = () => {
                       ) : 'Generate Speech'}
                     </button>
                   </div>
+
+                  {/* Warning Display */}
+                  {audioWarnings[subtitle.id] && (
+                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <div className="flex items-start gap-2">
+                        <svg className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-xs text-yellow-800">{audioWarnings[subtitle.id]}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1008,6 +1132,7 @@ const SrtTextToSpeech = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
