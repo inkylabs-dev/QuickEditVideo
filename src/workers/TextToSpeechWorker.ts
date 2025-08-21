@@ -117,8 +117,6 @@ async function processQueue(): Promise<void> {
     const currentItem = processingQueue.shift()!;
     
     try {
-      console.log(`Generating speech in worker for: "${currentItem.text}" with speed ${currentItem.speed || 1.0}x`);
-      
       // Generate speech using KittenTTS
       const audioData = await kittenTTS.generate(currentItem.text, {
         voice: currentItem.voice,
@@ -126,11 +124,8 @@ async function processQueue(): Promise<void> {
         language: currentItem.language || 'en-us'
       });
       
-      // Calculate actual duration
+      // Create audio URL for playback
       const audioUrl = createAudioUrl(audioData, kittenTTS.getSampleRate());
-      const actualDuration = audioData.length / kittenTTS.getSampleRate();
-      
-      console.log(`Speech generated successfully: ${actualDuration.toFixed(2)}s at ${currentItem.speed || 1.0}x speed`);
       
       const response: WorkerResponse = {
         type: 'speech-generated',

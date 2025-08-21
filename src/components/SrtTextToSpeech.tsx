@@ -112,8 +112,6 @@ const SrtTextToSpeech = () => {
         
       case 'speech-generated':
         if (response.id && response.audioUrl) {
-          console.log(`🎯 Speech generated for ID: ${response.id}, starting duration check...`);
-          
           // First update the state with the generated audio, then check duration
           setGeneratedAudios(prev => {
             const updated = prev.map(audio => 
@@ -125,18 +123,10 @@ const SrtTextToSpeech = () => {
             // Find the audio that was just updated
             const updatedAudio = updated.find(a => a.id === response.id);
             if (updatedAudio) {
-              console.log(`🔄 Found audio for duration check:`, {
-                subtitleId: updatedAudio.subtitleId,
-                attempts: updatedAudio.regenerationAttempts || 0,
-                lastSpeed: updatedAudio.lastSpeed || 1.0
-              });
-              
               // Check duration asynchronously after state update
               setTimeout(() => {
                 checkAudioDurationAndRegenerateIfNeeded(updatedAudio, response.audioUrl!);
               }, 100);
-            } else {
-              console.warn(`⚠️ Could not find updated audio for ID: ${response.id}`);
             }
             
             return updated;
@@ -160,29 +150,29 @@ const SrtTextToSpeech = () => {
   // Check audio duration and auto-regenerate if needed with increased speed
   const checkAudioDurationAndRegenerateIfNeeded = useCallback(async (currentAudio: GeneratedAudio, audioUrl: string) => {
     try {
-      console.log(`🔍 Checking audio duration for subtitle ${currentAudio.subtitleId}...`);
-      
       // Create a temporary audio element to get duration
       const audioElement = new Audio(audioUrl);
       
-      await new Promise<void>((resolve, reject) => {
+      // Load audio metadata with timeout
+      const audioDuration = await new Promise<number>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
-          audioElement.removeEventListener('loadedmetadata', onLoad);
-          audioElement.removeEventListener('error', onError);
+          cleanup();
           reject(new Error('Timeout loading audio metadata'));
-        }, 5000); // 5 second timeout
+        }, 5000);
         
-        const onLoad = () => {
+        const cleanup = () => {
           clearTimeout(timeoutId);
           audioElement.removeEventListener('loadedmetadata', onLoad);
           audioElement.removeEventListener('error', onError);
-          resolve();
+        };
+        
+        const onLoad = () => {
+          cleanup();
+          resolve(audioElement.duration);
         };
         
         const onError = () => {
-          clearTimeout(timeoutId);
-          audioElement.removeEventListener('loadedmetadata', onLoad);
-          audioElement.removeEventListener('error', onError);
+          cleanup();
           reject(new Error('Failed to load audio metadata'));
         };
         
@@ -190,75 +180,62 @@ const SrtTextToSpeech = () => {
         audioElement.addEventListener('error', onError);
       });
       
-      const audioDuration = audioElement.duration;
-      console.log(`📏 Audio duration detected: ${audioDuration.toFixed(2)}s`);
-      
-      // Use ref to get current subtitles to avoid closure issues
-      const currentSubtitles = subtitlesRef.current;
-      const subtitle = currentSubtitles.find(s => s.id === currentAudio.subtitleId);
-      console.log(`🔎 Looking for subtitle ID: ${currentAudio.subtitleId}`);
-      console.log(`📋 Available subtitles:`, currentSubtitles.map(s => ({ id: s.id, duration: s.endSeconds - s.startSeconds })));
-      
+      // Find subtitle using ref to avoid closure issues
+      const subtitle = subtitlesRef.current.find(s => s.id === currentAudio.subtitleId);
       if (!subtitle) {
-        console.warn(`❌ Subtitle with ID ${currentAudio.subtitleId} not found`);
+        console.warn(`Subtitle with ID ${currentAudio.subtitleId} not found for auto-regeneration`);
         return;
       }
       
-      console.log(`✅ Found subtitle:`, {
-        id: subtitle.id,
-        startTime: subtitle.startTime,
-        endTime: subtitle.endTime,
-        startSeconds: subtitle.startSeconds,
-        endSeconds: subtitle.endSeconds
-      });
-      
       const subtitleDuration = subtitle.endSeconds - subtitle.startSeconds;
-      const maxRegenerationAttempts = 3; // Limit regeneration attempts
       const regenerationAttempts = currentAudio.regenerationAttempts || 0;
+      const maxRegenerationAttempts = 5;
       
-      console.log(`📊 Comparison: Audio ${audioDuration.toFixed(2)}s vs Subtitle ${subtitleDuration.toFixed(2)}s`);
-      console.log(`🔢 Current attempt: ${regenerationAttempts}/${maxRegenerationAttempts}`);
-      console.log(`❓ Should regenerate? ${audioDuration > subtitleDuration && regenerationAttempts < maxRegenerationAttempts}`);
-      
-      // If audio is longer than subtitle duration and we haven't exceeded max attempts
+      // Auto-regenerate if audio is too long and we haven't exceeded max attempts
       if (audioDuration > subtitleDuration && regenerationAttempts < maxRegenerationAttempts) {
-        // Calculate needed speed with a more aggressive buffer (20% faster than strictly needed)
-        const baseSpeedMultiplier = audioDuration / subtitleDuration;
-        const speedWithBuffer = baseSpeedMultiplier * 1.2; // 20% faster for safety margin
+        // Calculate optimal speed using progressive strategy:
+        // - First attempt: base calculation from duration ratio
+        // - Subsequent attempts: use previous speed and increase progressively
+        // - Ensure minimum speed progression for vigorous scenarios
+        let finalSpeed: number;
         
-        // Apply progressive speed increase for subsequent attempts
-        const attemptMultiplier = 1 + (regenerationAttempts * 0.3); // 30% increase per attempt
-        const finalSpeed = Math.min(speedWithBuffer * attemptMultiplier, 3.0); // Cap at 3x speed
+        if (regenerationAttempts > 0 && currentAudio.lastSpeed) {
+          // For regenerations, use the previous speed as baseline and increase progressively
+          const speedIncrease = 1 + (0.5 * regenerationAttempts); // 50% increase per attempt
+          finalSpeed = Math.min(currentAudio.lastSpeed * speedIncrease, 3.0);
+        } else {
+          // For first regeneration, calculate from audio/subtitle duration ratio
+          const baseSpeedMultiplier = audioDuration / subtitleDuration;
+          const speedWithBuffer = baseSpeedMultiplier * 1.2; // 20% safety margin
+          finalSpeed = Math.min(speedWithBuffer, 3.0);
+        }
         
-        console.log(`🔄 Audio too long (${audioDuration.toFixed(2)}s > ${subtitleDuration.toFixed(2)}s)`);
-        console.log(`📊 Speed calculation: base=${baseSpeedMultiplier.toFixed(2)}x, with buffer=${speedWithBuffer.toFixed(2)}x, final=${finalSpeed.toFixed(2)}x`);
-        console.log(`🔁 Regenerating attempt ${regenerationAttempts + 1}/${maxRegenerationAttempts} for subtitle ${subtitle.id}`);
+        // Ensure minimum speed progression for vigorous scenarios
+        const minimumSpeed = 1.5 + (regenerationAttempts * 0.3);
+        finalSpeed = Math.max(finalSpeed, minimumSpeed);
         
-        // Clean up the current audio URL to prevent memory leaks
+        // Final cap at maximum speed
+        finalSpeed = Math.min(finalSpeed, 3.0);
+        
+        console.log(`Auto-regenerating subtitle ${subtitle.id}: ${audioDuration.toFixed(2)}s > ${subtitleDuration.toFixed(2)}s, using ${finalSpeed.toFixed(2)}x speed (attempt ${regenerationAttempts + 1}${currentAudio.lastSpeed ? `, prev: ${currentAudio.lastSpeed.toFixed(1)}x` : ''})`);
+        
+        // Clean up current audio and regenerate
         URL.revokeObjectURL(audioUrl);
-        
-        // Remove the current audio entry before regenerating
         setGeneratedAudios(prev => prev.filter(a => a.id !== currentAudio.id));
         
-        // Regenerate with faster speed and track attempt
         setTimeout(() => {
           generateSpeechForSubtitle(subtitle, finalSpeed, regenerationAttempts + 1);
         }, 50);
         return;
       }
       
-      // Audio fits within duration or we've reached max attempts - keep it
+      // Log if we've reached max attempts but audio is still too long
       if (regenerationAttempts >= maxRegenerationAttempts && audioDuration > subtitleDuration) {
-        console.warn(`⚠️ Audio for subtitle ${subtitle.id} still too long after ${maxRegenerationAttempts} attempts (${audioDuration.toFixed(2)}s > ${subtitleDuration.toFixed(2)}s). Keeping final version.`);
-      } else if (audioDuration <= subtitleDuration) {
-        console.log(`✅ Speech fits perfectly for subtitle ${subtitle.id}: ${audioDuration.toFixed(2)}s fits in ${subtitleDuration.toFixed(2)}s (speed: ${currentAudio.lastSpeed?.toFixed(2) || '1.00'}x)`);
-      } else {
-        console.log(`✅ Speech accepted for subtitle ${subtitle.id}: ${audioDuration.toFixed(2)}s (speed: ${currentAudio.lastSpeed?.toFixed(2) || '1.00'}x)`);
+        console.warn(`Audio for subtitle ${subtitle.id} still exceeds duration after ${maxRegenerationAttempts} attempts. Keeping final version.`);
       }
       
     } catch (error) {
-      console.error('❌ Error checking audio duration:', error);
-      // If we can't check duration, the audio is already in state from the previous update
+      console.error('Error checking audio duration for auto-regeneration:', error);
     }
   }, [setGeneratedAudios]);
 
@@ -343,8 +320,6 @@ const SrtTextToSpeech = () => {
     const speed = customSpeed || 1.0;
     const attempts = regenerationAttempts || 0;
     
-    console.log(`Generating speech for subtitle ${subtitle.id} with speed ${speed}x (attempt ${attempts + 1})`);
-    
     const audioItem: GeneratedAudio = {
       id: audioId,
       subtitleId: subtitle.id,
@@ -371,13 +346,6 @@ const SrtTextToSpeech = () => {
       speed: speed,
       language: 'en-us'
     };
-    
-    console.log(`Sending to worker:`, { 
-      audioId, 
-      speed, 
-      subtitleDuration: subtitle.endSeconds - subtitle.startSeconds,
-      attempts 
-    });
     
     workerRef.current.postMessage({
       type: 'generate-speech',
@@ -807,29 +775,6 @@ const SrtTextToSpeech = () => {
                       regenerationAttempts > 0 ? `Regenerate (${lastSpeed.toFixed(1)}x)` : 'Regenerate'
                     ) : 'Generate Speech'}
                   </button>
-                  
-                  {/* Manual speed control for testing */}
-                  {hasAudio && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <label className="text-xs text-gray-600">Manual speed:</label>
-                      <select
-                        onChange={(e) => {
-                          const speed = parseFloat(e.currentTarget.value);
-                          generateSpeechForSubtitle(subtitle, speed);
-                        }}
-                        className="text-xs px-2 py-1 border border-gray-300 rounded"
-                        defaultValue="1.0"
-                      >
-                        <option value="0.8">0.8x</option>
-                        <option value="1.0">1.0x</option>
-                        <option value="1.2">1.2x</option>
-                        <option value="1.5">1.5x</option>
-                        <option value="2.0">2.0x</option>
-                        <option value="2.5">2.5x</option>
-                        <option value="3.0">3.0x</option>
-                      </select>
-                    </div>
-                  )}
                 </div>
               );
             })}
