@@ -358,7 +358,8 @@ const SrtTextToSpeech = () => {
       text: subtitle.text,
       voice: selectedVoice,
       speed: speed,
-      language: 'en-us'
+      language: 'en-us',
+      fadeout: 0.2 // Add 0.2 second fadeout by default
     };
     
     workerRef.current.postMessage({
