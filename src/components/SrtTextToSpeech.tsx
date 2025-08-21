@@ -296,6 +296,175 @@ const SrtTextToSpeech = () => {
     }
   };
 
+  // High-quality pitch-preserving time stretching using Phase Vocoder
+  const pitchPreservingTimeStretch = (sourceData: Float32Array, speedRatio: number): Float32Array => {
+    const frameSize = 2048; // Larger frame for better frequency resolution
+    const hopSize = frameSize / 4; // 75% overlap for better quality
+    const outputLength = Math.floor(sourceData.length / speedRatio);
+    
+    // Create FFT and IFFT functions (simplified DFT for this use case)
+    const fft = (real: Float32Array, imag: Float32Array) => {
+      const N = real.length;
+      if (N <= 1) return;
+      
+      // Bit-reversal permutation
+      let j = 0;
+      for (let i = 1; i < N; i++) {
+        let bit = N >> 1;
+        while (j & bit) {
+          j ^= bit;
+          bit >>= 1;
+        }
+        j ^= bit;
+        if (i < j) {
+          [real[i], real[j]] = [real[j], real[i]];
+          [imag[i], imag[j]] = [imag[j], imag[i]];
+        }
+      }
+      
+      // Cooley-Tukey decimation-in-time
+      for (let len = 2; len <= N; len <<= 1) {
+        const wlen = 2 * Math.PI / len;
+        for (let i = 0; i < N; i += len) {
+          for (let j = 0; j < len / 2; j++) {
+            const u = real[i + j];
+            const v = real[i + j + len / 2];
+            const ui = imag[i + j];
+            const vi = imag[i + j + len / 2];
+            
+            const wr = Math.cos(wlen * j);
+            const wi = -Math.sin(wlen * j);
+            
+            const tr = wr * v - wi * vi;
+            const ti = wr * vi + wi * v;
+            
+            real[i + j] = u + tr;
+            imag[i + j] = ui + ti;
+            real[i + j + len / 2] = u - tr;
+            imag[i + j + len / 2] = ui - ti;
+          }
+        }
+      }
+    };
+    
+    const ifft = (real: Float32Array, imag: Float32Array) => {
+      // Conjugate
+      for (let i = 0; i < imag.length; i++) {
+        imag[i] = -imag[i];
+      }
+      
+      fft(real, imag);
+      
+      // Conjugate and normalize
+      for (let i = 0; i < real.length; i++) {
+        real[i] /= real.length;
+        imag[i] = -imag[i] / real.length;
+      }
+    };
+    
+    // Create windows
+    const window = new Float32Array(frameSize);
+    for (let i = 0; i < frameSize; i++) {
+      window[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (frameSize - 1))); // Hanning
+    }
+    
+    const output = new Float32Array(outputLength);
+    const prevPhase = new Float32Array(frameSize);
+    const phaseAccum = new Float32Array(frameSize);
+    const analysisHop = Math.floor(hopSize * speedRatio);
+    
+    let inputPos = 0;
+    let outputPos = 0;
+    
+    while (inputPos + frameSize < sourceData.length && outputPos + frameSize < outputLength) {
+      // Analysis: Extract windowed frame
+      const realPart = new Float32Array(frameSize);
+      const imagPart = new Float32Array(frameSize);
+      
+      for (let i = 0; i < frameSize; i++) {
+        const idx = inputPos + i;
+        realPart[i] = idx < sourceData.length ? sourceData[idx] * window[i] : 0;
+        imagPart[i] = 0;
+      }
+      
+      // Forward FFT
+      fft(realPart, imagPart);
+      
+      // Convert to magnitude and phase
+      const magnitude = new Float32Array(frameSize);
+      const phase = new Float32Array(frameSize);
+      
+      for (let i = 0; i < frameSize; i++) {
+        magnitude[i] = Math.sqrt(realPart[i] * realPart[i] + imagPart[i] * imagPart[i]);
+        phase[i] = Math.atan2(imagPart[i], realPart[i]);
+      }
+      
+      // Phase vocoder: maintain phase coherence
+      for (let i = 0; i < frameSize / 2; i++) {
+        // Calculate expected phase advance
+        const expectedPhase = prevPhase[i] + (2 * Math.PI * i * analysisHop) / frameSize;
+        
+        // Calculate actual phase advance
+        let phaseDeviation = phase[i] - expectedPhase;
+        
+        // Wrap to [-π, π]
+        while (phaseDeviation > Math.PI) phaseDeviation -= 2 * Math.PI;
+        while (phaseDeviation < -Math.PI) phaseDeviation += 2 * Math.PI;
+        
+        // Calculate true frequency
+        const trueFreq = (2 * Math.PI * i) / frameSize + phaseDeviation / analysisHop;
+        
+        // Accumulate phase for synthesis
+        phaseAccum[i] += trueFreq * hopSize;
+        
+        // Update previous phase
+        prevPhase[i] = phase[i];
+        
+        // Apply phase to synthesis
+        phase[i] = phaseAccum[i];
+        
+        // Mirror for negative frequencies
+        if (i > 0 && i < frameSize / 2) {
+          magnitude[frameSize - i] = magnitude[i];
+          phase[frameSize - i] = -phase[i];
+        }
+      }
+      
+      // Convert back to complex
+      for (let i = 0; i < frameSize; i++) {
+        realPart[i] = magnitude[i] * Math.cos(phase[i]);
+        imagPart[i] = magnitude[i] * Math.sin(phase[i]);
+      }
+      
+      // Inverse FFT
+      ifft(realPart, imagPart);
+      
+      // Overlap-add synthesis
+      for (let i = 0; i < frameSize; i++) {
+        const outIdx = outputPos + i;
+        if (outIdx < outputLength) {
+          output[outIdx] += realPart[i] * window[i];
+        }
+      }
+      
+      inputPos += analysisHop;
+      outputPos += hopSize;
+    }
+    
+    // Normalize output
+    let maxVal = 0;
+    for (let i = 0; i < outputLength; i++) {
+      maxVal = Math.max(maxVal, Math.abs(output[i]));
+    }
+    if (maxVal > 0) {
+      for (let i = 0; i < outputLength; i++) {
+        output[i] /= maxVal * 1.1; // Slight headroom
+      }
+    }
+    
+    return output;
+  };
+
   const mergeAndDownloadMp3 = async () => {
     const completedAudios = generatedAudios.filter(a => a.audioUrl && !a.isGenerating);
     
@@ -354,7 +523,7 @@ const SrtTextToSpeech = () => {
       
       const outputData = outputBuffer.getChannelData(0);
 
-      // Mix audio buffers at their proper timing with speed adjustment
+      // Mix audio buffers at their proper timing with pitch-preserving speed adjustment
       for (const item of audioBuffers) {
         const { buffer, startTime, endTime } = item;
         const startSample = Math.floor(startTime * audioContext.sampleRate);
@@ -364,17 +533,17 @@ const SrtTextToSpeech = () => {
         const availableDuration = endTime - startTime;
         const actualDuration = buffer.duration;
         
-        // If audio is longer than available duration, speed it up
+        // If audio is longer than available duration, apply pitch-preserving time stretch
         if (actualDuration > availableDuration) {
           const speedRatio = actualDuration / availableDuration;
           const targetSamples = Math.floor(availableDuration * audioContext.sampleRate);
           
-          // Resample audio to fit within the time constraint
-          for (let i = 0; i < targetSamples && (startSample + i) < totalSamples; i++) {
-            const sourceIndex = Math.floor(i * speedRatio);
-            if (sourceIndex < sourceData.length) {
-              outputData[startSample + i] = sourceData[sourceIndex];
-            }
+          // Apply PSOLA-like time stretching (simplified version)
+          const stretchedAudio = pitchPreservingTimeStretch(sourceData, speedRatio);
+          
+          // Copy stretched audio to output
+          for (let i = 0; i < Math.min(stretchedAudio.length, targetSamples) && (startSample + i) < totalSamples; i++) {
+            outputData[startSample + i] = stretchedAudio[i];
           }
         } else {
           // Audio fits within duration, copy normally
