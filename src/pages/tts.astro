@@ -113,6 +113,116 @@ const ttsStructuredData = {
 			</div>
 		</section>
 
+		<!-- Tips and Tricks Section -->
+		<section id="tips-and-tricks" class="px-4 md:px-6 pb-16">
+			<div class="max-w-6xl mx-auto">
+				<h3 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Tips & Tricks</h3>
+				
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<!-- Pause Control -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<circle cx="12" cy="12" r="10"/>
+								<rect x="9" y="9" width="2" height="6"/>
+								<rect x="13" y="9" width="2" height="6"/>
+							</svg>
+						</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Natural Pauses</h4>
+						<p class="text-sm text-gray-600 mb-3">Add natural pauses to your speech by using line breaks or typing <code class="bg-gray-100 px-1 rounded">[pause]</code> markers in your text.</p>
+						<div class="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+							Example:<br/>
+							"Hello there.<br/>
+							[pause]<br/>
+							How are you today?"
+						</div>
+					</div>
+
+					<!-- Voice Quality -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+								<path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+								<line x1="12" y1="19" x2="12" y2="23"/>
+								<line x1="8" y1="23" x2="16" y2="23"/>
+							</svg>
+						</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Voice Selection</h4>
+						<p class="text-sm text-gray-600 mb-3">Try different voices for various content types. Some voices work better for narration while others excel at conversational content.</p>
+						<div class="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+							Tip: Preview short samples with different voices to find your perfect match.
+						</div>
+					</div>
+
+					<!-- Text Formatting -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+								<polyline points="14,2 14,8 20,8"/>
+								<line x1="16" y1="13" x2="8" y2="13"/>
+								<line x1="16" y1="17" x2="8" y2="17"/>
+							</svg>
+						</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Text Formatting</h4>
+						<p class="text-sm text-gray-600 mb-3">Use proper punctuation for better pronunciation. Periods, commas, and question marks help the AI understand speech flow.</p>
+						<div class="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+							Pro tip: Write numbers and abbreviations in full words for clearer pronunciation.
+						</div>
+					</div>
+
+					<!-- Batch Processing -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+								<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+								<path d="M12 11l4 4-4 4"/>
+								<path d="M8 15l4-4-4-4"/>
+							</svg>
+						</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Segment Processing</h4>
+						<p class="text-sm text-gray-600 mb-3">When using pauses, the tool automatically processes each segment separately and joins them with smooth transitions.</p>
+						<div class="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+							Each segment gets a 0.2s fadeout for natural sound transitions.
+						</div>
+					</div>
+
+					<!-- Audio Quality -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M9 18V5l12-2v13"/>
+								<circle cx="6" cy="18" r="3"/>
+								<circle cx="18" cy="16" r="3"/>
+							</svg>
+						</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Audio Quality</h4>
+						<p class="text-sm text-gray-600 mb-3">Generated audio is high-quality WAV format, perfect for professional use. No quality loss during processing.</p>
+						<div class="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+							Files are ready for immediate use in any audio or video editing software.
+						</div>
+					</div>
+
+					<!-- Privacy & Speed -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+								<path d="M9 12l2 2 4-4"/>
+							</svg>
+						</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Privacy & Performance</h4>
+						<p class="text-sm text-gray-600 mb-3">All processing happens in your browser. No uploads, no tracking, instant results. Your text never leaves your device.</p>
+						<div class="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+							Perfect for sensitive content or when working offline after initial load.
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
 		<!-- Content Section for SEO with Sidebar -->
 		<section class="bg-gray-50 py-16 px-4 md:px-6">
 			<div class="max-w-7xl mx-auto">

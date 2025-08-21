@@ -5,7 +5,9 @@
  * Manages the generation queue and runs in a separate thread to avoid blocking the main UI
  */
 
-import { KittenTTS, createAudioUrl, type VoiceId } from '@quickeditvideo/kittentts';
+import { KittenTTS, type VoiceId } from '@quickeditvideo/kittentts';
+import { splitTextForPauses, hasPauseMarkers } from '../utils/textProcessing';
+import { applyFadeout, joinAudioSegments, createAudioUrl } from '../utils/audioProcessing';
 
 // Use vite-plugin-wasm for WASM imports via alias
 import ortWasmSimdThreadedUrl from '@onnx-wasm/ort-wasm-simd-threaded.wasm?url';
@@ -18,6 +20,7 @@ interface QueueItem {
   speed?: number;
   language?: string;
   fadeout?: number; // Fadeout duration in seconds
+  supportPauses?: boolean; // Whether to process pauses in text
 }
 
 interface GenerateSpeechEvent {
@@ -26,12 +29,14 @@ interface GenerateSpeechEvent {
 }
 
 interface WorkerResponse {
-  type: 'speech-generated' | 'speech-error' | 'model-loaded' | 'model-error' | 'queue-updated';
+  type: 'speech-generated' | 'speech-error' | 'model-loaded' | 'model-error' | 'queue-updated' | 'segment-progress';
   id?: string;
   audioUrl?: string;
   error?: string;
   queueLength?: number;
   processing?: boolean;
+  segmentIndex?: number;
+  totalSegments?: number;
 }
 
 let kittenTTS: KittenTTS | null = null;
@@ -118,20 +123,58 @@ async function processQueue(): Promise<void> {
     const currentItem = processingQueue.shift()!;
     
     try {
-      // Generate speech using KittenTTS
-      let audioData = await kittenTTS.generate(currentItem.text, {
-        voice: currentItem.voice,
-        speed: currentItem.speed || 1.0,
-        language: currentItem.language || 'en-us'
-      });
+      let finalAudioData: Float32Array;
       
-      // Apply simple fadeout if specified (using audio processing, not FFmpeg)
-      if (currentItem.fadeout && currentItem.fadeout > 0) {
-        audioData = applySimpleFadeout(audioData, kittenTTS.getSampleRate(), currentItem.fadeout);
+      // Check if text should be processed for pauses
+      if (currentItem.supportPauses && hasPauseMarkers(currentItem.text)) {
+        // Split text into segments
+        const textSegments = splitTextForPauses(currentItem.text);
+        const audioSegments: Float32Array[] = [];
+        
+        // Generate audio for each segment
+        for (let i = 0; i < textSegments.length; i++) {
+          const segment = textSegments[i];
+          
+          // Notify UI about segment progress
+          self.postMessage({
+            type: 'segment-progress',
+            id: currentItem.id,
+            segmentIndex: i + 1,
+            totalSegments: textSegments.length
+          } as WorkerResponse);
+          
+          // Generate speech for this segment
+          let segmentAudio = await kittenTTS.generate(segment, {
+            voice: currentItem.voice,
+            speed: currentItem.speed || 1.0,
+            language: currentItem.language || 'en-us'
+          });
+          
+          // Apply fadeout to each segment (default 0.2s for pauses)
+          const fadeoutDuration = currentItem.fadeout || 0.2;
+          segmentAudio = applyFadeout(segmentAudio, kittenTTS.getSampleRate(), fadeoutDuration);
+          
+          audioSegments.push(segmentAudio);
+        }
+        
+        // Join all segments with pauses
+        finalAudioData = joinAudioSegments(audioSegments, kittenTTS.getSampleRate(), 0.2);
+      } else {
+        // Single segment processing (original behavior)
+        finalAudioData = await kittenTTS.generate(currentItem.text, {
+          voice: currentItem.voice,
+          speed: currentItem.speed || 1.0,
+          language: currentItem.language || 'en-us'
+        });
+        
+        // Apply fadeout if specified
+        if (currentItem.fadeout && currentItem.fadeout > 0) {
+          finalAudioData = applyFadeout(finalAudioData, kittenTTS.getSampleRate(), currentItem.fadeout);
+        }
       }
       
       // Create audio URL for playback
-      const audioUrl = createAudioUrl(audioData, kittenTTS.getSampleRate());
+      const audioUrl = createAudioUrl(finalAudioData, kittenTTS.getSampleRate());
       
       const response: WorkerResponse = {
         type: 'speech-generated',
@@ -167,24 +210,6 @@ async function processQueue(): Promise<void> {
     queueLength: 0,
     processing: false
   } as WorkerResponse);
-}
-
-// Simple fadeout function using direct audio manipulation
-function applySimpleFadeout(audioData: Float32Array, sampleRate: number, fadeoutDuration: number): Float32Array {
-  const fadeoutSamples = Math.floor(fadeoutDuration * sampleRate);
-  const startFade = Math.max(0, audioData.length - fadeoutSamples);
-  
-  // Create a copy of the audio data
-  const processedAudio = new Float32Array(audioData);
-  
-  // Apply linear fadeout
-  for (let i = startFade; i < audioData.length; i++) {
-    const fadeProgress = (i - startFade) / fadeoutSamples;
-    const fadeMultiplier = 1.0 - fadeProgress;
-    processedAudio[i] *= fadeMultiplier;
-  }
-  
-  return processedAudio;
 }
 
 // Listen for messages from the main thread
