@@ -50,6 +50,7 @@ const SrtTextToSpeech = () => {
   const [queueLength, setQueueLength] = useState<number>(0);
   const [currentView, setCurrentView] = useState<'landing' | 'editor'>('landing');
   const [isMerging, setIsMerging] = useState<boolean>(false);
+  const [customSpeeds, setCustomSpeeds] = useState<{[subtitleId: number]: number}>({});
   
   const workerRef = useRef<Worker | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -219,6 +220,12 @@ const SrtTextToSpeech = () => {
         
         console.log(`Auto-regenerating subtitle ${subtitle.id}: ${audioDuration.toFixed(2)}s > ${subtitleDuration.toFixed(2)}s, using ${finalSpeed.toFixed(2)}x speed (attempt ${regenerationAttempts + 1}${currentAudio.lastSpeed ? `, prev: ${currentAudio.lastSpeed.toFixed(1)}x` : ''})`);
         
+        // Update custom speeds state to remember the calculated speed
+        setCustomSpeeds(prev => ({
+          ...prev,
+          [subtitle.id]: finalSpeed
+        }));
+        
         // Clean up current audio and regenerate
         URL.revokeObjectURL(audioUrl);
         setGeneratedAudios(prev => prev.filter(a => a.id !== currentAudio.id));
@@ -237,7 +244,7 @@ const SrtTextToSpeech = () => {
     } catch (error) {
       console.error('Error checking audio duration for auto-regeneration:', error);
     }
-  }, [setGeneratedAudios]);
+  }, [setGeneratedAudios, setCustomSpeeds]);
 
   // Parse SRT time format (HH:MM:SS,mmm) to seconds
   const parseTimeToSeconds = (timeString: string): number => {
@@ -317,8 +324,15 @@ const SrtTextToSpeech = () => {
     if (!workerRef.current || !isModelLoaded) return;
 
     const audioId = `srt_${subtitle.id}_${Date.now()}`;
-    const speed = customSpeed || 1.0;
+    // Use custom speed from state if no explicit speed provided
+    const speed = customSpeed || customSpeeds[subtitle.id] || 1.0;
     const attempts = regenerationAttempts || 0;
+    
+    // Update custom speeds state to remember the speed used
+    setCustomSpeeds(prev => ({
+      ...prev,
+      [subtitle.id]: speed
+    }));
     
     const audioItem: GeneratedAudio = {
       id: audioId,
@@ -591,6 +605,7 @@ const SrtTextToSpeech = () => {
     setSrtFile(null);
     setSubtitles([]);
     setGeneratedAudios([]);
+    setCustomSpeeds({});
     setError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -761,20 +776,47 @@ const SrtTextToSpeech = () => {
                     </div>
                   )}
 
-                  <button
-                    onClick={() => generateSpeechForSubtitle(subtitle)}
-                    disabled={isGenerating || !isModelLoaded}
-                    className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 bg-teal-50 hover:bg-teal-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-teal-700 text-sm rounded-md transition-colors"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.824a1 1 0 011.617.824zM14 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clipRule="evenodd"/>
-                    </svg>
-                    {isGenerating ? (
-                      regenerationAttempts > 0 ? `Regenerating (${regenerationAttempts + 1})...` : 'Generating...'
-                    ) : hasAudio ? (
-                      regenerationAttempts > 0 ? `Regenerate (${lastSpeed.toFixed(1)}x)` : 'Regenerate'
-                    ) : 'Generate Speech'}
-                  </button>
+                  <div className="mt-3 flex items-center gap-2">
+                    {/* Speed Input */}
+                    <div className="flex items-center gap-1">
+                      <label htmlFor={`speed-${subtitle.id}`} className="text-xs text-gray-500">Speed:</label>
+                      <input
+                        id={`speed-${subtitle.id}`}
+                        type="number"
+                        min="0.5"
+                        max="3.0"
+                        step="0.1"
+                        value={customSpeeds[subtitle.id] || lastSpeed || 1.0}
+                        onChange={(e) => {
+                          const value = parseFloat(e.currentTarget.value);
+                          if (!isNaN(value)) {
+                            setCustomSpeeds(prev => ({
+                              ...prev,
+                              [subtitle.id]: value
+                            }));
+                          }
+                        }}
+                        className="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                      />
+                      <span className="text-xs text-gray-400">x</span>
+                    </div>
+
+                    {/* Generate/Regenerate Button */}
+                    <button
+                      onClick={() => generateSpeechForSubtitle(subtitle)}
+                      disabled={isGenerating || !isModelLoaded}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-teal-50 hover:bg-teal-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-teal-700 text-sm rounded-md transition-colors"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.824a1 1 0 011.617.824zM14 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clipRule="evenodd"/>
+                      </svg>
+                      {isGenerating ? (
+                        regenerationAttempts > 0 ? `Regenerating (${regenerationAttempts + 1})...` : 'Generating...'
+                      ) : hasAudio ? (
+                        regenerationAttempts > 0 ? `Regenerate (${lastSpeed.toFixed(1)}x)` : 'Regenerate'
+                      ) : 'Generate Speech'}
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -815,30 +857,34 @@ const SrtTextToSpeech = () => {
                 </select>
               </div>
 
-              {/* Generate All Button */}
-              <button
-                onClick={generateAllSpeech}
-                disabled={!isModelLoaded || subtitles.length === 0}
-                className={`flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 transition-colors w-full justify-center ${
-                  !isModelLoaded || subtitles.length === 0
-                    ? 'border-gray-200 bg-white text-gray-400 cursor-not-allowed'
-                    : ''
-                }`}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.824a1 1 0 011.617.824zM14 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clipRule="evenodd"/>
-                  <path d="M16.5 6A1.5 1.5 0 0118 7.5v5a1.5 1.5 0 11-3 0v-5A1.5 1.5 0 0116.5 6z"/>
-                </svg>
-                Generate All Speech
-              </button>
-
               {/* Download Buttons */}
               <div className="space-y-3">
+                {/* Generate All Button */}
+                <button
+                  onClick={generateAllSpeech}
+                  disabled={!isModelLoaded || subtitles.length === 0}
+                  className={`flex items-center gap-2 px-4 py-2 border-2 transition-colors w-full justify-center rounded-md ${
+                    !isModelLoaded || subtitles.length === 0
+                      ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                      : 'border-gray-900 bg-white hover:bg-gray-50 text-gray-900'
+                  }`}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.824a1 1 0 011.617.824zM14 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clipRule="evenodd"/>
+                    <path d="M16.5 6A1.5 1.5 0 0118 7.5v5a1.5 1.5 0 11-3 0v-5A1.5 1.5 0 0116.5 6z"/>
+                  </svg>
+                  Generate All Speech
+                </button>
+
                 {/* Download All ZIP Button */}
                 <button
                   onClick={downloadAllAudio}
                   disabled={!generatedAudios.some(a => a.audioUrl && !a.isGenerating)}
-                  className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white transition-colors w-full justify-center rounded-md"
+                  className={`flex items-center gap-2 px-4 py-2 border-2 transition-colors w-full justify-center rounded-md ${
+                    !generatedAudios.some(a => a.audioUrl && !a.isGenerating)
+                      ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                      : 'border-teal-600 bg-teal-600 hover:bg-teal-700 text-white'
+                  }`}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -852,7 +898,11 @@ const SrtTextToSpeech = () => {
                 <button
                   onClick={mergeAndDownloadMp3}
                   disabled={isMerging || !generatedAudios.some(a => a.audioUrl && !a.isGenerating)}
-                  className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white transition-colors w-full justify-center rounded-md"
+                  className={`flex items-center gap-2 px-4 py-2 border-2 transition-colors w-full justify-center rounded-md ${
+                    isMerging || !generatedAudios.some(a => a.audioUrl && !a.isGenerating)
+                      ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                      : 'border-teal-600 bg-teal-600 hover:bg-teal-700 text-white'
+                  }`}
                 >
                   {isMerging ? (
                     <>
@@ -869,48 +919,6 @@ const SrtTextToSpeech = () => {
                     </>
                   )}
                 </button>
-              </div>
-
-              {/* Generated Audio List */}
-              <div className="mt-8">
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Generated Audio</h4>
-                {generatedAudios.length === 0 ? (
-                  <p className="text-sm text-gray-500">No audio generated yet</p>
-                ) : (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                    {generatedAudios
-                      .sort((a, b) => {
-                        const subtitleA = subtitles.find(s => s.id === a.subtitleId);
-                        const subtitleB = subtitles.find(s => s.id === b.subtitleId);
-                        return (subtitleA?.startSeconds || 0) - (subtitleB?.startSeconds || 0);
-                      })
-                      .map((audio) => (
-                      <div key={audio.id} className="flex items-center gap-2 text-sm">
-                        <span className="text-gray-600">#{audio.subtitleId}</span>
-                        {audio.isGenerating ? (
-                          <Loading className="scale-50" />
-                        ) : audio.audioUrl ? (
-                          <button
-                            onClick={() => downloadAudio(audio)}
-                            className="text-teal-600 hover:text-teal-800"
-                          >
-                            Download
-                          </button>
-                        ) : (
-                          <span className="text-red-500">Failed</span>
-                        )}
-                        <button
-                          onClick={() => removeAudio(audio.id)}
-                          className="ml-auto text-gray-400 hover:text-red-500"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 6L6 18M6 6l12 12"/>
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {error && (
