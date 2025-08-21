@@ -158,6 +158,23 @@ const TextToSpeech = () => {
     });
   };
 
+  const clearAll = () => {
+    // Clear all generated audios and revoke URLs
+    generatedAudios.forEach(audio => {
+      if (audio.audioUrl) {
+        URL.revokeObjectURL(audio.audioUrl);
+      }
+    });
+    setGeneratedAudios([]);
+    
+    // Reset text and voice to defaults
+    setText('');
+    setSelectedVoice('expr-voice-3-f');
+    
+    // Clear any errors
+    setError('');
+  };
+
   // Cleanup URLs on unmount
   useEffect(() => {
     return () => {
@@ -204,14 +221,26 @@ const TextToSpeech = () => {
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      {/* Header with title and clear button */}
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Text to Speech</h3>
+          <p className="text-sm text-gray-600">Enter text and select a voice to generate speech</p>
+        </div>
+        <button 
+          onClick={clearAll}
+          className="text-gray-400 hover:text-gray-600 p-1"
+          title="Clear all and reset to default"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+          </svg>
+        </button>
+      </div>
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
         {/* Control Panel - First on mobile, left on desktop */}
         <div className="p-6 order-1 lg:order-1">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Text to Speech</h3>
-            <p className="text-sm text-gray-600">Enter text and select a voice to generate speech</p>
-          </div>
-
           <div className="space-y-6">
             {/* Voice Selection */}
             <div>
