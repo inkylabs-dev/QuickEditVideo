@@ -749,18 +749,7 @@ const SrtTextToSpeech = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm relative">
-      {/* Close button - top right */}
-      <button
-        onClick={resetTool}
-        className="absolute top-4 right-4 z-10 w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-        title="Close and reset"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-600">
-          <path d="M18 6L6 18M6 6l12 12"/>
-        </svg>
-      </button>
-
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
         {/* Left Panel - Subtitles */}
         <div className="p-6 order-2 lg:order-1">
@@ -883,19 +872,48 @@ const SrtTextToSpeech = () => {
 
         {/* Right Panel - Control Panel */}
         <div className="border-l-0 lg:border-l border-gray-200 border-t lg:border-t-0 order-1 lg:order-2">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Control Panel</h3>
-            <p className="text-sm text-gray-600 mt-1">Configure voice and generate speech</p>
-            {processingQueue && queueLength > 0 && (
-              <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
-                <Loading className="scale-50" />
-                <span>Processing queue ({queueLength})</span>
-              </div>
-            )}
+          {/* Header with title and actions */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 className="font-semibold text-gray-900">Control Panel</h3>
+            <div className="flex items-center gap-2">
+              {/* Reset Button */}
+              <button 
+                onClick={resetSpeedsAndClearAudios}
+                disabled={generatedAudios.length === 0 && Object.keys(customSpeeds).length === 0}
+                className={`text-sm flex items-center gap-1 ${
+                  generatedAudios.length === 0 && Object.keys(customSpeeds).length === 0
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                title="Reset speeds and clear audio"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+                </svg>
+                Reset
+              </button>
+              {/* Close Button */}
+              <button 
+                onClick={resetTool}
+                className="text-gray-400 hover:text-gray-600"
+                title="Choose different file"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                </svg>
+              </button>
+            </div>
           </div>
           
           <div className="p-6">
             <div className="space-y-6">
+              <p className="text-sm text-gray-600">Configure voice and generate speech</p>
+              {processingQueue && queueLength > 0 && (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <Loading className="scale-50" />
+                  <span>Processing queue ({queueLength})</span>
+                </div>
+              )}
               {/* Voice Selection */}
               <div>
                 <label htmlFor="voice-select" className="block text-sm font-medium text-gray-700 mb-2">
@@ -917,23 +935,6 @@ const SrtTextToSpeech = () => {
 
               {/* Download Buttons */}
               <div className="space-y-3">
-                {/* Reset Button */}
-                <button
-                  onClick={resetSpeedsAndClearAudios}
-                  disabled={generatedAudios.length === 0 && Object.keys(customSpeeds).length === 0}
-                  className={`flex items-center gap-2 px-4 py-2 border-2 transition-colors w-full justify-center rounded-md ${
-                    generatedAudios.length === 0 && Object.keys(customSpeeds).length === 0
-                      ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-                      : 'border-red-300 bg-red-50 hover:bg-red-100 text-red-700'
-                  }`}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                    <path d="M3 3v5h5"/>
-                  </svg>
-                  Reset Speeds & Clear Audio
-                </button>
-
                 {/* Generate All Button */}
                 <button
                   onClick={generateAllSpeech}
