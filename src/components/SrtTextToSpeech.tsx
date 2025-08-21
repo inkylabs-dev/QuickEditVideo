@@ -3,6 +3,17 @@ import Loading from './Loading';
 import { VOICE_OPTIONS, type VoiceId } from '@quickeditvideo/kittentts';
 import TextToSpeechWorkerUrl from '../workers/TextToSpeechWorker.ts?worker&url';
 import type { WorkerResponse, QueueItem } from '../workers/TextToSpeechWorker';
+import { registerMp3Encoder } from '@mediabunny/mp3-encoder';
+import { 
+  Input, 
+  Output, 
+  BlobSource, 
+  BufferTarget, 
+  Mp3OutputFormat, 
+  ALL_FORMATS, 
+  Conversion,
+  canEncodeAudio 
+} from 'mediabunny';
 
 interface SrtSubtitle {
   id: number;
@@ -26,7 +37,7 @@ interface GeneratedAudio {
 }
 
 const SrtTextToSpeech = () => {
-  const [srtFile, setSrtFile] = useState<File | null>(null);
+  const [, setSrtFile] = useState<File | null>(null);
   const [subtitles, setSubtitles] = useState<SrtSubtitle[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<VoiceId>('expr-voice-3-f');
   const [isModelLoaded, setIsModelLoaded] = useState<boolean>(false);
@@ -36,6 +47,7 @@ const SrtTextToSpeech = () => {
   const [processingQueue, setProcessingQueue] = useState<boolean>(false);
   const [queueLength, setQueueLength] = useState<number>(0);
   const [currentView, setCurrentView] = useState<'landing' | 'editor'>('landing');
+  const [isMerging, setIsMerging] = useState<boolean>(false);
   
   const workerRef = useRef<Worker | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -284,6 +296,170 @@ const SrtTextToSpeech = () => {
     }
   };
 
+  const mergeAndDownloadMp3 = async () => {
+    const completedAudios = generatedAudios.filter(a => a.audioUrl && !a.isGenerating);
+    
+    if (completedAudios.length === 0) {
+      setError('No audio files available for merging');
+      return;
+    }
+
+    setIsMerging(true);
+    setError('');
+
+    try {
+      // Sort audios by start time to maintain proper order
+      const sortedAudios = completedAudios
+        .map(audio => {
+          const subtitle = subtitles.find(s => s.id === audio.subtitleId);
+          return { audio, subtitle };
+        })
+        .filter(item => item.subtitle)
+        .sort((a, b) => a.subtitle!.startSeconds - b.subtitle!.startSeconds);
+
+      // Create an audio context for processing
+      const audioContext = new AudioContext();
+      const audioBuffers: { buffer: AudioBuffer; startTime: number; endTime: number }[] = [];
+
+      // Load and decode all audio files
+      for (const item of sortedAudios) {
+        const { audio, subtitle } = item;
+        if (!audio.audioUrl || !subtitle) continue;
+
+        const response = await fetch(audio.audioUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        
+        audioBuffers.push({
+          buffer: audioBuffer,
+          startTime: subtitle.startSeconds,
+          endTime: subtitle.endSeconds
+        });
+      }
+
+      if (audioBuffers.length === 0) {
+        throw new Error('No audio buffers to merge');
+      }
+
+      // Calculate the total duration needed
+      const maxEndTime = Math.max(...audioBuffers.map(ab => ab.endTime));
+      const totalSamples = Math.ceil(maxEndTime * audioContext.sampleRate);
+      
+      // Create output buffer
+      const outputBuffer = audioContext.createBuffer(
+        1, // mono
+        totalSamples,
+        audioContext.sampleRate
+      );
+      
+      const outputData = outputBuffer.getChannelData(0);
+
+      // Mix audio buffers at their proper timing
+      for (const item of audioBuffers) {
+        const { buffer, startTime } = item;
+        const startSample = Math.floor(startTime * audioContext.sampleRate);
+        const sourceData = buffer.getChannelData(0);
+        
+        // Copy audio data to the correct position
+        for (let i = 0; i < sourceData.length && (startSample + i) < totalSamples; i++) {
+          outputData[startSample + i] = sourceData[i];
+        }
+      }
+
+      // Convert to WAV first, then to MP3
+      const wavBlob = audioBufferToWav(outputBuffer);
+      
+      // Register MP3 encoder if not natively supported
+      if (!(await canEncodeAudio('mp3'))) {
+        registerMp3Encoder();
+      }
+
+      // Convert WAV to MP3 using Mediabunny
+      const input = new Input({
+        source: new BlobSource(wavBlob),
+        formats: ALL_FORMATS,
+      });
+      
+      const output = new Output({
+        format: new Mp3OutputFormat(),
+        target: new BufferTarget(),
+      });
+
+      const conversion = await Conversion.init({ input, output });
+      await conversion.execute();
+
+      // Create MP3 blob from the buffer
+      if (!output.target.buffer) {
+        throw new Error('MP3 conversion failed - no buffer returned');
+      }
+      const mp3Blob = new Blob([output.target.buffer], { type: 'audio/mpeg' });
+
+      // Download the MP3 file
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(mp3Blob);
+      link.download = `srt_merged_${selectedVoice}_${Date.now()}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+    } catch (err) {
+      console.error('Error merging audio files:', err);
+      setError('Failed to merge audio files: ' + (err as Error).message);
+    } finally {
+      setIsMerging(false);
+    }
+  };
+
+  // Helper function to convert AudioBuffer to WAV blob
+  const audioBufferToWav = (buffer: AudioBuffer): Blob => {
+    const length = buffer.length;
+    const numberOfChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const bytesPerSample = 2;
+    const byteRate = sampleRate * numberOfChannels * bytesPerSample;
+    const blockAlign = numberOfChannels * bytesPerSample;
+    const dataLength = length * numberOfChannels * bytesPerSample;
+    const bufferLength = 44 + dataLength;
+    
+    const arrayBuffer = new ArrayBuffer(bufferLength);
+    const view = new DataView(arrayBuffer);
+    
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, bufferLength - 8, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numberOfChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bytesPerSample * 8, true);
+    writeString(36, 'data');
+    view.setUint32(40, dataLength, true);
+    
+    // Convert float32 audio data to int16
+    let offset = 44;
+    for (let i = 0; i < length; i++) {
+      for (let channel = 0; channel < numberOfChannels; channel++) {
+        const sample = buffer.getChannelData(channel)[i];
+        const intSample = Math.max(-32768, Math.min(32767, sample * 32767));
+        view.setInt16(offset, intSample, true);
+        offset += 2;
+      }
+    }
+    
+    return new Blob([arrayBuffer], { type: 'audio/wav' });
+  };
+
   const removeAudio = (audioId: string) => {
     setGeneratedAudios(prev => {
       const audioToRemove = prev.find(a => a.id === audioId);
@@ -520,11 +696,13 @@ const SrtTextToSpeech = () => {
                 Generate All Speech
               </button>
 
-              {/* Download All Button */}
-              {generatedAudios.some(a => a.audioUrl && !a.isGenerating) && (
+              {/* Download Buttons */}
+              <div className="space-y-3">
+                {/* Download All ZIP Button */}
                 <button
                   onClick={downloadAllAudio}
-                  className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white transition-colors w-full justify-center rounded-md"
+                  disabled={!generatedAudios.some(a => a.audioUrl && !a.isGenerating)}
+                  className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white transition-colors w-full justify-center rounded-md"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -533,7 +711,29 @@ const SrtTextToSpeech = () => {
                   </svg>
                   Download All (ZIP)
                 </button>
-              )}
+                
+                {/* Merge and Download MP3 Button */}
+                <button
+                  onClick={mergeAndDownloadMp3}
+                  disabled={isMerging || !generatedAudios.some(a => a.audioUrl && !a.isGenerating)}
+                  className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white transition-colors w-full justify-center rounded-md"
+                >
+                  {isMerging ? (
+                    <>
+                      <Loading className="scale-50" />
+                      <span>Merging...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 3L4 7L8 11M16 21L20 17L16 13M4 7H16M20 17H8"/>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      </svg>
+                      <span>Merge & Download MP3</span>
+                    </>
+                  )}
+                </button>
+              </div>
 
               {/* Generated Audio List */}
               <div className="mt-8">
