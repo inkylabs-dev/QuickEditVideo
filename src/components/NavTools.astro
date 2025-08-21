@@ -33,34 +33,23 @@ const categories = getCategories();
 					<h4 class="text-sm font-semibold text-gray-900 mb-3 px-2">{category.name}</h4>
 					<div class="grid gap-1 grid-cols-3">
 						{category.tools.map(tool => (
-							category.id === 'converters' ? (
-								<a href={tool.url} class="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-center">
-									<div class={`w-8 h-8 ${tool.bgColor} rounded-lg flex items-center justify-center ${tool.hoverBgColor} transition-colors`}>
+							<a href={tool.url} class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group">
+								<div class={`w-8 h-8 ${tool.bgColor} rounded-lg flex items-center justify-center ${tool.hoverBgColor} transition-colors`}>
+									{tool.icon.type === 'svg' ? (
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class={tool.iconColor}>
+											<Fragment set:html={tool.icon.content} />
+										</svg>
+									) : (
 										<span class={`${tool.icon.className || ''} ${tool.iconColor}`}>
 											{tool.icon.content}
 										</span>
-									</div>
-									<div class="text-xs text-gray-600">{tool.shortDescription}</div>
-								</a>
-							) : (
-								<a href={tool.url} class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group">
-									<div class={`w-8 h-8 ${tool.bgColor} rounded-lg flex items-center justify-center ${tool.hoverBgColor} transition-colors`}>
-										{tool.icon.type === 'svg' ? (
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class={tool.iconColor}>
-												<Fragment set:html={tool.icon.content} />
-											</svg>
-										) : (
-											<span class={`${tool.icon.className || ''} ${tool.iconColor}`}>
-												{tool.icon.content}
-											</span>
-										)}
-									</div>
-									<div>
-										<div class="text-sm font-medium text-gray-900">{tool.shortName || tool.name}</div>
-										<div class="text-xs text-gray-500">{tool.shortDescription}</div>
-									</div>
-								</a>
-							)
+									)}
+								</div>
+								<div>
+									<div class="text-sm font-medium text-gray-900">{tool.shortName || tool.name}</div>
+									<div class="text-xs text-gray-500">{tool.shortDescription}</div>
+								</div>
+							</a>
 						))}
 					</div>
 				</div>

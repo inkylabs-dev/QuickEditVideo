@@ -196,7 +196,7 @@ const TOOLS: Tool[] = [
     name: 'Convert to MP4',
     shortName: 'MP4',
     description: 'Convert to MP4, AVI to MP4 online',
-    shortDescription: 'MP4',
+    shortDescription: 'Convert to MP4',
     url: '/to-mp4/',
     icon: {
       type: 'text',
@@ -206,16 +206,16 @@ const TOOLS: Tool[] = [
     category: 'converters',
     featured: true,
     recommendedTools: ['trim', 'merge', 'resize', 'extract-audio', 'to-gif'],
-    bgColor: 'bg-orange-100',
-    hoverBgColor: 'hover:bg-orange-200',
-    iconColor: 'text-orange-700'
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'hover:bg-teal-200',
+    iconColor: 'text-teal-700'
   },
   {
     id: 'to-avi',
     name: 'Convert to AVI',
     shortName: 'AVI',
     description: 'Convert videos to AVI format',
-    shortDescription: 'AVI',
+    shortDescription: 'Convert to AVI',
     url: '/to-avi/',
     icon: {
       type: 'text',
@@ -224,16 +224,16 @@ const TOOLS: Tool[] = [
     },
     category: 'converters',
     recommendedTools: ['to-mp4', 'to-mov', 'to-mkv', 'trim', 'resize'],
-    bgColor: 'bg-orange-100',
-    hoverBgColor: 'hover:bg-orange-200',
-    iconColor: 'text-orange-700'
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'hover:bg-teal-200',
+    iconColor: 'text-teal-700'
   },
   {
     id: 'to-mov',
     name: 'Convert to MOV',
     shortName: 'MOV',
     description: 'Convert videos to MOV format',
-    shortDescription: 'MOV',
+    shortDescription: 'Convert to MOV',
     url: '/to-mov/',
     icon: {
       type: 'text',
@@ -242,16 +242,16 @@ const TOOLS: Tool[] = [
     },
     category: 'converters',
     recommendedTools: ['to-mp4', 'to-avi', 'to-mkv', 'trim', 'merge'],
-    bgColor: 'bg-orange-100',
-    hoverBgColor: 'hover:bg-orange-200',
-    iconColor: 'text-orange-700'
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'hover:bg-teal-200',
+    iconColor: 'text-teal-700'
   },
   {
     id: 'to-webm',
     name: 'Convert to WebM',
     shortName: 'WebM',
     description: 'Convert videos to WebM format',
-    shortDescription: 'WebM',
+    shortDescription: 'Convert to WebM',
     url: '/to-webm/',
     icon: {
       type: 'text',
@@ -260,16 +260,16 @@ const TOOLS: Tool[] = [
     },
     category: 'converters',
     recommendedTools: ['to-mp4', 'to-gif', 'trim', 'resize', 'change-speed'],
-    bgColor: 'bg-orange-100',
-    hoverBgColor: 'hover:bg-orange-200',
-    iconColor: 'text-orange-700'
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'hover:bg-teal-200',
+    iconColor: 'text-teal-700'
   },
   {
     id: 'to-gif',
     name: 'Convert to GIF',
     shortName: 'GIF',
     description: 'Video to GIF, MP4 to GIF online',
-    shortDescription: 'GIF',
+    shortDescription: 'Convert to GIF',
     url: '/to-gif/',
     icon: {
       type: 'text',
@@ -278,16 +278,16 @@ const TOOLS: Tool[] = [
     },
     category: 'converters',
     recommendedTools: ['trim', 'resize', 'crop', 'to-mp4', 'change-speed'],
-    bgColor: 'bg-orange-100',
-    hoverBgColor: 'hover:bg-orange-200',
-    iconColor: 'text-orange-700'
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'hover:bg-teal-200',
+    iconColor: 'text-teal-700'
   },
   {
     id: 'to-mkv',
     name: 'Convert to MKV',
     shortName: 'MKV',
     description: 'Convert videos to MKV format',
-    shortDescription: 'MKV',
+    shortDescription: 'Convert to MKV',
     url: '/to-mkv/',
     icon: {
       type: 'text',
@@ -296,9 +296,9 @@ const TOOLS: Tool[] = [
     },
     category: 'converters',
     recommendedTools: ['to-mp4', 'to-avi', 'to-mov', 'extract-audio', 'merge'],
-    bgColor: 'bg-orange-100',
-    hoverBgColor: 'hover:bg-orange-200',
-    iconColor: 'text-orange-700'
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'hover:bg-teal-200',
+    iconColor: 'text-teal-700'
   },
 
   // Audio & Quality Tools
@@ -315,9 +315,9 @@ const TOOLS: Tool[] = [
     },
     category: 'audio-quality',
     recommendedTools: ['tts', 'trim', 'merge', 'to-mp4', 'change-speed'],
-    bgColor: 'bg-orange-100',
-    hoverBgColor: 'group-hover:bg-orange-200',
-    iconColor: 'text-orange-600'
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'group-hover:bg-teal-200',
+    iconColor: 'text-teal-600'
   },
   {
     id: 'tts',
