@@ -55,11 +55,17 @@ const SrtTextToSpeech = () => {
   const workerRef = useRef<Worker | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subtitlesRef = useRef<SrtSubtitle[]>([]);
+  const generateSpeechRef = useRef<((subtitle: SrtSubtitle, customSpeed?: number, regenerationAttempts?: number) => void) | null>(null);
 
   // Keep subtitles ref updated
   useEffect(() => {
     subtitlesRef.current = subtitles;
   }, [subtitles]);
+
+  // Keep generateSpeech ref updated
+  useEffect(() => {
+    generateSpeechRef.current = generateSpeechForSubtitle;
+  });
 
   // Dispatch view change event for header visibility
   useEffect(() => {
@@ -231,7 +237,12 @@ const SrtTextToSpeech = () => {
         setGeneratedAudios(prev => prev.filter(a => a.id !== currentAudio.id));
         
         setTimeout(() => {
-          generateSpeechForSubtitle(subtitle, finalSpeed, regenerationAttempts + 1);
+          console.log(`Calling regeneration for subtitle ${subtitle.id} with speed ${finalSpeed}`);
+          if (generateSpeechRef.current) {
+            generateSpeechRef.current(subtitle, finalSpeed, regenerationAttempts + 1);
+          } else {
+            console.error('generateSpeechRef.current is null - cannot regenerate');
+          }
         }, 50);
         return;
       }
@@ -321,6 +332,8 @@ const SrtTextToSpeech = () => {
   };
 
   const generateSpeechForSubtitle = (subtitle: SrtSubtitle, customSpeed?: number, regenerationAttempts?: number) => {
+    console.log(`generateSpeechForSubtitle called for subtitle ${subtitle.id}, speed: ${customSpeed || 'default'}, attempts: ${regenerationAttempts || 0}`);
+    
     if (!workerRef.current || !isModelLoaded) return;
 
     const audioId = `srt_${subtitle.id}_${Date.now()}`;
