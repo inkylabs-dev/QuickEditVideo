@@ -117,7 +117,7 @@ async function processQueue(): Promise<void> {
     const currentItem = processingQueue.shift()!;
     
     try {
-      console.log('Generating speech in worker for:', currentItem.text);
+      console.log(`Generating speech in worker for: "${currentItem.text}" with speed ${currentItem.speed || 1.0}x`);
       
       // Generate speech using KittenTTS
       const audioData = await kittenTTS.generate(currentItem.text, {
@@ -126,8 +126,11 @@ async function processQueue(): Promise<void> {
         language: currentItem.language || 'en-us'
       });
       
-      // Create audio URL for playback
+      // Calculate actual duration
       const audioUrl = createAudioUrl(audioData, kittenTTS.getSampleRate());
+      const actualDuration = audioData.length / kittenTTS.getSampleRate();
+      
+      console.log(`Speech generated successfully: ${actualDuration.toFixed(2)}s at ${currentItem.speed || 1.0}x speed`);
       
       const response: WorkerResponse = {
         type: 'speech-generated',
@@ -135,8 +138,6 @@ async function processQueue(): Promise<void> {
         audioUrl
       };
       self.postMessage(response);
-      
-      console.log('Speech generated successfully in worker for:', currentItem.text);
       
     } catch (error) {
       console.error('Failed to generate speech in worker:', error);

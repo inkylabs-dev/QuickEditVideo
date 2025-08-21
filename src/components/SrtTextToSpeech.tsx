@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import Loading from './Loading';
 import { VOICE_OPTIONS, type VoiceId } from '@quickeditvideo/kittentts';
 import TextToSpeechWorkerUrl from '../workers/TextToSpeechWorker.ts?worker&url';
@@ -34,6 +34,8 @@ interface GeneratedAudio {
   isGenerating?: boolean;
   startTime: string;
   endTime: string;
+  regenerationAttempts?: number;
+  lastSpeed?: number;
 }
 
 const SrtTextToSpeech = () => {
@@ -51,6 +53,12 @@ const SrtTextToSpeech = () => {
   
   const workerRef = useRef<Worker | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const subtitlesRef = useRef<SrtSubtitle[]>([]);
+
+  // Keep subtitles ref updated
+  useEffect(() => {
+    subtitlesRef.current = subtitles;
+  }, [subtitles]);
 
   // Dispatch view change event for header visibility
   useEffect(() => {
@@ -104,14 +112,35 @@ const SrtTextToSpeech = () => {
         
       case 'speech-generated':
         if (response.id && response.audioUrl) {
-          setGeneratedAudios(prev => 
-            prev.map(audio => 
+          console.log(`🎯 Speech generated for ID: ${response.id}, starting duration check...`);
+          
+          // First update the state with the generated audio, then check duration
+          setGeneratedAudios(prev => {
+            const updated = prev.map(audio => 
               audio.id === response.id 
                 ? { ...audio, audioUrl: response.audioUrl!, isGenerating: false }
                 : audio
-            )
-          );
-          console.log('Speech generated for ID:', response.id);
+            );
+            
+            // Find the audio that was just updated
+            const updatedAudio = updated.find(a => a.id === response.id);
+            if (updatedAudio) {
+              console.log(`🔄 Found audio for duration check:`, {
+                subtitleId: updatedAudio.subtitleId,
+                attempts: updatedAudio.regenerationAttempts || 0,
+                lastSpeed: updatedAudio.lastSpeed || 1.0
+              });
+              
+              // Check duration asynchronously after state update
+              setTimeout(() => {
+                checkAudioDurationAndRegenerateIfNeeded(updatedAudio, response.audioUrl!);
+              }, 100);
+            } else {
+              console.warn(`⚠️ Could not find updated audio for ID: ${response.id}`);
+            }
+            
+            return updated;
+          });
         }
         break;
         
@@ -127,6 +156,111 @@ const SrtTextToSpeech = () => {
         break;
     }
   };
+
+  // Check audio duration and auto-regenerate if needed with increased speed
+  const checkAudioDurationAndRegenerateIfNeeded = useCallback(async (currentAudio: GeneratedAudio, audioUrl: string) => {
+    try {
+      console.log(`🔍 Checking audio duration for subtitle ${currentAudio.subtitleId}...`);
+      
+      // Create a temporary audio element to get duration
+      const audioElement = new Audio(audioUrl);
+      
+      await new Promise<void>((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          audioElement.removeEventListener('loadedmetadata', onLoad);
+          audioElement.removeEventListener('error', onError);
+          reject(new Error('Timeout loading audio metadata'));
+        }, 5000); // 5 second timeout
+        
+        const onLoad = () => {
+          clearTimeout(timeoutId);
+          audioElement.removeEventListener('loadedmetadata', onLoad);
+          audioElement.removeEventListener('error', onError);
+          resolve();
+        };
+        
+        const onError = () => {
+          clearTimeout(timeoutId);
+          audioElement.removeEventListener('loadedmetadata', onLoad);
+          audioElement.removeEventListener('error', onError);
+          reject(new Error('Failed to load audio metadata'));
+        };
+        
+        audioElement.addEventListener('loadedmetadata', onLoad);
+        audioElement.addEventListener('error', onError);
+      });
+      
+      const audioDuration = audioElement.duration;
+      console.log(`📏 Audio duration detected: ${audioDuration.toFixed(2)}s`);
+      
+      // Use ref to get current subtitles to avoid closure issues
+      const currentSubtitles = subtitlesRef.current;
+      const subtitle = currentSubtitles.find(s => s.id === currentAudio.subtitleId);
+      console.log(`🔎 Looking for subtitle ID: ${currentAudio.subtitleId}`);
+      console.log(`📋 Available subtitles:`, currentSubtitles.map(s => ({ id: s.id, duration: s.endSeconds - s.startSeconds })));
+      
+      if (!subtitle) {
+        console.warn(`❌ Subtitle with ID ${currentAudio.subtitleId} not found`);
+        return;
+      }
+      
+      console.log(`✅ Found subtitle:`, {
+        id: subtitle.id,
+        startTime: subtitle.startTime,
+        endTime: subtitle.endTime,
+        startSeconds: subtitle.startSeconds,
+        endSeconds: subtitle.endSeconds
+      });
+      
+      const subtitleDuration = subtitle.endSeconds - subtitle.startSeconds;
+      const maxRegenerationAttempts = 3; // Limit regeneration attempts
+      const regenerationAttempts = currentAudio.regenerationAttempts || 0;
+      
+      console.log(`📊 Comparison: Audio ${audioDuration.toFixed(2)}s vs Subtitle ${subtitleDuration.toFixed(2)}s`);
+      console.log(`🔢 Current attempt: ${regenerationAttempts}/${maxRegenerationAttempts}`);
+      console.log(`❓ Should regenerate? ${audioDuration > subtitleDuration && regenerationAttempts < maxRegenerationAttempts}`);
+      
+      // If audio is longer than subtitle duration and we haven't exceeded max attempts
+      if (audioDuration > subtitleDuration && regenerationAttempts < maxRegenerationAttempts) {
+        // Calculate needed speed with a more aggressive buffer (20% faster than strictly needed)
+        const baseSpeedMultiplier = audioDuration / subtitleDuration;
+        const speedWithBuffer = baseSpeedMultiplier * 1.2; // 20% faster for safety margin
+        
+        // Apply progressive speed increase for subsequent attempts
+        const attemptMultiplier = 1 + (regenerationAttempts * 0.3); // 30% increase per attempt
+        const finalSpeed = Math.min(speedWithBuffer * attemptMultiplier, 3.0); // Cap at 3x speed
+        
+        console.log(`🔄 Audio too long (${audioDuration.toFixed(2)}s > ${subtitleDuration.toFixed(2)}s)`);
+        console.log(`📊 Speed calculation: base=${baseSpeedMultiplier.toFixed(2)}x, with buffer=${speedWithBuffer.toFixed(2)}x, final=${finalSpeed.toFixed(2)}x`);
+        console.log(`🔁 Regenerating attempt ${regenerationAttempts + 1}/${maxRegenerationAttempts} for subtitle ${subtitle.id}`);
+        
+        // Clean up the current audio URL to prevent memory leaks
+        URL.revokeObjectURL(audioUrl);
+        
+        // Remove the current audio entry before regenerating
+        setGeneratedAudios(prev => prev.filter(a => a.id !== currentAudio.id));
+        
+        // Regenerate with faster speed and track attempt
+        setTimeout(() => {
+          generateSpeechForSubtitle(subtitle, finalSpeed, regenerationAttempts + 1);
+        }, 50);
+        return;
+      }
+      
+      // Audio fits within duration or we've reached max attempts - keep it
+      if (regenerationAttempts >= maxRegenerationAttempts && audioDuration > subtitleDuration) {
+        console.warn(`⚠️ Audio for subtitle ${subtitle.id} still too long after ${maxRegenerationAttempts} attempts (${audioDuration.toFixed(2)}s > ${subtitleDuration.toFixed(2)}s). Keeping final version.`);
+      } else if (audioDuration <= subtitleDuration) {
+        console.log(`✅ Speech fits perfectly for subtitle ${subtitle.id}: ${audioDuration.toFixed(2)}s fits in ${subtitleDuration.toFixed(2)}s (speed: ${currentAudio.lastSpeed?.toFixed(2) || '1.00'}x)`);
+      } else {
+        console.log(`✅ Speech accepted for subtitle ${subtitle.id}: ${audioDuration.toFixed(2)}s (speed: ${currentAudio.lastSpeed?.toFixed(2) || '1.00'}x)`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error checking audio duration:', error);
+      // If we can't check duration, the audio is already in state from the previous update
+    }
+  }, [setGeneratedAudios]);
 
   // Parse SRT time format (HH:MM:SS,mmm) to seconds
   const parseTimeToSeconds = (timeString: string): number => {
@@ -202,10 +336,14 @@ const SrtTextToSpeech = () => {
     }
   };
 
-  const generateSpeechForSubtitle = (subtitle: SrtSubtitle) => {
+  const generateSpeechForSubtitle = (subtitle: SrtSubtitle, customSpeed?: number, regenerationAttempts?: number) => {
     if (!workerRef.current || !isModelLoaded) return;
 
     const audioId = `srt_${subtitle.id}_${Date.now()}`;
+    const speed = customSpeed || 1.0;
+    const attempts = regenerationAttempts || 0;
+    
+    console.log(`Generating speech for subtitle ${subtitle.id} with speed ${speed}x (attempt ${attempts + 1})`);
     
     const audioItem: GeneratedAudio = {
       id: audioId,
@@ -216,7 +354,9 @@ const SrtTextToSpeech = () => {
       timestamp: Date.now(),
       isGenerating: true,
       startTime: subtitle.startTime,
-      endTime: subtitle.endTime
+      endTime: subtitle.endTime,
+      regenerationAttempts: attempts,
+      lastSpeed: speed
     };
 
     setGeneratedAudios(prev => {
@@ -228,9 +368,16 @@ const SrtTextToSpeech = () => {
       id: audioId,
       text: subtitle.text,
       voice: selectedVoice,
-      speed: 1.0,
+      speed: speed,
       language: 'en-us'
     };
+    
+    console.log(`Sending to worker:`, { 
+      audioId, 
+      speed, 
+      subtitleDuration: subtitle.endSeconds - subtitle.startSeconds,
+      attempts 
+    });
     
     workerRef.current.postMessage({
       type: 'generate-speech',
@@ -296,174 +443,6 @@ const SrtTextToSpeech = () => {
     }
   };
 
-  // High-quality pitch-preserving time stretching using Phase Vocoder
-  const pitchPreservingTimeStretch = (sourceData: Float32Array, speedRatio: number): Float32Array => {
-    const frameSize = 2048; // Larger frame for better frequency resolution
-    const hopSize = frameSize / 4; // 75% overlap for better quality
-    const outputLength = Math.floor(sourceData.length / speedRatio);
-    
-    // Create FFT and IFFT functions (simplified DFT for this use case)
-    const fft = (real: Float32Array, imag: Float32Array) => {
-      const N = real.length;
-      if (N <= 1) return;
-      
-      // Bit-reversal permutation
-      let j = 0;
-      for (let i = 1; i < N; i++) {
-        let bit = N >> 1;
-        while (j & bit) {
-          j ^= bit;
-          bit >>= 1;
-        }
-        j ^= bit;
-        if (i < j) {
-          [real[i], real[j]] = [real[j], real[i]];
-          [imag[i], imag[j]] = [imag[j], imag[i]];
-        }
-      }
-      
-      // Cooley-Tukey decimation-in-time
-      for (let len = 2; len <= N; len <<= 1) {
-        const wlen = 2 * Math.PI / len;
-        for (let i = 0; i < N; i += len) {
-          for (let j = 0; j < len / 2; j++) {
-            const u = real[i + j];
-            const v = real[i + j + len / 2];
-            const ui = imag[i + j];
-            const vi = imag[i + j + len / 2];
-            
-            const wr = Math.cos(wlen * j);
-            const wi = -Math.sin(wlen * j);
-            
-            const tr = wr * v - wi * vi;
-            const ti = wr * vi + wi * v;
-            
-            real[i + j] = u + tr;
-            imag[i + j] = ui + ti;
-            real[i + j + len / 2] = u - tr;
-            imag[i + j + len / 2] = ui - ti;
-          }
-        }
-      }
-    };
-    
-    const ifft = (real: Float32Array, imag: Float32Array) => {
-      // Conjugate
-      for (let i = 0; i < imag.length; i++) {
-        imag[i] = -imag[i];
-      }
-      
-      fft(real, imag);
-      
-      // Conjugate and normalize
-      for (let i = 0; i < real.length; i++) {
-        real[i] /= real.length;
-        imag[i] = -imag[i] / real.length;
-      }
-    };
-    
-    // Create windows
-    const window = new Float32Array(frameSize);
-    for (let i = 0; i < frameSize; i++) {
-      window[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (frameSize - 1))); // Hanning
-    }
-    
-    const output = new Float32Array(outputLength);
-    const prevPhase = new Float32Array(frameSize);
-    const phaseAccum = new Float32Array(frameSize);
-    const analysisHop = Math.floor(hopSize * speedRatio);
-    
-    let inputPos = 0;
-    let outputPos = 0;
-    
-    while (inputPos + frameSize < sourceData.length && outputPos + frameSize < outputLength) {
-      // Analysis: Extract windowed frame
-      const realPart = new Float32Array(frameSize);
-      const imagPart = new Float32Array(frameSize);
-      
-      for (let i = 0; i < frameSize; i++) {
-        const idx = inputPos + i;
-        realPart[i] = idx < sourceData.length ? sourceData[idx] * window[i] : 0;
-        imagPart[i] = 0;
-      }
-      
-      // Forward FFT
-      fft(realPart, imagPart);
-      
-      // Convert to magnitude and phase
-      const magnitude = new Float32Array(frameSize);
-      const phase = new Float32Array(frameSize);
-      
-      for (let i = 0; i < frameSize; i++) {
-        magnitude[i] = Math.sqrt(realPart[i] * realPart[i] + imagPart[i] * imagPart[i]);
-        phase[i] = Math.atan2(imagPart[i], realPart[i]);
-      }
-      
-      // Phase vocoder: maintain phase coherence
-      for (let i = 0; i < frameSize / 2; i++) {
-        // Calculate expected phase advance
-        const expectedPhase = prevPhase[i] + (2 * Math.PI * i * analysisHop) / frameSize;
-        
-        // Calculate actual phase advance
-        let phaseDeviation = phase[i] - expectedPhase;
-        
-        // Wrap to [-π, π]
-        while (phaseDeviation > Math.PI) phaseDeviation -= 2 * Math.PI;
-        while (phaseDeviation < -Math.PI) phaseDeviation += 2 * Math.PI;
-        
-        // Calculate true frequency
-        const trueFreq = (2 * Math.PI * i) / frameSize + phaseDeviation / analysisHop;
-        
-        // Accumulate phase for synthesis
-        phaseAccum[i] += trueFreq * hopSize;
-        
-        // Update previous phase
-        prevPhase[i] = phase[i];
-        
-        // Apply phase to synthesis
-        phase[i] = phaseAccum[i];
-        
-        // Mirror for negative frequencies
-        if (i > 0 && i < frameSize / 2) {
-          magnitude[frameSize - i] = magnitude[i];
-          phase[frameSize - i] = -phase[i];
-        }
-      }
-      
-      // Convert back to complex
-      for (let i = 0; i < frameSize; i++) {
-        realPart[i] = magnitude[i] * Math.cos(phase[i]);
-        imagPart[i] = magnitude[i] * Math.sin(phase[i]);
-      }
-      
-      // Inverse FFT
-      ifft(realPart, imagPart);
-      
-      // Overlap-add synthesis
-      for (let i = 0; i < frameSize; i++) {
-        const outIdx = outputPos + i;
-        if (outIdx < outputLength) {
-          output[outIdx] += realPart[i] * window[i];
-        }
-      }
-      
-      inputPos += analysisHop;
-      outputPos += hopSize;
-    }
-    
-    // Normalize output
-    let maxVal = 0;
-    for (let i = 0; i < outputLength; i++) {
-      maxVal = Math.max(maxVal, Math.abs(output[i]));
-    }
-    if (maxVal > 0) {
-      for (let i = 0; i < outputLength; i++) {
-        output[i] /= maxVal * 1.1; // Slight headroom
-      }
-    }
-    
-    return output;
-  };
 
   const mergeAndDownloadMp3 = async () => {
     const completedAudios = generatedAudios.filter(a => a.audioUrl && !a.isGenerating);
@@ -523,33 +502,15 @@ const SrtTextToSpeech = () => {
       
       const outputData = outputBuffer.getChannelData(0);
 
-      // Mix audio buffers at their proper timing with pitch-preserving speed adjustment
+      // Mix audio buffers at their proper timing
       for (const item of audioBuffers) {
-        const { buffer, startTime, endTime } = item;
+        const { buffer, startTime } = item;
         const startSample = Math.floor(startTime * audioContext.sampleRate);
         const sourceData = buffer.getChannelData(0);
         
-        // Calculate available duration and actual audio duration
-        const availableDuration = endTime - startTime;
-        const actualDuration = buffer.duration;
-        
-        // If audio is longer than available duration, apply pitch-preserving time stretch
-        if (actualDuration > availableDuration) {
-          const speedRatio = actualDuration / availableDuration;
-          const targetSamples = Math.floor(availableDuration * audioContext.sampleRate);
-          
-          // Apply PSOLA-like time stretching (simplified version)
-          const stretchedAudio = pitchPreservingTimeStretch(sourceData, speedRatio);
-          
-          // Copy stretched audio to output
-          for (let i = 0; i < Math.min(stretchedAudio.length, targetSamples) && (startSample + i) < totalSamples; i++) {
-            outputData[startSample + i] = stretchedAudio[i];
-          }
-        } else {
-          // Audio fits within duration, copy normally
-          for (let i = 0; i < sourceData.length && (startSample + i) < totalSamples; i++) {
-            outputData[startSample + i] = sourceData[i];
-          }
+        // Copy audio to output at the correct timing
+        for (let i = 0; i < sourceData.length && (startSample + i) < totalSamples; i++) {
+          outputData[startSample + i] = sourceData[i];
         }
       }
 
@@ -779,6 +740,9 @@ const SrtTextToSpeech = () => {
             {subtitles.map((subtitle) => {
               const hasAudio = generatedAudios.some(a => a.subtitleId === subtitle.id && a.audioUrl);
               const isGenerating = generatedAudios.some(a => a.subtitleId === subtitle.id && a.isGenerating);
+              const audioEntry = generatedAudios.find(a => a.subtitleId === subtitle.id);
+              const regenerationAttempts = audioEntry?.regenerationAttempts || 0;
+              const lastSpeed = audioEntry?.lastSpeed || 1.0;
               
               return (
                 <div key={subtitle.id} className="border border-gray-200 rounded-lg p-4">
@@ -786,6 +750,14 @@ const SrtTextToSpeech = () => {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-gray-500 mb-1">
                         {subtitle.startTime} → {subtitle.endTime}
+                        <span className="ml-2 text-gray-400">
+                          ({(subtitle.endSeconds - subtitle.startSeconds).toFixed(1)}s)
+                        </span>
+                        {regenerationAttempts > 0 && (
+                          <span className="ml-2 text-orange-600 font-medium">
+                            (Attempt {regenerationAttempts + 1}, Speed: {lastSpeed.toFixed(1)}x)
+                          </span>
+                        )}
                       </p>
                       <p className="text-sm text-gray-900">{subtitle.text}</p>
                     </div>
@@ -795,7 +767,12 @@ const SrtTextToSpeech = () => {
                         <div className="w-2 h-2 bg-green-500 rounded-full" title="Audio generated" />
                       )}
                       {isGenerating && (
-                        <Loading className="scale-50" />
+                        <div className="flex items-center gap-1">
+                          <Loading className="scale-50" />
+                          {regenerationAttempts > 0 && (
+                            <span className="text-xs text-orange-600">Regenerating</span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -824,8 +801,35 @@ const SrtTextToSpeech = () => {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.824a1 1 0 011.617.824zM14 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clipRule="evenodd"/>
                     </svg>
-                    {isGenerating ? 'Generating...' : hasAudio ? 'Regenerate' : 'Generate Speech'}
+                    {isGenerating ? (
+                      regenerationAttempts > 0 ? `Regenerating (${regenerationAttempts + 1})...` : 'Generating...'
+                    ) : hasAudio ? (
+                      regenerationAttempts > 0 ? `Regenerate (${lastSpeed.toFixed(1)}x)` : 'Regenerate'
+                    ) : 'Generate Speech'}
                   </button>
+                  
+                  {/* Manual speed control for testing */}
+                  {hasAudio && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <label className="text-xs text-gray-600">Manual speed:</label>
+                      <select
+                        onChange={(e) => {
+                          const speed = parseFloat(e.currentTarget.value);
+                          generateSpeechForSubtitle(subtitle, speed);
+                        }}
+                        className="text-xs px-2 py-1 border border-gray-300 rounded"
+                        defaultValue="1.0"
+                      >
+                        <option value="0.8">0.8x</option>
+                        <option value="1.0">1.0x</option>
+                        <option value="1.2">1.2x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2.0">2.0x</option>
+                        <option value="2.5">2.5x</option>
+                        <option value="3.0">3.0x</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               );
             })}
