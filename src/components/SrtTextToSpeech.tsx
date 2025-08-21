@@ -820,12 +820,6 @@ const SrtTextToSpeech = () => {
               <h3 className="text-lg font-semibold text-gray-900">Subtitles</h3>
               <p className="text-sm text-gray-600">{subtitles.length} subtitles found</p>
             </div>
-            <button
-              onClick={resetTool}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              New File
-            </button>
           </div>
 
           <div className="space-y-3 flex-1 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - 300px)' }}>
