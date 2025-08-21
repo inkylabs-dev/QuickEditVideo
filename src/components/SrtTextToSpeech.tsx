@@ -614,6 +614,25 @@ const SrtTextToSpeech = () => {
     });
   };
 
+  const resetSpeeds = () => {
+    setCustomSpeeds({});
+  };
+
+  const clearAllAudios = () => {
+    // Clean up URLs
+    generatedAudios.forEach(audio => {
+      if (audio.audioUrl) {
+        URL.revokeObjectURL(audio.audioUrl);
+      }
+    });
+    setGeneratedAudios([]);
+  };
+
+  const resetSpeedsAndClearAudios = () => {
+    resetSpeeds();
+    clearAllAudios();
+  };
+
   const resetTool = () => {
     setCurrentView('landing');
     setSrtFile(null);
@@ -672,51 +691,76 @@ const SrtTextToSpeech = () => {
 
   if (currentView === 'landing') {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8">
-        <div className="text-center max-w-md mx-auto">
-          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" className="text-teal-600">
+      <div className="bg-white rounded-lg border-4 border-dashed border-gray-900 hover:border-gray-900 transition-colors">
+        <div 
+          className="p-16 text-center cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={(event) => {
+            event.preventDefault();
+            const files = event.dataTransfer?.files;
+            if (files && files.length > 0) {
+              const file = files[0];
+              if (file.name.toLowerCase().endsWith('.srt')) {
+                handleFileUpload({ target: { files: [file] } } as any);
+              } else {
+                setError('Please select a valid SRT file');
+              }
+            }
+          }}
+          onDragOver={(event) => event.preventDefault()}
+          onDragEnter={(event) => event.preventDefault()}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".srt"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          
+          {/* File Icon */}
+          <div className="mb-6">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-gray-400">
               <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
               <polyline points="14,2 14,8 20,8"/>
               <path d="M8 13h8M8 17h6"/>
             </svg>
           </div>
+
+          {/* Title */}
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Select your SRT file</h3>
           
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Upload SRT File</h2>
-          <p className="text-gray-600 mb-6">Convert your subtitle file to speech with AI voices</p>
+          {/* Description */}
+          <p className="text-gray-600 mb-6">Drop an SRT subtitle file here or click to browse</p>
           
-          <div className="space-y-4">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".srt"
-              onChange={handleFileUpload}
-              className="hidden"
-              id="srt-upload"
-            />
-            
-            <label
-              htmlFor="srt-upload"
-              className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <svg className="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                </svg>
-                <p className="text-sm text-gray-500">
-                  <span className="font-semibold">Click to upload</span> or drag and drop
-                </p>
-                <p className="text-xs text-gray-500">SRT files only</p>
-              </div>
-            </label>
+          {/* Choose File Button */}
+          <div className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 px-6 py-3 font-medium transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+            Choose file
           </div>
+          
+          {/* Support Text */}
+          <p className="text-xs text-gray-500 mt-4">Supports SRT subtitle files</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm relative">
+      {/* Close button - top right */}
+      <button
+        onClick={resetTool}
+        className="absolute top-4 right-4 z-10 w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+        title="Close and reset"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-600">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
         {/* Left Panel - Subtitles */}
         <div className="p-6 order-2 lg:order-1">
@@ -873,6 +917,23 @@ const SrtTextToSpeech = () => {
 
               {/* Download Buttons */}
               <div className="space-y-3">
+                {/* Reset Button */}
+                <button
+                  onClick={resetSpeedsAndClearAudios}
+                  disabled={generatedAudios.length === 0 && Object.keys(customSpeeds).length === 0}
+                  className={`flex items-center gap-2 px-4 py-2 border-2 transition-colors w-full justify-center rounded-md ${
+                    generatedAudios.length === 0 && Object.keys(customSpeeds).length === 0
+                      ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                      : 'border-red-300 bg-red-50 hover:bg-red-100 text-red-700'
+                  }`}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                    <path d="M3 3v5h5"/>
+                  </svg>
+                  Reset Speeds & Clear Audio
+                </button>
+
                 {/* Generate All Button */}
                 <button
                   onClick={generateAllSpeech}
@@ -890,7 +951,7 @@ const SrtTextToSpeech = () => {
                   Generate All Speech
                 </button>
 
-                {/* Download All ZIP Button */}
+                {/* Download ZIP Button */}
                 <button
                   onClick={downloadAllAudio}
                   disabled={!generatedAudios.some(a => a.audioUrl && !a.isGenerating)}
@@ -905,10 +966,10 @@ const SrtTextToSpeech = () => {
                     <polyline points="7,10 12,15 17,10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
-                  Download All (ZIP)
+                  Download ZIP
                 </button>
                 
-                {/* Merge and Download MP3 Button */}
+                {/* Download MP3 Button */}
                 <button
                   onClick={mergeAndDownloadMp3}
                   disabled={isMerging || !generatedAudios.some(a => a.audioUrl && !a.isGenerating)}
@@ -926,10 +987,11 @@ const SrtTextToSpeech = () => {
                   ) : (
                     <>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M8 3L4 7L8 11M16 21L20 17L16 13M4 7H16M20 17H8"/>
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
                       </svg>
-                      <span>Merge & Download MP3</span>
+                      <span>Download MP3</span>
                     </>
                   )}
                 </button>
