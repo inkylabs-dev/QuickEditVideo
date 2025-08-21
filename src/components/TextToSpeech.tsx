@@ -117,7 +117,6 @@ const TextToSpeech = () => {
     };
 
     // IMMEDIATE UI UPDATES (synchronous)
-    setText(''); // Clear input immediately
     setError(''); // Clear any errors
     setGeneratedAudios(prev => [audioItem, ...prev]); // Add to UI immediately
     
