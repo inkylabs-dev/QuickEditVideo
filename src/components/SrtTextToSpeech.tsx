@@ -750,10 +750,10 @@ const SrtTextToSpeech = () => {
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px] max-h-[800px]">
         {/* Left Panel - Subtitles */}
-        <div className="p-6 order-2 lg:order-1">
-          <div className="flex items-center justify-between mb-6">
+        <div className="p-6 order-2 lg:order-1 flex flex-col">
+          <div className="flex items-center justify-between mb-6 flex-shrink-0">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Subtitles</h3>
               <p className="text-sm text-gray-600">{subtitles.length} subtitles found</p>
@@ -766,7 +766,7 @@ const SrtTextToSpeech = () => {
             </button>
           </div>
 
-          <div className="space-y-3 max-h-[500px] overflow-y-auto">
+          <div className="space-y-3 flex-1 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - 300px)' }}>
             {subtitles.map((subtitle) => {
               const hasAudio = generatedAudios.some(a => a.subtitleId === subtitle.id && a.audioUrl);
               const isGenerating = generatedAudios.some(a => a.subtitleId === subtitle.id && a.isGenerating);
