@@ -17,6 +17,7 @@ interface QueueItem {
   voice: VoiceId;
   speed?: number;
   language?: string;
+  fadeout?: number; // Fadeout duration in seconds
 }
 
 interface GenerateSpeechEvent {
@@ -117,14 +118,17 @@ async function processQueue(): Promise<void> {
     const currentItem = processingQueue.shift()!;
     
     try {
-      console.log('Generating speech in worker for:', currentItem.text);
-      
       // Generate speech using KittenTTS
-      const audioData = await kittenTTS.generate(currentItem.text, {
+      let audioData = await kittenTTS.generate(currentItem.text, {
         voice: currentItem.voice,
         speed: currentItem.speed || 1.0,
         language: currentItem.language || 'en-us'
       });
+      
+      // Apply simple fadeout if specified (using audio processing, not FFmpeg)
+      if (currentItem.fadeout && currentItem.fadeout > 0) {
+        audioData = applySimpleFadeout(audioData, kittenTTS.getSampleRate(), currentItem.fadeout);
+      }
       
       // Create audio URL for playback
       const audioUrl = createAudioUrl(audioData, kittenTTS.getSampleRate());
@@ -135,8 +139,6 @@ async function processQueue(): Promise<void> {
         audioUrl
       };
       self.postMessage(response);
-      
-      console.log('Speech generated successfully in worker for:', currentItem.text);
       
     } catch (error) {
       console.error('Failed to generate speech in worker:', error);
@@ -165,6 +167,24 @@ async function processQueue(): Promise<void> {
     queueLength: 0,
     processing: false
   } as WorkerResponse);
+}
+
+// Simple fadeout function using direct audio manipulation
+function applySimpleFadeout(audioData: Float32Array, sampleRate: number, fadeoutDuration: number): Float32Array {
+  const fadeoutSamples = Math.floor(fadeoutDuration * sampleRate);
+  const startFade = Math.max(0, audioData.length - fadeoutSamples);
+  
+  // Create a copy of the audio data
+  const processedAudio = new Float32Array(audioData);
+  
+  // Apply linear fadeout
+  for (let i = startFade; i < audioData.length; i++) {
+    const fadeProgress = (i - startFade) / fadeoutSamples;
+    const fadeMultiplier = 1.0 - fadeProgress;
+    processedAudio[i] *= fadeMultiplier;
+  }
+  
+  return processedAudio;
 }
 
 // Listen for messages from the main thread
