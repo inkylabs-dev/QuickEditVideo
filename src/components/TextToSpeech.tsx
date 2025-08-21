@@ -9,6 +9,7 @@ interface GeneratedAudio {
   id: string;
   text: string;
   voice: VoiceId;
+  speed: number;
   audioUrl: string | null; // null when generating
   timestamp: number;
   isGenerating?: boolean;
@@ -17,6 +18,7 @@ interface GeneratedAudio {
 const TextToSpeech = () => {
   const [text, setText] = useState<string>('');
   const [selectedVoice, setSelectedVoice] = useState<VoiceId>('expr-voice-3-f');
+  const [speed, setSpeed] = useState<number>(1.0);
   const [isModelLoaded, setIsModelLoaded] = useState<boolean>(false);
   const [isModelLoading, setIsModelLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -111,6 +113,7 @@ const TextToSpeech = () => {
       id: audioId,
       text: textToGenerate,
       voice: voiceToUse,
+      speed: speed,
       audioUrl: null,
       timestamp: Date.now(),
       isGenerating: true
@@ -125,7 +128,7 @@ const TextToSpeech = () => {
       id: audioId,
       text: textToGenerate,
       voice: voiceToUse,
-      speed: 1.0,
+      speed: speed,
       language: 'en-us',
       fadeout: 0.2 // Apply 0.2s fadeout to segments
     };
@@ -169,6 +172,7 @@ const TextToSpeech = () => {
     // Reset text and voice to defaults
     setText('');
     setSelectedVoice('expr-voice-3-f');
+    setSpeed(1.0);
     
     // Clear any errors
     setError('');
@@ -277,6 +281,31 @@ Use [pause] markers or line breaks to add natural pauses."
               />
             </div>
 
+            {/* Speed Control */}
+            <div>
+              <label htmlFor="speed-slider" className="block text-sm font-medium text-gray-700 mb-2">
+                Speed: {speed}x
+              </label>
+              <div className="space-y-2">
+                <input
+                  type="range"
+                  id="speed-slider"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={speed}
+                  onChange={(e) => setSpeed(parseFloat(e.currentTarget.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>0.5x</span>
+                  <span>1.0x</span>
+                  <span>1.5x</span>
+                  <span>2.0x</span>
+                </div>
+              </div>
+            </div>
+
             {/* Generate Button */}
             <button
               onClick={generateSpeech}
@@ -340,7 +369,7 @@ Use [pause] markers or line breaks to add natural pauses."
                           {audio.text.length > 60 ? `${audio.text.substring(0, 60)}...` : audio.text}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {VOICE_OPTIONS.find(v => v.value === audio.voice)?.label} • {new Date(audio.timestamp).toLocaleTimeString()}
+                          {VOICE_OPTIONS.find(v => v.value === audio.voice)?.label} • {audio.speed}x speed • {new Date(audio.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
                       <button
@@ -396,3 +425,45 @@ Use [pause] markers or line breaks to add natural pauses."
 };
 
 export default TextToSpeech;
+
+// Add styles for the custom slider
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      height: 20px;
+      width: 20px;
+      background: #0d9488;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    
+    .slider::-moz-range-thumb {
+      height: 20px;
+      width: 20px;
+      background: #0d9488;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .slider::-webkit-slider-track {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+    }
+    
+    .slider::-moz-range-track {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      border: none;
+    }
+  `;
+  
+  if (!document.head.querySelector('style[data-slider-styles]')) {
+    style.setAttribute('data-slider-styles', 'true');
+    document.head.appendChild(style);
+  }
+}
