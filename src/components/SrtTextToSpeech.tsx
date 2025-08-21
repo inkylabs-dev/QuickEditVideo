@@ -354,15 +354,33 @@ const SrtTextToSpeech = () => {
       
       const outputData = outputBuffer.getChannelData(0);
 
-      // Mix audio buffers at their proper timing
+      // Mix audio buffers at their proper timing with speed adjustment
       for (const item of audioBuffers) {
-        const { buffer, startTime } = item;
+        const { buffer, startTime, endTime } = item;
         const startSample = Math.floor(startTime * audioContext.sampleRate);
         const sourceData = buffer.getChannelData(0);
         
-        // Copy audio data to the correct position
-        for (let i = 0; i < sourceData.length && (startSample + i) < totalSamples; i++) {
-          outputData[startSample + i] = sourceData[i];
+        // Calculate available duration and actual audio duration
+        const availableDuration = endTime - startTime;
+        const actualDuration = buffer.duration;
+        
+        // If audio is longer than available duration, speed it up
+        if (actualDuration > availableDuration) {
+          const speedRatio = actualDuration / availableDuration;
+          const targetSamples = Math.floor(availableDuration * audioContext.sampleRate);
+          
+          // Resample audio to fit within the time constraint
+          for (let i = 0; i < targetSamples && (startSample + i) < totalSamples; i++) {
+            const sourceIndex = Math.floor(i * speedRatio);
+            if (sourceIndex < sourceData.length) {
+              outputData[startSample + i] = sourceData[sourceIndex];
+            }
+          }
+        } else {
+          // Audio fits within duration, copy normally
+          for (let i = 0; i < sourceData.length && (startSample + i) < totalSamples; i++) {
+            outputData[startSample + i] = sourceData[i];
+          }
         }
       }
 
