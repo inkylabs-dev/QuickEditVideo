@@ -20,7 +20,6 @@ interface QueueItem {
   speed?: number;
   language?: string;
   fadeout?: number; // Fadeout duration in seconds
-  supportPauses?: boolean; // Whether to process pauses in text
 }
 
 interface GenerateSpeechEvent {
@@ -29,14 +28,12 @@ interface GenerateSpeechEvent {
 }
 
 interface WorkerResponse {
-  type: 'speech-generated' | 'speech-error' | 'model-loaded' | 'model-error' | 'queue-updated' | 'segment-progress';
+  type: 'speech-generated' | 'speech-error' | 'model-loaded' | 'model-error' | 'queue-updated';
   id?: string;
   audioUrl?: string;
   error?: string;
   queueLength?: number;
   processing?: boolean;
-  segmentIndex?: number;
-  totalSegments?: number;
 }
 
 let kittenTTS: KittenTTS | null = null;
@@ -126,7 +123,7 @@ async function processQueue(): Promise<void> {
       let finalAudioData: Float32Array;
       
       // Check if text should be processed for pauses
-      if (currentItem.supportPauses && hasPauseMarkers(currentItem.text)) {
+      if (hasPauseMarkers(currentItem.text)) {
         // Split text into segments
         const textSegments = splitTextForPauses(currentItem.text);
         const audioSegments: Float32Array[] = [];
@@ -134,14 +131,6 @@ async function processQueue(): Promise<void> {
         // Generate audio for each segment
         for (let i = 0; i < textSegments.length; i++) {
           const segment = textSegments[i];
-          
-          // Notify UI about segment progress
-          self.postMessage({
-            type: 'segment-progress',
-            id: currentItem.id,
-            segmentIndex: i + 1,
-            totalSegments: textSegments.length
-          } as WorkerResponse);
           
           // Generate speech for this segment
           let segmentAudio = await kittenTTS.generate(segment, {

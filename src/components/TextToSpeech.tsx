@@ -3,7 +3,7 @@ import Loading from './Loading';
 import { VOICE_OPTIONS, type VoiceId } from '@quickeditvideo/kittentts';
 import TextToSpeechWorkerUrl from '../workers/TextToSpeechWorker.ts?worker&url';
 import type { WorkerResponse, QueueItem } from '../workers/TextToSpeechWorker';
-import { hasPauseMarkers } from '../utils/textProcessing';
+
 
 interface GeneratedAudio {
   id: string;
@@ -12,10 +12,6 @@ interface GeneratedAudio {
   audioUrl: string | null; // null when generating
   timestamp: number;
   isGenerating?: boolean;
-  segmentProgress?: {
-    current: number;
-    total: number;
-  };
 }
 
 const TextToSpeech = () => {
@@ -73,31 +69,13 @@ const TextToSpeech = () => {
         setProcessingQueue(response.processing || false);
         break;
         
-      case 'segment-progress':
-        if (response.id && response.segmentIndex && response.totalSegments) {
-          setGeneratedAudios(prev => 
-            prev.map(audio => 
-              audio.id === response.id 
-                ? { 
-                    ...audio, 
-                    segmentProgress: { 
-                      current: response.segmentIndex!, 
-                      total: response.totalSegments! 
-                    }
-                  }
-                : audio
-            )
-          );
-        }
-        break;
-        
       case 'speech-generated':
         if (response.id && response.audioUrl) {
           // Update the audio item with the generated URL
           setGeneratedAudios(prev => 
             prev.map(audio => 
               audio.id === response.id 
-                ? { ...audio, audioUrl: response.audioUrl!, isGenerating: false, segmentProgress: undefined }
+                ? { ...audio, audioUrl: response.audioUrl!, isGenerating: false }
                 : audio
             )
           );
@@ -150,7 +128,6 @@ const TextToSpeech = () => {
       voice: voiceToUse,
       speed: 1.0,
       language: 'en-us',
-      supportPauses: true, // Enable pause processing
       fadeout: 0.2 // Apply 0.2s fadeout to segments
     };
     
@@ -269,21 +246,7 @@ const TextToSpeech = () => {
 Use [pause] markers or line breaks to add natural pauses."
                 className="w-full px-3 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
                 rows={8}
-                maxLength={500}
               />
-              <div className="flex justify-between items-center mt-2">
-                <div className="text-xs text-gray-500">
-                  {text.length}/500 characters
-                </div>
-                {hasPauseMarkers(text) && (
-                  <div className="text-xs text-blue-600 flex items-center gap-1">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,16.5L6.5,12L11,7.5V10.5H16V13.5H11V16.5Z"/>
-                    </svg>
-                    Pauses detected
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Generate Button */}
@@ -367,10 +330,7 @@ Use [pause] markers or line breaks to add natural pauses."
                       <div className="w-full mb-3 bg-gray-100 rounded p-3 flex items-center justify-center gap-2">
                         <Loading className="scale-75" />
                         <span className="text-sm text-gray-600">
-                          {audio.segmentProgress 
-                            ? `Generating segment ${audio.segmentProgress.current}/${audio.segmentProgress.total}...`
-                            : 'Generating...'
-                          }
+                          Generating...
                         </span>
                       </div>
                     ) : (
