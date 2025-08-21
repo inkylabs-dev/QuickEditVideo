@@ -17,7 +17,7 @@ We believe video editing should be open, free, and accessible without sacrificin
 
 - We **don't collect any personal data**.  
 - We **don't have accounts** — your videos never leave your device.  
-- We use **Plausible Analytics** (no cookies, no tracking).  
+- We use **Google Analytics** to understand site usage (cookies may be used).  
 - We run **ads** to keep the site free — ad networks may use cookies.  
 - That's it. Your privacy is safe with us.  
 
@@ -33,13 +33,14 @@ All video processing happens **directly in your browser**, using open technologi
 ---
 
 ## Analytics
-To understand how people use QuickEditVideo and improve the site, we use **Plausible Analytics**.  
+To understand how people use QuickEditVideo and improve the site, we use **Google Analytics**.  
 
-- Plausible is a privacy-focused analytics tool.  
-- It uses **no cookies** and does not track or store personal data.  
-- All data is aggregated and anonymous.  
+- Google Analytics helps us analyze website traffic and user behavior.  
+- It may use **cookies** to collect usage data and provide insights.  
+- All data collected is used to improve the user experience and site functionality.  
 
-You can learn more at [https://plausible.io/privacy](https://plausible.io/privacy).
+You can learn more about Google's privacy practices at [https://policies.google.com/privacy](https://policies.google.com/privacy).  
+You can opt out of Google Analytics tracking by visiting [https://tools.google.com/dlpage/gaoptout](https://tools.google.com/dlpage/gaoptout).
 
 ---
 
