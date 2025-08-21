@@ -1,0 +1,326 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SrtTextToSpeech from '../components/SrtTextToSpeech.tsx';
+import Adsterra from '../components/Adsterra.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
+
+// Structured data for SRT TTS tool
+const srtTtsStructuredData = {
+	"@context": "https://schema.org",
+	"@type": "SoftwareApplication",
+	"name": "SRT to Text-to-Speech Converter",
+	"description": "Convert SRT subtitle files to audio with AI voices. Generate speech from subtitles with precise timing. Privacy-focused and completely free.",
+	"applicationCategory": "MultimediaApplication",
+	"operatingSystem": "Any",
+	"url": "https://quickeditvideo.com/srt-tts",
+	"offers": {
+		"@type": "Offer",
+		"price": "0",
+		"priceCurrency": "USD"
+	},
+	"featureList": [
+		"Convert SRT subtitles to speech",
+		"Multiple AI voices available",
+		"Precise timing synchronization",
+		"Download individual or combined audio",
+		"Privacy-focused (no uploads)",
+		"Browser-based processing"
+	],
+	"screenshot": "https://quickeditvideo.com/logo.png"
+};
+---
+
+<Layout
+	title="SRT to Text-to-Speech Converter - Convert Subtitles to Audio Free | QuickEditVideo"
+	description="Convert SRT subtitle files to audio with AI voices. Transform subtitles into speech with precise timing. No uploads required - completely private and secure."
+	keywords="srt to speech, subtitle to audio, text to speech srt, convert srt to audio, subtitle tts, ai voice subtitles, srt audio generator, subtitle narrator, speech from subtitles, voice over subtitles"
+	ogTitle="Free SRT to Text-to-Speech Converter - AI Voice Generation"
+	ogDescription="Convert SRT subtitle files to high-quality audio with multiple AI voices. Precise timing, no uploads required, completely free and private."
+	canonicalUrl="https://quickeditvideo.com/srt-tts"
+	showBreadcrumbs={true}
+	currentPage="SRT to Speech"
+	structuredData={srtTtsStructuredData}
+>
+	<main class="min-h-screen bg-gray-50">
+		<!-- Page Header -->
+		<div id="page-header" class="bg-white border-b border-gray-200 py-6 transition-all duration-300">
+			<div class="max-w-6xl mx-auto px-4 md:px-6">
+				<h1 class="text-3xl font-bold text-gray-900">SRT to Text-to-Speech</h1>
+				<p class="text-gray-600 mt-2">Convert subtitle files to audio with AI voices</p>
+			</div>
+		</div>
+
+		<!-- Main SRT TTS Tool -->
+		<section class="p-4 md:p-6 w-full">
+			<div class="max-w-6xl mx-auto w-full">
+				<SrtTextToSpeech client:load />
+			</div>
+		</section>
+
+		<Adsterra />
+
+		<!-- Quick Help -->
+		<section id="quick-help" class="px-4 md:px-6 pb-16">
+			<div class="max-w-6xl mx-auto">
+				<h3 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Quick Guide</h3>
+				
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<!-- Step 1: Upload SRT -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+								<polyline points="14,2 14,8 20,8"/>
+								<path d="M8 13h8M8 17h6"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">1</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Upload SRT File</h4>
+						<p class="text-sm text-gray-600">Upload your subtitle file (.srt format)</p>
+					</div>
+
+					<!-- Step 2: Select Voice -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+								<path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+								<line x1="12" y1="19" x2="12" y2="23"/>
+								<line x1="8" y1="23" x2="16" y2="23"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">2</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Choose Voice</h4>
+						<p class="text-sm text-gray-600">Select from multiple AI voices and generate speech</p>
+					</div>
+
+					<!-- Step 3: Download Audio -->
+					<div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all p-6 text-center">
+						<div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-600">
+								<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+								<polyline points="7,10 12,15 17,10"/>
+								<line x1="12" y1="15" x2="12" y2="3"/>
+							</svg>
+						</div>
+						<div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mb-3 mx-auto">3</div>
+						<h4 class="font-semibold text-gray-900 mb-2">Download Audio</h4>
+						<p class="text-sm text-gray-600">Download individual clips or combined audio file</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Content Section for SEO with Sidebar -->
+		<section class="bg-gray-50 py-16 px-4 md:px-6">
+			<div class="max-w-7xl mx-auto">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+					<!-- Main Content -->
+					<div class="lg:col-span-3">
+				<!-- Introduction -->
+				<div class="mb-16">
+					<h2 class="text-3xl font-bold text-gray-900 mb-6">Convert SRT Subtitles to Speech - AI Voice Generation</h2>
+					<div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+						<p>
+							Need to turn your subtitle files into audio? Whether you're creating voiceovers from existing subtitles, generating audio descriptions, or converting text content to speech for accessibility, our SRT to Text-to-Speech converter makes it simple.
+						</p>
+						<p>
+							Upload your SRT file, choose from multiple AI voices, and let the tool generate high-quality audio with precise timing. Each subtitle segment is processed individually, giving you complete control over the final output.
+						</p>
+						<p>
+							Everything happens locally in your browser using advanced AI models. No uploads, no accounts, no privacy concerns—just fast, accurate text-to-speech conversion.
+						</p>
+					</div>
+				</div>
+
+				<!-- How It Works -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">How SRT to Speech Conversion Works</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Smart SRT Parsing</h4>
+							<p class="text-gray-600 mb-4">
+								Our tool intelligently parses your SRT file, extracting timestamps and text content while preserving the original timing structure for accurate playback.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">AI Voice Generation</h4>
+							<p class="text-gray-600 mb-4">
+								Choose from multiple high-quality AI voices. Each subtitle segment is converted to speech using advanced neural networks running locally in your browser.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Queue Processing</h4>
+							<p class="text-gray-600 mb-4">
+								Subtitles are processed one by one in a queue system, allowing you to monitor progress and preview individual audio clips as they're generated.
+							</p>
+						</div>
+						<div>
+							<h4 class="text-lg font-medium text-gray-900 mb-3">Flexible Download Options</h4>
+							<p class="text-gray-600 mb-4">
+								Download individual audio clips for specific subtitles, or combine everything into a single audio file with proper timing and gaps.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Why Choose This Tool -->
+				<div class="mb-16">
+					<h3 class="text-2xl font-semibold text-gray-900 mb-6">Why Convert SRT to Speech With Our Tool?</h3>
+					<div class="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Completely Free</h4>
+									<p class="text-sm text-gray-600">No costs, no limits, no premium features. Use as much as you want.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Multiple AI Voices</h4>
+									<p class="text-sm text-gray-600">Choose from various high-quality AI voices to match your needs.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Perfect Timing</h4>
+									<p class="text-sm text-gray-600">Maintains original subtitle timing for synchronized playback.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Privacy Protected</h4>
+									<p class="text-sm text-gray-600">All processing happens locally. Your files never leave your device.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">Flexible Output</h4>
+									<p class="text-sm text-gray-600">Download individual clips or combined audio files.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-green-600">
+										<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+									</svg>
+								</div>
+								<div>
+									<h4 class="font-medium text-gray-900 mb-1">No Installation Required</h4>
+									<p class="text-sm text-gray-600">Works instantly in any modern web browser.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- FAQ Section -->
+				<div>
+					<h3 class="text-2xl font-semibold text-gray-900 mb-8">Frequently Asked Questions</h3>
+					<div class="space-y-6">
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">What SRT file formats are supported?</h4>
+							<p class="text-gray-600">We support standard SRT subtitle files with proper timestamp formatting. The tool automatically parses timing and text content.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">How many voices are available?</h4>
+							<p class="text-gray-600">We offer multiple high-quality AI voices with different characteristics. You can preview and select the one that best fits your content.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Can I download individual audio clips?</h4>
+							<p class="text-gray-600">Yes! You can download each subtitle segment as a separate audio file, or combine them all into a single file with proper timing.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Is there a limit on subtitle length?</h4>
+							<p class="text-gray-600">Each subtitle segment can contain up to 500 characters. Longer text will be automatically chunked for optimal voice generation quality.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Does the tool preserve timing information?</h4>
+							<p class="text-gray-600">Absolutely! The original timing from your SRT file is preserved, ensuring the generated audio maintains proper synchronization.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">What audio formats can I download?</h4>
+							<p class="text-gray-600">Generated audio is available in WAV format for high quality, with options to convert to MP3 for smaller file sizes.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">Can I use this for commercial projects?</h4>
+							<p class="text-gray-600">Yes, the generated audio is yours to use however you like, including commercial projects. No attribution required.</p>
+						</div>
+						
+						<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+							<h4 class="font-semibold text-gray-900 mb-2">How long does it take to process subtitles?</h4>
+							<p class="text-gray-600">Processing time depends on the length and number of subtitle segments. Each segment is processed individually, with progress shown in real-time.</p>
+						</div>
+					</div>
+				</div>
+					</div>
+					
+					<!-- Sidebar -->
+					<RecommendedTools currentToolId="srt-tts" category="audio-quality" />
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		// Listen for events from SrtTextToSpeech component to hide/show header
+		document.addEventListener('DOMContentLoaded', function() {
+			const pageHeader = document.getElementById('page-header');
+			
+			// Function to toggle header visibility
+			function toggleHeader(show: boolean) {
+				if (pageHeader) {
+					if (show) {
+						pageHeader.style.display = 'block';
+						pageHeader.style.opacity = '1';
+						pageHeader.style.transform = 'translateY(0)';
+					} else {
+						pageHeader.style.opacity = '0';
+						pageHeader.style.transform = 'translateY(-10px)';
+						setTimeout(() => {
+							pageHeader.style.display = 'none';
+						}, 300);
+					}
+				}
+			}
+			
+			// Listen for custom events from SrtTextToSpeech
+			document.addEventListener('srtTtsViewChange', function(event) {
+				const customEvent = event as any;
+				const isLandingView = customEvent.detail.currentView === 'landing';
+				toggleHeader(isLandingView);
+			});
+		});
+	</script>
+</Layout>

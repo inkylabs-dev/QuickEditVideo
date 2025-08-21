@@ -332,7 +332,24 @@ const TOOLS: Tool[] = [
     },
     category: 'audio-quality',
     featured: true,
-    recommendedTools: ['extract-audio', 'merge', 'extract-frame', 'watermark', 'trim'],
+    recommendedTools: ['srt-tts', 'extract-audio', 'merge', 'extract-frame', 'watermark'],
+    bgColor: 'bg-teal-100',
+    hoverBgColor: 'group-hover:bg-teal-200',
+    iconColor: 'text-teal-600'
+  },
+  {
+    id: 'srt-tts',
+    name: 'SRT to Text-to-Speech',
+    shortName: 'SRT to Speech',
+    description: 'Convert SRT subtitle files to audio with AI voices and precise timing',
+    shortDescription: 'SRT to speech',
+    url: '/srt-tts',
+    icon: {
+      type: 'svg',
+      content: '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/><path d="M8 13h8M8 17h6"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/>'
+    },
+    category: 'audio-quality',
+    recommendedTools: ['tts', 'extract-audio', 'merge', 'trim', 'to-mp4'],
     bgColor: 'bg-teal-100',
     hoverBgColor: 'group-hover:bg-teal-200',
     iconColor: 'text-teal-600'
