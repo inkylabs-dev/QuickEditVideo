@@ -4,10 +4,12 @@ import { VOICE_OPTIONS, type VoiceId } from '@quickeditvideo/kittentts';
 import TextToSpeechWorkerUrl from '../workers/TextToSpeechWorker.ts?worker&url';
 import type { WorkerResponse, QueueItem } from '../workers/TextToSpeechWorker';
 
+
 interface GeneratedAudio {
   id: string;
   text: string;
   voice: VoiceId;
+  speed: number;
   audioUrl: string | null; // null when generating
   timestamp: number;
   isGenerating?: boolean;
@@ -16,6 +18,7 @@ interface GeneratedAudio {
 const TextToSpeech = () => {
   const [text, setText] = useState<string>('');
   const [selectedVoice, setSelectedVoice] = useState<VoiceId>('expr-voice-3-f');
+  const [speed, setSpeed] = useState<number>(1.0);
   const [isModelLoaded, setIsModelLoaded] = useState<boolean>(false);
   const [isModelLoading, setIsModelLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -110,13 +113,13 @@ const TextToSpeech = () => {
       id: audioId,
       text: textToGenerate,
       voice: voiceToUse,
+      speed: speed,
       audioUrl: null,
       timestamp: Date.now(),
       isGenerating: true
     };
 
     // IMMEDIATE UI UPDATES (synchronous)
-    setText(''); // Clear input immediately
     setError(''); // Clear any errors
     setGeneratedAudios(prev => [audioItem, ...prev]); // Add to UI immediately
     
@@ -125,8 +128,9 @@ const TextToSpeech = () => {
       id: audioId,
       text: textToGenerate,
       voice: voiceToUse,
-      speed: 1.0,
-      language: 'en-us'
+      speed: speed,
+      language: 'en-us',
+      fadeout: 0.2 // Apply 0.2s fadeout to segments
     };
     
     workerRef.current.postMessage({
@@ -154,6 +158,24 @@ const TextToSpeech = () => {
       }
       return prev.filter(a => a.id !== audioId);
     });
+  };
+
+  const clearAll = () => {
+    // Clear all generated audios and revoke URLs
+    generatedAudios.forEach(audio => {
+      if (audio.audioUrl) {
+        URL.revokeObjectURL(audio.audioUrl);
+      }
+    });
+    setGeneratedAudios([]);
+    
+    // Reset text and voice to defaults
+    setText('');
+    setSelectedVoice('expr-voice-3-f');
+    setSpeed(1.0);
+    
+    // Clear any errors
+    setError('');
   };
 
   // Cleanup URLs on unmount
@@ -202,14 +224,26 @@ const TextToSpeech = () => {
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      {/* Header with title and clear button */}
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Text to Speech</h3>
+          <p className="text-sm text-gray-600">Enter text and select a voice to generate speech</p>
+        </div>
+        <button 
+          onClick={clearAll}
+          className="text-gray-400 hover:text-gray-600 p-1"
+          title="Clear all and reset to default"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+          </svg>
+        </button>
+      </div>
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
         {/* Control Panel - First on mobile, left on desktop */}
         <div className="p-6 order-1 lg:order-1">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Text to Speech</h3>
-            <p className="text-sm text-gray-600">Enter text and select a voice to generate speech</p>
-          </div>
-
           <div className="space-y-6">
             {/* Voice Selection */}
             <div>
@@ -239,13 +273,36 @@ const TextToSpeech = () => {
                 id="text-input"
                 value={text}
                 onChange={(e) => setText(e.currentTarget.value)}
-                placeholder="Enter the text you want to convert to speech..."
+                placeholder="Enter the text you want to convert to speech...
+
+Use [pause] markers or line breaks to add natural pauses."
                 className="w-full px-3 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
                 rows={8}
-                maxLength={500}
               />
-              <div className="text-xs text-gray-500 mt-2">
-                {text.length}/500 characters
+            </div>
+
+            {/* Speed Control */}
+            <div>
+              <label htmlFor="speed-slider" className="block text-sm font-medium text-gray-700 mb-2">
+                Speed: {speed}x
+              </label>
+              <div className="space-y-2">
+                <input
+                  type="range"
+                  id="speed-slider"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={speed}
+                  onChange={(e) => setSpeed(parseFloat(e.currentTarget.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>0.5x</span>
+                  <span>1.0x</span>
+                  <span>1.5x</span>
+                  <span>2.0x</span>
+                </div>
               </div>
             </div>
 
@@ -312,7 +369,7 @@ const TextToSpeech = () => {
                           {audio.text.length > 60 ? `${audio.text.substring(0, 60)}...` : audio.text}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {VOICE_OPTIONS.find(v => v.value === audio.voice)?.label} • {new Date(audio.timestamp).toLocaleTimeString()}
+                          {VOICE_OPTIONS.find(v => v.value === audio.voice)?.label} • {audio.speed}x speed • {new Date(audio.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
                       <button
@@ -329,7 +386,9 @@ const TextToSpeech = () => {
                     {audio.isGenerating ? (
                       <div className="w-full mb-3 bg-gray-100 rounded p-3 flex items-center justify-center gap-2">
                         <Loading className="scale-75" />
-                        <span className="text-sm text-gray-600">Generating...</span>
+                        <span className="text-sm text-gray-600">
+                          Generating...
+                        </span>
                       </div>
                     ) : (
                       <audio 
@@ -366,3 +425,45 @@ const TextToSpeech = () => {
 };
 
 export default TextToSpeech;
+
+// Add styles for the custom slider
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      height: 20px;
+      width: 20px;
+      background: #0d9488;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    
+    .slider::-moz-range-thumb {
+      height: 20px;
+      width: 20px;
+      background: #0d9488;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .slider::-webkit-slider-track {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+    }
+    
+    .slider::-moz-range-track {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      border: none;
+    }
+  `;
+  
+  if (!document.head.querySelector('style[data-slider-styles]')) {
+    style.setAttribute('data-slider-styles', 'true');
+    document.head.appendChild(style);
+  }
+}
