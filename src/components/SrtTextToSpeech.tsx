@@ -205,7 +205,7 @@ const SrtTextToSpeech = () => {
         // Check if user has manually set a speed for this subtitle
         const hasUserSetSpeed = userSetSpeeds[subtitle.id] === true;
         
-        console.log(`Audio duration check for subtitle ${subtitle.id}: audioDuration=${audioDuration.toFixed(2)}s, subtitleDuration=${subtitleDuration.toFixed(2)}s, hasUserSetSpeed=${hasUserSetSpeed}, userSetSpeeds=`, userSetSpeeds);
+        console.log(`Audio duration check for subtitle ${subtitle.id}: audioDuration=${audioDuration.toFixed(2)}s, subtitleDuration=${subtitleDuration.toFixed(2)}s, hasUserSetSpeed=${hasUserSetSpeed}`);
         
         if (hasUserSetSpeed) {
           // User has set a speed manually - show warning instead of auto-regenerating
@@ -861,9 +861,6 @@ const SrtTextToSpeech = () => {
                       {isGenerating && (
                         <div className="flex items-center gap-1">
                           <Loading className="scale-50" />
-                          {regenerationAttempts > 0 && (
-                            <span className="text-xs text-orange-600">Regenerating</span>
-                          )}
                         </div>
                       )}
                     </div>
@@ -900,17 +897,15 @@ const SrtTextToSpeech = () => {
                         onChange={(e) => {
                           const value = parseFloat(e.currentTarget.value);
                           if (!isNaN(value)) {
-                            console.log(`User changed slider speed for subtitle ${subtitle.id} to ${value}`);
                             setCustomSpeeds(prev => ({
                               ...prev,
                               [subtitle.id]: value
                             }));
                             // Mark as user-set speed
-                            setUserSetSpeeds(prev => {
-                              const newState = { ...prev, [subtitle.id]: true };
-                              console.log(`Marking subtitle ${subtitle.id} as user-set speed. New userSetSpeeds:`, newState);
-                              return newState;
-                            });
+                            setUserSetSpeeds(prev => ({
+                              ...prev,
+                              [subtitle.id]: true
+                            }));
                             // Clear any existing warning since user is making a change
                             setAudioWarnings(prev => {
                               const newWarnings = { ...prev };
@@ -936,17 +931,15 @@ const SrtTextToSpeech = () => {
                         onChange={(e) => {
                           const value = parseFloat(e.currentTarget.value);
                           if (!isNaN(value) && value >= 0.5 && value <= 3.0) {
-                            console.log(`User changed input speed for subtitle ${subtitle.id} to ${value}`);
                             setCustomSpeeds(prev => ({
                               ...prev,
                               [subtitle.id]: value
                             }));
                             // Mark as user-set speed
-                            setUserSetSpeeds(prev => {
-                              const newState = { ...prev, [subtitle.id]: true };
-                              console.log(`Marking subtitle ${subtitle.id} as user-set speed via input. New userSetSpeeds:`, newState);
-                              return newState;
-                            });
+                            setUserSetSpeeds(prev => ({
+                              ...prev,
+                              [subtitle.id]: true
+                            }));
                             // Clear any existing warning since user is making a change
                             setAudioWarnings(prev => {
                               const newWarnings = { ...prev };
@@ -970,9 +963,9 @@ const SrtTextToSpeech = () => {
                         <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.824a1 1 0 011.617.824zM14 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clipRule="evenodd"/>
                       </svg>
                       {isGenerating ? (
-                        regenerationAttempts > 0 ? `Regenerating (${regenerationAttempts + 1})...` : 'Generating...'
+                        'Generating...'
                       ) : hasAudio ? (
-                        regenerationAttempts > 0 ? `Regenerate (${lastSpeed.toFixed(1)}x)` : 'Regenerate'
+                        'Regenerate'
                       ) : 'Generate Speech'}
                     </button>
                   </div>
