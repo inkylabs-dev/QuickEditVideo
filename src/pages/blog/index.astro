@@ -1,44 +1,63 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 
+// Import metadata from each blog post
+import * as post1 from './2025-08-26-tts-model-upgrade-kitten-tts.astro';
+import * as post2 from './2025-08-22-tts-major-updates-pause-speed-srt.astro';
+import * as post3 from './2025-08-21-srt-to-speech-complete-guide.astro';
+import * as post4 from './2025-08-20-introducing-free-unlimited-text-to-speech-tool.astro';
+import * as post5 from './2025-01-15-introducing-quickeditvideo.astro';
+
 const blogPosts = [
 	{
-		title: "Major Text-to-Speech Updates: Pause Control, Speed Adjustment & SRT Support",
-		description: "Exciting new features for our AI voice tools: [pause] markup for natural breaks, smooth transitions, adjustable speech speed, and powerful SRT subtitle conversion capabilities.",
-		slug: "2025-08-22-tts-major-updates-pause-speed-srt",
-		pubDate: "2025-08-22",
-		author: "QuickEditVideo Team",
-		tags: ["update", "text-to-speech", "features", "pause-control", "speed-adjustment", "srt-support"],
-		readingTime: "5 min read"
+		title: post1.title,
+		description: post1.description,
+		slug: '2025-08-26-tts-model-upgrade-kitten-tts',
+		pubDate: post1.pubDate,
+		author: post1.author,
+		tags: post1.tags,
+		readingTime: post1.readingTime
 	},
 	{
-		title: "Transform SRT Subtitles into Natural AI Speech - The Complete Guide",
-		description: "Discover how to convert subtitle files into professional voiceovers using AI. Perfect for content creators, educators, and accessibility. Step-by-step guide with tips and best practices.",
-		slug: "2025-08-21-srt-to-speech-complete-guide",
-		pubDate: "2025-08-21",
-		author: "QuickEditVideo Team",
-		tags: ["guide", "srt-to-speech", "ai-voices", "subtitles", "accessibility", "content-creation"],
-		readingTime: "8 min read"
+		title: post2.title,
+		description: post2.description,
+		slug: '2025-08-22-tts-major-updates-pause-speed-srt',
+		pubDate: post2.pubDate,
+		author: post2.author,
+		tags: post2.tags,
+		readingTime: post2.readingTime
 	},
 	{
-		title: "Introducing Free Unlimited Text to Speech - AI Voices Without Limits",
-		description: "Convert text to natural speech instantly in your browser. No uploads, no subscriptions, unlimited usage. Privacy-first AI voice synthesis powered by KittenTTS.",
-		slug: "2025-08-20-introducing-free-unlimited-text-to-speech-tool",
-		pubDate: "2025-08-20",
-		author: "QuickEditVideo Team",
-		tags: ["announcement", "text-to-speech", "ai-voices", "privacy", "unlimited"],
-		readingTime: "6 min read"
+		title: post3.title,
+		description: post3.description,
+		slug: '2025-08-21-srt-to-speech-complete-guide',
+		pubDate: post3.pubDate,
+		author: post3.author,
+		tags: post3.tags,
+		readingTime: post3.readingTime
 	},
 	{
-		title: "Introducing QuickEditVideo.com",
-		description: "Edit videos in your browser without uploads, signups, or complex software. We're reimagining video editing for everyone.",
-		slug: "2025-01-15-introducing-quickeditvideo",
-		pubDate: "2025-01-15",
-		author: "QuickEditVideo Team",
-		tags: ["announcement", "launch", "video-editing", "privacy"],
-		readingTime: "4 min read"
+		title: post4.title,
+		description: post4.description,
+		slug: '2025-08-20-introducing-free-unlimited-text-to-speech-tool',
+		pubDate: post4.pubDate,
+		author: post4.author,
+		tags: post4.tags,
+		readingTime: post4.readingTime
+	},
+	{
+		title: post5.title,
+		description: post5.description,
+		slug: '2025-01-15-introducing-quickeditvideo',
+		pubDate: post5.pubDate,
+		author: post5.author,
+		tags: post5.tags,
+		readingTime: post5.readingTime
 	}
 ];
+
+// Sort posts by publication date (newest first)
+blogPosts.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 ---
 
 <Layout 
