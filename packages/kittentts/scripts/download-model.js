@@ -9,12 +9,12 @@ import { npz } from 'tfjs-npy-node';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const MODEL_REPO_ID = 'KittenML/kitten-tts-nano-0.2';
 
 /**
  * Download KittenTTS model files using @huggingface/hub instead of Python CLI
  */
 async function downloadModel() {
-  const repoId = 'KittenML/kitten-tts-nano-0.1';
   const localDir = path.join(__dirname, '..', 'assets');
   
   // Create assets directory if it doesn't exist
@@ -28,7 +28,7 @@ async function downloadModel() {
     'config.json'
   ];
 
-  console.log(`Downloading KittenTTS model from ${repoId}...`);
+  console.log(`Downloading KittenTTS model from ${MODEL_REPO_ID}...`);
 
   try {
     for (const filename of filesToDownload) {
@@ -46,7 +46,7 @@ async function downloadModel() {
         // Try @huggingface/hub first, fallback to fetch if needed
         try {
           const response = await downloadFile({
-            repo: repoId,
+            repo: MODEL_REPO_ID,
             filename: filename,
           });
           
@@ -60,7 +60,7 @@ async function downloadModel() {
         } catch (hubError) {
           // Fallback to direct fetch
           console.log(`    Falling back to direct fetch for ${filename}...`);
-          const url = `https://huggingface.co/${repoId}/resolve/main/${filename}`;
+          const url = `https://huggingface.co/${MODEL_REPO_ID}/resolve/main/${filename}`;
           const response = await fetch(url);
           
           if (!response.ok) {
@@ -276,6 +276,12 @@ export function hasEmbeddedAssets(): boolean {
 export function getEmbeddedVoices() {
   return EMBEDDED_VOICES;
 }`;
+
+
+  embeddedCode += `
+// Repo ID
+export const MODEL_REPO_ID = '${MODEL_REPO_ID}';
+`;
 
   writeFileSync(outputPath, embeddedCode);
   console.log('✅ Created embedded assets module');
