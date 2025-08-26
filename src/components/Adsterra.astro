@@ -1,6 +1,13 @@
 ---
-// Adsterra ad component
+// Adsterra ad component - only shows in production when ADSTERRA_ENABLED is true
+const isProduction = import.meta.env.PROD;
+const adsEnabled = import.meta.env.ADSTERRA_ENABLED === 'true';
+const shouldShowAds = isProduction && adsEnabled;
 ---
 
-<script async data-cfasync="false" src="https://pl27432156.profitableratecpm.com/dcd98c5173d8cb7b028f645ea697ef2f/invoke.js"></script>
-<div id="container-dcd98c5173d8cb7b028f645ea697ef2f"></div>
+{shouldShowAds && (
+  <>
+    <script async data-cfasync="false" src="https://pl27432156.profitableratecpm.com/dcd98c5173d8cb7b028f645ea697ef2f/invoke.js"></script>
+    <div id="container-dcd98c5173d8cb7b028f645ea697ef2f"></div>
+  </>
+)}
