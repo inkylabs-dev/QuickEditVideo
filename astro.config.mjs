@@ -4,7 +4,7 @@ import tailwind from '@astrojs/tailwind';
 import wasm from 'vite-plugin-wasm';
 import { resolve } from 'path';
 
-import preact from '@astrojs/preact';
+import react from '@astrojs/react';
 
 import sitemap from '@astrojs/sitemap';
 
@@ -13,10 +13,7 @@ import partytown from '@astrojs/partytown';
 // https://astro.build/config
 export default defineConfig({
     site: 'https://quickeditvideo.com',
-    integrations: [tailwind(), preact({
-        compat: true,
-        devtools: true,
-    }), sitemap(), partytown()],
+    integrations: [tailwind(), react(), sitemap(), partytown()],
     devToolbar: {
         enabled: false,
     },
@@ -24,8 +21,6 @@ export default defineConfig({
         plugins: [wasm()],
         resolve: {
             alias: {
-                'react': 'preact/compat',
-                'react-dom': 'preact/compat',
                 '@onnx-wasm': resolve('./node_modules/onnxruntime-web/dist')
             }
         },

@@ -1,5 +1,4 @@
-import { useRef } from 'preact/hooks';
-import type { JSX } from 'preact';
+import { useRef, type ChangeEvent, type DragEvent } from 'react';
 
 export interface SelectFileProps {
   /** Whether to allow multiple file selection */
@@ -39,12 +38,11 @@ export const SelectFile = ({
   onFileSelect,
   validateFile,
   validationErrorMessage = "Please select a valid file."
-}: SelectFileProps): JSX.Element => {
+}: SelectFileProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileInputChange = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    const files = target.files;
+  const handleFileInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
     
     if (!files || files.length === 0) {
       onFileSelect(null);
@@ -69,7 +67,7 @@ export const SelectFile = ({
     }
   };
 
-  const handleDrop = (event: DragEvent) => {
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const files = event.dataTransfer?.files;
     
@@ -107,11 +105,11 @@ export const SelectFile = ({
     }
   };
 
-  const handleDragOver = (event: DragEvent) => {
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
   };
 
-  const handleDragEnter = (event: DragEvent) => {
+  const handleDragEnter = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
   };
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/preact';
-import { act } from '@testing-library/preact';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
 import VideoConverter from '../../../src/components/VideoConverter.tsx';
 
 // Clean up between tests
@@ -98,8 +98,8 @@ describe('VideoConverter', () => {
         });
       });
       
-      // The component should handle the event without throwing errors
-      expect(fileInput).toBeInTheDocument();
+      // The component should handle the event without throwing and switch to the converting view
+      expect(screen.getByText('Converting to MP4')).toBeInTheDocument();
     });
 
     it('handles invalid file types', async () => {

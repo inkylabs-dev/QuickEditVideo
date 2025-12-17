@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'react';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { SelectFile } from './SelectFile';
 import { getVideoInfo, formatDuration, formatFileSize, formatBitrate, type VideoMetadata } from '../FFmpegUtils';
@@ -68,10 +68,10 @@ const VideoInfoContent = () => {
 
 	// Auto-analyze when video loads and FFmpeg is ready
 	useEffect(() => {
-		if (selectedFile && ffmpegLoaded && currentView === 'analyzing' && !metadata && !isAnalyzing) {
+		if (selectedFile && ffmpegLoaded && currentView === 'analyzing' && !metadata && !isAnalyzing && !error) {
 			analyzeVideo();
 		}
-	}, [selectedFile, ffmpegLoaded, currentView, metadata, isAnalyzing]);
+	}, [selectedFile, ffmpegLoaded, currentView, metadata, isAnalyzing, error]);
 
 	// Handle video play/pause
 	const togglePlayPause = () => {

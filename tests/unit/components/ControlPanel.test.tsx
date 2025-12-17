@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, cleanup } from '@testing-library/preact';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import ControlPanel, { type Tab } from '../../../src/components/ControlPanel';
 

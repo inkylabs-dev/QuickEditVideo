@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Loading from './Loading';
 import { VOICE_OPTIONS, type VoiceId } from '@quickeditvideo/kittentts';
 import TextToSpeechWorkerUrl from '../workers/TextToSpeechWorker.ts?worker&url';

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/preact';
-import { act } from '@testing-library/preact';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
 import VideoCropper from '../../../src/components/VideoCropper.tsx';
 
 // Mock the FFmpeg core module

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/preact';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import VideoInfo from '../../../src/components/VideoInfo';
 
 // Mock the FFmpegCore module
@@ -29,15 +29,15 @@ vi.mock('../../../src/FFmpegCore', () => ({
   })
 }));
 
-// Mock the getVideoInfo utility
-vi.mock('../../../src/FFmpegUtils/getVideoInfo', () => ({
+// Mock the getVideoInfo utility (the component imports via the FFmpegUtils barrel)
+vi.mock('../../../src/FFmpegUtils', () => ({
   getVideoInfo: vi.fn(),
-  formatDuration: vi.fn((duration) => duration ? `${duration}s` : 'Unknown'),
-  formatFileSize: vi.fn((size) => size ? `${size} bytes` : 'Unknown'),
-  formatBitrate: vi.fn((bitrate) => bitrate ? `${bitrate} bps` : 'Unknown')
+  formatDuration: vi.fn((duration) => (duration ? `${duration}s` : 'Unknown')),
+  formatFileSize: vi.fn((size) => (size ? `${size} bytes` : 'Unknown')),
+  formatBitrate: vi.fn((bitrate) => (bitrate ? `${bitrate} bps` : 'Unknown')),
 }));
 
-const { getVideoInfo } = await import('../../../src/FFmpegUtils/getVideoInfo');
+const { getVideoInfo } = await import('../../../src/FFmpegUtils');
 
 // Mock URL.createObjectURL and revokeObjectURL
 global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');

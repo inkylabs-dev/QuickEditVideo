@@ -1,4 +1,4 @@
-import { createContext, type RefObject } from "preact/compat";
+import { createContext, type RefObject } from "react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 
 export interface FFmpegContextType {

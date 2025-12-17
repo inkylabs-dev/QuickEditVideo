@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
-import { act } from 'preact/test-utils';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
 import VideoResizer from '../../../src/components/VideoResizer';
 
 // Mock the FFmpeg core module
@@ -50,137 +50,7 @@ global.Blob = vi.fn().mockImplementation((content, options) => ({
 const mockDownloadClick = vi.fn();
 const originalCreateElement = document.createElement;
 
-      // Create a mock URL for the video
-      const mockUrl = 'blob:mock-url';
-      
-      // Mock HTMLVideoElement behavior directly on prototype  
-      class MockHTMLVideoElement extends HTMLElement {
-        videoWidth = 1920;
-        videoHeight = 1080;
-        duration = 120;
-        paused = true;
-        src = '';
-        currentTime = 0;
-        onloadedmetadata: any = null;
-        
-        play() { return Promise.resolve(); }
-        pause() { return undefined; }
-        load() { return undefined; }
-        
-        // Override setAttribute to trigger loadedmetadata when src is set
-        setAttribute(name: string, value: string) {
-          super.setAttribute(name, value);
-          if (name === 'src' && value && this.onloadedmetadata) {
-            // Simulate metadata loading asynchronously
-            setTimeout(() => {
-              const event = new Event('loadedmetadata');
-              this.onloadedmetadata?.(event);
-            }, 0);
-          }
-        }
-      }
-
-// Helper function to simulate video loaded metadata
-const simulateVideoLoadedMetadata = (videoElement: any) => {
-  if (videoElement.onloadedmetadata) {
-    videoElement.onloadedmetadata();
-  }
-};
-
 beforeEach(() => {
-  // Mock HTMLVideoElement prototype to ensure all video elements have the right properties
-  const originalVideoElement = global.HTMLVideoElement;
-  
-  global.HTMLVideoElement = class MockHTMLVideoElement extends HTMLElement {
-    public play: any;
-    public pause: any;
-    public load: any;
-    private _onloadedmetadata: any = null;
-    
-    constructor() {
-      super();
-      
-      // Set video properties that will be available when the component accesses them
-      Object.defineProperty(this, 'videoWidth', {
-        writable: false,
-        value: 1920,
-        configurable: true,
-      });
-      
-      Object.defineProperty(this, 'videoHeight', {
-        writable: false,
-        value: 1080,
-        configurable: true,
-      });
-      
-      Object.defineProperty(this, 'duration', {
-        writable: false,
-        value: 10,
-        configurable: true,
-      });
-      
-      Object.defineProperty(this, 'currentTime', {
-        writable: true,
-        value: 0,
-        configurable: true,
-      });
-      
-      Object.defineProperty(this, 'paused', {
-        writable: true,
-        value: true,
-        configurable: true,
-      });
-      
-      let videoSrc = '';
-      Object.defineProperty(this, 'src', {
-        get: () => videoSrc,
-        set: (value) => {
-          videoSrc = value;
-          // Trigger loadedmetadata immediately when src is set
-          setTimeout(() => {
-            this.dispatchEvent(new Event('loadedmetadata'));
-          }, 10); // Reduced timeout for faster tests
-        },
-        configurable: true,
-      });
-      
-      // Also trigger loadedmetadata when onloadedmetadata is set
-      Object.defineProperty(this, 'onloadedmetadata', {
-        get: () => this._onloadedmetadata,
-        set: (value) => {
-          this._onloadedmetadata = value;
-          // Immediately call the handler if it's set and we have a src
-          if (value && videoSrc) {
-            setTimeout(() => value.call(this, new Event('loadedmetadata')), 10);
-          }
-        },
-        configurable: true,
-      });
-      
-      // Mock methods
-      this.play = vi.fn().mockImplementation(() => {
-        Object.defineProperty(this, 'paused', {
-          writable: true,
-          value: false,
-          configurable: true,
-        });
-        setTimeout(() => this.dispatchEvent(new Event('play')), 10);
-        return Promise.resolve();
-      });
-      
-      this.pause = vi.fn().mockImplementation(() => {
-        Object.defineProperty(this, 'paused', {
-          writable: true,
-          value: true,
-          configurable: true,
-        });
-        setTimeout(() => this.dispatchEvent(new Event('pause')), 10);
-      });
-      
-      this.load = vi.fn();
-    }
-  } as any;
-
   document.createElement = vi.fn().mockImplementation((tagName) => {
     if (tagName === 'a') {
       return {
@@ -191,7 +61,7 @@ beforeEach(() => {
       };
     }
     if (tagName === 'video') {
-      return new global.HTMLVideoElement();
+      return originalCreateElement.call(document, tagName);
     }
     return originalCreateElement.call(document, tagName);
   });
@@ -907,8 +777,8 @@ describe('VideoResizer Component', () => {
         // Try to set invalid width (0)
         fireEvent.change(widthInput, { target: { value: '0' } });
         
-        // Should not update to invalid value or should handle gracefully
-        expect(widthInput).toHaveValue(0); // Input shows the value but logic should handle it
+        // Should not update to invalid value (the component keeps the last valid dimensions)
+        expect((widthInput as HTMLInputElement).value).toBe('1920');
       }, { timeout: 3000 });
     });
   });

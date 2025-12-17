@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll, vi } from 'vitest';
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/preact';
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import VideoFlipper from '../../../src/components/VideoFlipper.tsx';
 import { NodeFFmpeg } from '../../ffmpeg-node-adapter';
 import { createTestVideoFile, createMockVideoFile } from '../../test-utils';

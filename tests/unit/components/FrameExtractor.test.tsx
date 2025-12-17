@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
-import { act } from 'preact/test-utils';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
 import FrameExtractor from '../../../src/components/FrameExtractor';
 
 // Mock the frame extraction functions

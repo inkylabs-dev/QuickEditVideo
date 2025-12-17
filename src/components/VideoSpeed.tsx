@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'react';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import ControlPanel from './ControlPanel';
 import { SelectFile } from './SelectFile';
@@ -262,9 +262,9 @@ const VideoSpeedContent = () => {
 							/>
 							<div className="relative text-xs text-gray-500 mt-1">
 								<span className="absolute left-0">0.01x</span>
-								<span className="absolute" style="left: 6%">0.25x</span>
-								<span className="absolute" style="left: 24.8%">1x</span>
-								<span className="absolute" style="left: 49.9%">2x</span>
+								<span className="absolute" style={{ left: '6%' }}>0.25x</span>
+								<span className="absolute" style={{ left: '24.8%' }}>1x</span>
+								<span className="absolute" style={{ left: '49.9%' }}>2x</span>
 								<span className="absolute right-0">4x</span>
 							</div>
 						</div>

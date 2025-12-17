@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'react';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { fetchFile } from '@ffmpeg/util';
 import ControlPanel from './ControlPanel';

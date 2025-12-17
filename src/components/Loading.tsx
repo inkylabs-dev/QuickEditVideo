@@ -1,10 +1,8 @@
-import type { JSX } from 'preact';
-
 interface LoadingProps {
   className?: string;
 }
 
-const Loading = ({ className = '' }: LoadingProps): JSX.Element => {
+const Loading = ({ className = '' }: LoadingProps) => {
   return (
     <div className={`loader ${className}`}>
       <style>

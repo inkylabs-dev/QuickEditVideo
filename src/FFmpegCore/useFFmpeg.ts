@@ -58,7 +58,7 @@
  * - `downloadVideo()`: Download processed video
  */
 
-import { useContext } from 'preact/hooks';
+import { useContext } from 'react';
 import { FFmpegContext } from './FFmpegContext';
 
 export const useFFmpeg = () => {

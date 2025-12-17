@@ -1,9 +1,9 @@
-import type { JSX, ComponentChildren } from 'preact';
+import type { ReactNode } from 'react';
 
 export interface Tab {
   id: string;
   label: string;
-  content: JSX.Element;
+  content: ReactNode;
   badge?: string | number;
 }
 
@@ -16,7 +16,7 @@ export interface ControlPanelProps {
   tabs?: Tab[];
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
-  children?: ComponentChildren;
+  children?: ReactNode;
   className?: string;
 }
 

@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
-import type { JSX } from 'preact';
+import { useState, useEffect, useRef } from 'react';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { convertVideo, createVideoBlob, downloadBlob, type ConversionOptions } from '../FFmpegUtils';
 import Loading from './Loading';

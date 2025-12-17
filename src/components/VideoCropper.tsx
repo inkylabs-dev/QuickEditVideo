@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
-import type { JSX } from 'preact';
+import { useState, useEffect, useRef } from 'react';
+import type { CSSProperties, DragEvent, MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } from 'react';
 import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { fetchFile } from '@ffmpeg/util';
 import ControlPanel from './ControlPanel';
@@ -440,7 +440,7 @@ const VideoCropperContent = () => {
   };
 
   // Calculate crop overlay position and size
-  const getCropOverlayStyle = (): JSX.CSSProperties => {
+  const getCropOverlayStyle = (): CSSProperties => {
     if (!videoRef.current || !originalWidth || !originalHeight) {
       return {
         left: '20%',
@@ -498,18 +498,18 @@ const VideoCropperContent = () => {
     };
   };
 
-  const handleDrop = (e: JSX.TargetedDragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const files = e.dataTransfer?.files;
     if (files && files.length > 0) handleFileSelect(files[0]);
   };
 
-  const handleDragOver = (e: JSX.TargetedDragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
 
   // Drag handlers for crop area positioning
-  const handleCropDragStart = (e: JSX.TargetedMouseEvent<HTMLDivElement> | JSX.TargetedTouchEvent<HTMLDivElement>) => {
+  const handleCropDragStart = (e: ReactMouseEvent<HTMLDivElement> | ReactTouchEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -581,7 +581,7 @@ const VideoCropperContent = () => {
   };
 
   // Resize handlers for corner dragging
-  const handleResizeStart = (e: JSX.TargetedMouseEvent<HTMLDivElement> | JSX.TargetedTouchEvent<HTMLDivElement>, handle: string) => {
+  const handleResizeStart = (e: ReactMouseEvent<HTMLDivElement> | ReactTouchEvent<HTMLDivElement>, handle: string) => {
     e.preventDefault();
     e.stopPropagation();
     

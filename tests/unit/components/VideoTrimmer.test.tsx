@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
-import { act } from 'preact/test-utils';
-import { useState } from 'preact/hooks';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
 import VideoTrimmer from '../../../src/components/VideoTrimmer';
 
 // Mock the FFmpeg core module

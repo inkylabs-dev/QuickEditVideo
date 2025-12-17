@@ -1,11 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from "preact/compat";
-import type { ComponentChildren } from "preact";
+import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL } from "@ffmpeg/util";
 import { FFmpegContext, type FFmpegContextType } from "./FFmpegContext";
 
 interface FfmpegProviderProps {
-  children: ComponentChildren;
+  children: ReactNode;
 }
 
 export function FfmpegProvider({ children }: FfmpegProviderProps) {

@@ -1,11 +1,11 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite';
-import preact from '@preact/preset-vite';
+import react from '@vitejs/plugin-react';
 import { getViteConfig } from 'astro/config';
 
 export default defineConfig(
   getViteConfig({
-    plugins: [preact()],
+    plugins: [react()],
     test: {
       environment: 'happy-dom',
       setupFiles: ['./tests/setup.ts'],
