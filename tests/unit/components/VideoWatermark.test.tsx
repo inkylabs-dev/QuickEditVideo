@@ -3,9 +3,12 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import VideoWatermark from '../../../src/components/VideoWatermark';
 
-// Mock the addWatermark utility specifically
-vi.mock('../../../src/FFmpegUtils/addWatermark', () => ({
-  addWatermark: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
+vi.mock('../../../src/utils/watermarkVideoWithMediaBunny', () => ({
+  watermarkVideoWithMediaBunny: vi.fn().mockResolvedValue({
+    blob: new Blob([new Uint8Array([1, 2, 3])], { type: 'video/mp4' }),
+    filename: 'watermarked_test.mp4',
+    mimeType: 'video/mp4',
+  }),
 }));
 
 describe('VideoWatermark', () => {
@@ -88,12 +91,11 @@ describe('VideoWatermark', () => {
       input.getAttribute('accept') === 'video/*'
     ) as HTMLInputElement;
     
-    // Test different video formats - they should all be accepted
+    // Test different video formats - supported formats should be accepted
     const formats = [
       { name: 'test.mp4', type: 'video/mp4' },
       { name: 'test.mov', type: 'video/quicktime' },
       { name: 'test.mkv', type: 'video/x-matroska' },
-      { name: 'test.avi', type: 'video/x-msvideo' },
       { name: 'test.webm', type: 'video/webm' },
     ];
     
@@ -107,6 +109,24 @@ describe('VideoWatermark', () => {
       // Should not trigger any alerts (file should be accepted)
       expect(global.alert).not.toHaveBeenCalled();
     }
+  });
+
+  it('rejects unsupported video formats', async () => {
+    render(<VideoWatermark />);
+
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    const videoInput = Array.from(fileInputs).find(input =>
+      input.getAttribute('accept') === 'video/*'
+    ) as HTMLInputElement;
+
+    const videoFile = new File(['video content'], 'test.avi', { type: 'video/x-msvideo' });
+
+    await act(async () => {
+      fireEvent.change(videoInput, { target: { files: [videoFile] } });
+    });
+
+    expect(global.alert).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent('This format is not supported');
   });
 
   it('handles various image formats correctly', async () => {
@@ -164,7 +184,7 @@ describe('VideoWatermark', () => {
     render(<VideoWatermark />);
     
     // Check video format support message
-    expect(screen.getByText('Supports MP4, WebM, AVI, MOV and more')).toBeInTheDocument();
+    expect(screen.getByText('Supports MP4, WebM, MOV, MKV')).toBeInTheDocument();
     
     // Check image format support message
     expect(screen.getByText('Supports PNG, JPG, SVG and more')).toBeInTheDocument();

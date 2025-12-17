@@ -1,8 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import type { DragEvent, MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } from 'react';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { addWatermark } from '../FFmpegUtils';
-import { SelectFile } from './SelectFile';
+import { watermarkVideoWithMediaBunny, type WatermarkOutputFormat } from '../utils/watermarkVideoWithMediaBunny';
+
+const SUPPORTED_WATERMARK_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv']);
+
+function getFileExtension(filename: string): string {
+	const ext = filename.split('.').pop()?.toLowerCase();
+	return ext ?? '';
+}
 
 const VideoWatermarkContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'watermarking'>('landing');
@@ -13,6 +18,7 @@ const VideoWatermarkContent = () => {
 	const [videoDuration, setVideoDuration] = useState<number>(0);
 	const [originalWidth, setOriginalWidth] = useState<number>(0);
 	const [originalHeight, setOriginalHeight] = useState<number>(0);
+	const [errorMessage, setErrorMessage] = useState<string>('');
 	
 	// Watermark settings
 	const [logoWidth, setLogoWidth] = useState<number>(100);
@@ -24,7 +30,7 @@ const VideoWatermarkContent = () => {
 	const [isProcessing, setIsProcessing] = useState<boolean>(false);
 	const [processingProgress, setProcessingProgress] = useState<number>(0);
 	const [isPlaying, setIsPlaying] = useState<boolean>(false);
-	const [originalFormat, setOriginalFormat] = useState<string>('mp4');
+	const [originalFormat, setOriginalFormat] = useState<WatermarkOutputFormat>('mp4');
 	
 	// Drag state
 	const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -45,32 +51,26 @@ const VideoWatermarkContent = () => {
 	const videoFileInputRef = useRef<HTMLInputElement>(null);
 	const logoFileInputRef = useRef<HTMLInputElement>(null);
 
-	// Get FFmpeg context
-	const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress } = useFFmpeg();
-
-	// Update processing progress from FFmpeg context
-	useEffect(() => {
-		setProcessingProgress(progress);
-	}, [progress]);
-
 	// Handle video file selection
 	const handleVideoFileSelect = (file: File | null) => {
+		setErrorMessage('');
 		if (!file || !file.type.startsWith('video/')) {
-			alert('Please select a valid video file.');
+			setErrorMessage('Please select a valid video file (MP4, MOV, WebM, MKV).');
+			setVideoFile(null);
+			return;
+		}
+
+		const fileExtension = getFileExtension(file.name);
+		if (!SUPPORTED_WATERMARK_EXTENSIONS.has(fileExtension)) {
+			setErrorMessage(`This format is not supported: .${fileExtension || '(unknown)'}. Try MP4, MOV, WebM, or MKV.`);
+			setVideoFile(null);
 			return;
 		}
 
 		setVideoFile(file);
 		
 		// Detect original format from file extension
-		const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
-		const detectedFormat = fileExtension === 'mov' ? 'mov' : 
-							  fileExtension === 'mkv' ? 'mkv' :
-							  fileExtension === 'avi' ? 'avi' :
-							  fileExtension === 'webm' ? 'webm' :
-							  'mp4'; // default to mp4
-		
-		setOriginalFormat(detectedFormat);
+		setOriginalFormat(fileExtension as WatermarkOutputFormat);
 		
 		const url = URL.createObjectURL(file);
 		setVideoUrl(url);
@@ -88,8 +88,10 @@ const VideoWatermarkContent = () => {
 
 	// Handle logo file selection
 	const handleLogoFileSelect = (file: File | null) => {
+		setErrorMessage('');
 		if (!file || !file.type.startsWith('image/')) {
-			alert('Please select a valid image file (PNG, JPG, etc.).');
+			setErrorMessage('Please select a valid image file (PNG, JPG, etc.).');
+			setLogoFile(null);
 			return;
 		}
 
@@ -379,41 +381,46 @@ const VideoWatermarkContent = () => {
 
 	// Process watermark
 	const processWatermark = async () => {
-		if (!ffmpeg?.current || !ffmpegLoaded || !videoFile || !logoFile) {
-			alert('Please ensure FFmpeg is loaded and both video and logo files are selected.');
+		if (!videoFile || !logoFile) {
+			setErrorMessage('Please select both a video and a logo image.');
 			return;
 		}
 
 		setIsProcessing(true);
-		setProgress(0);
+		setProcessingProgress(0);
+		setErrorMessage('');
 
 		try {
-			const watermarkedData = await addWatermark(
-				ffmpeg,
+			const result = await watermarkVideoWithMediaBunny(
 				videoFile,
 				logoFile,
-				logoLeft,
-				logoTop,
-				logoWidth,
-				logoHeight
+				{
+					outputFormat: originalFormat,
+					position: {
+						left: logoLeft,
+						top: logoTop,
+						width: logoWidth,
+						height: logoHeight,
+					},
+				},
+				setProcessingProgress,
 			);
 
-			// Create blob and download
-			const blob = new Blob([watermarkedData], { type: `video/${originalFormat}` });
-			const url = URL.createObjectURL(blob);
+			const url = URL.createObjectURL(result.blob);
 			
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = `watermarked_${videoFile.name}`;
+			a.download = result.filename;
 			a.click();
 			
 			URL.revokeObjectURL(url);
 		} catch (error) {
 			console.error('Error processing watermark:', error);
-			alert('Error processing watermark. Please try again.');
+			const message = error instanceof Error ? error.message : 'Unknown error';
+			setErrorMessage(message);
 		} finally {
 			setIsProcessing(false);
-			setProgress(0);
+			setProcessingProgress(0);
 		}
 	};
 
@@ -447,6 +454,7 @@ const VideoWatermarkContent = () => {
 		setLogoUrl('');
 		setCurrentView('landing');
 		setLogoAspectRatio(1);
+		setErrorMessage('');
 		
 		// Clear file inputs
 		if (videoFileInputRef.current) videoFileInputRef.current.value = '';
@@ -461,6 +469,11 @@ const VideoWatermarkContent = () => {
 	if (currentView === 'landing') {
 		return (
 			<>
+				{errorMessage ? (
+					<div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 mb-4">
+						{errorMessage}
+					</div>
+				) : null}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
 					{/* Video Upload - Left Side */}
 					<div 
@@ -498,7 +511,7 @@ const VideoWatermarkContent = () => {
 									</svg>
 									Choose file
 								</div>
-								<p className="text-xs text-gray-500 mt-4">Supports MP4, WebM, AVI, MOV and more</p>
+								<p className="text-xs text-gray-500 mt-4">Supports MP4, WebM, MOV, MKV</p>
 							</div>
 						)}
 						<input
@@ -585,6 +598,11 @@ const VideoWatermarkContent = () => {
 
 	return (
 		<div className="space-y-6 p-4">
+			{errorMessage ? (
+				<div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+					{errorMessage}
+				</div>
+			) : null}
 			{/* Video Player and Controls Row */}
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				{/* Video Section */}
@@ -773,7 +791,7 @@ const VideoWatermarkContent = () => {
 							
 							<button 
 								onClick={processWatermark}
-								disabled={isProcessing || !ffmpegLoaded}
+								disabled={isProcessing}
 								className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
 							>
 								{isProcessing ? 
@@ -784,14 +802,12 @@ const VideoWatermarkContent = () => {
 										</svg>
 										<span>Processing {processingProgress}%</span>
 									</div> :
-									ffmpegLoaded ? 
-										<div className="flex items-center gap-2">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-												<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-											</svg>
-											Download {originalFormat.toUpperCase()}
-										</div> :
-										'Loading...'
+									<div className="flex items-center gap-2">
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+											<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+										</svg>
+										Download {originalFormat.toUpperCase()}
+									</div>
 								}
 							</button>
 						</div>
@@ -814,13 +830,9 @@ const VideoWatermarkContent = () => {
 	);
 };
 
-// Main VideoWatermark component with FFmpegProvider
+// Main VideoWatermark component
 const VideoWatermark = () => {
-	return (
-		<FfmpegProvider>
-			<VideoWatermarkContent />
-		</FfmpegProvider>
-	);
+	return <VideoWatermarkContent />;
 };
 
 export default VideoWatermark;
