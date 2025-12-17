@@ -1,10 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { fetchFile } from '@ffmpeg/util';
+import { useState, useRef } from 'react';
 import ControlPanel from './ControlPanel';
 import { SelectFile } from './SelectFile';
+import { resizeVideoWithMediaBunny, type ResizeOutputFormat } from '../utils/resizeVideoWithMediaBunny';
 
-const VideoResizerContent = () => {
+const SUPPORTED_RESIZE_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv']);
+
+function getFileExtension(filename: string): string {
+	const ext = filename.split('.').pop()?.toLowerCase();
+	return ext ?? '';
+}
+
+const VideoResizer = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'resizing'>('landing');
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [videoUrl, setVideoUrl] = useState<string>('');
@@ -21,14 +27,6 @@ const VideoResizerContent = () => {
 	
 	const videoRef = useRef<HTMLVideoElement>(null);
 
-	// Get FFmpeg context
-	const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress } = useFFmpeg();
-
-	// Update processing progress from FFmpeg context
-	useEffect(() => {
-		setProcessingProgress(progress);
-	}, [progress]);
-
 	// Handle file selection from SelectFile component
 	const handleFileSelect = (file: File | FileList | null) => {
 		// Return early if no file selected
@@ -42,12 +40,8 @@ const VideoResizerContent = () => {
 		setSelectedFile(selectedFile);
 		
 		// Detect original format from file extension
-		const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase() || '';
-		const detectedFormat = fileExtension === 'mov' ? 'mov' : 
-							  fileExtension === 'mkv' ? 'mkv' :
-							  fileExtension === 'avi' ? 'avi' :
-							  fileExtension === 'webm' ? 'webm' :
-							  'mp4'; // default to mp4
+		const fileExtension = getFileExtension(selectedFile.name);
+		const detectedFormat = SUPPORTED_RESIZE_EXTENSIONS.has(fileExtension) ? fileExtension : 'mp4';
 		
 		setOriginalFormat(detectedFormat);
 		
@@ -63,7 +57,9 @@ const VideoResizerContent = () => {
 
 	// Video file validation function
 	const validateVideoFile = (file: File): boolean => {
-		return file.type.startsWith('video/');
+		if (!file.type.startsWith('video/')) return false;
+		const ext = getFileExtension(file.name);
+		return SUPPORTED_RESIZE_EXTENSIONS.has(ext);
 	};
 
 	// Handle video metadata loaded
@@ -139,55 +135,36 @@ const VideoResizerContent = () => {
 
 	// Resize and download video
 	const resizeVideo = async () => {
-		if (!ffmpeg?.current || !ffmpegLoaded || !selectedFile) return;
+		if (!selectedFile) return;
+		if (!newWidth || !newHeight) return;
 
 		setIsProcessing(true);
-		setProgress(0);
+		setProcessingProgress(0);
 
 		try {
-			const inputExt = selectedFile.name.split('.').pop();
-			const inputFile = `input.${inputExt}`;
-			const outputFile = `${selectedFile.name.split('.')[0]}_resized.${originalFormat}`;
-
-			await ffmpeg.current.writeFile(inputFile, await fetchFile(selectedFile));
-
-			// Get MIME type for the output format
-			const getMimeType = (fmt: string): string => {
-				switch (fmt) {
-					case 'mov': return 'video/quicktime';
-					case 'mkv': return 'video/x-matroska';
-					case 'avi': return 'video/x-msvideo';
-					case 'webm': return 'video/webm';
-					default: return 'video/mp4';
-				}
-			};
-
-			// Use FFmpeg scale filter to resize
-			await ffmpeg.current.exec([
-				'-i', inputFile,
-				'-vf', `scale=${newWidth}:${newHeight}`,
-				'-c:a', 'copy', // Copy audio without re-encoding
-				outputFile
-			]);
-
-			const data = await ffmpeg.current.readFile(outputFile);
-			const blob = new Blob([data.buffer], { type: getMimeType(originalFormat) });
+			const result = await resizeVideoWithMediaBunny(
+				selectedFile,
+				{
+					width: newWidth,
+					height: newHeight,
+					outputFormat: originalFormat as ResizeOutputFormat,
+				},
+				setProcessingProgress,
+			);
 			
 			// Download file
 			const a = document.createElement('a');
-			a.href = URL.createObjectURL(blob);
-			a.download = outputFile;
+			a.href = URL.createObjectURL(result.blob);
+			a.download = result.filename;
 			a.click();
 			URL.revokeObjectURL(a.href);
 
-			// Cleanup would be handled automatically by the new FFmpeg API
-
 		} catch (error) {
 			console.error('Error resizing video:', error);
-			alert('Error processing video. Please try again.');
+			alert('Error resizing video. Please try a different file or format (MP4, MOV, WebM, MKV).');
 		} finally {
 			setIsProcessing(false);
-			setProgress(0);
+			setProcessingProgress(0);
 		}
 	};
 
@@ -209,7 +186,8 @@ const VideoResizerContent = () => {
 			<SelectFile
 				onFileSelect={handleFileSelect}
 				validateFile={validateVideoFile}
-				validationErrorMessage="Please select a valid video file."
+				validationErrorMessage="Please select a valid video file (MP4, MOV, WebM, MKV)."
+				supportText="Supports MP4, WebM, MOV, MKV"
 			/>
 		);
 	}
@@ -328,7 +306,7 @@ const VideoResizerContent = () => {
 							
 							<button 
 								onClick={resizeVideo}
-								disabled={isProcessing || !ffmpegLoaded}
+								disabled={isProcessing || !selectedFile}
 								className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
 							>
 								{isProcessing ? 
@@ -338,15 +316,14 @@ const VideoResizerContent = () => {
 												style={{ strokeDashoffset: 251.2 - (processingProgress / 100) * 251.2 }} />
 										</svg>
 										<span>Processing {processingProgress}%</span>
-									</div> :
-									ffmpegLoaded ? 
-										<div className="flex items-center gap-2">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-												<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-											</svg>
-											Download {originalFormat.toUpperCase()}
-										</div> :
-										'Loading...'
+									</div> : (
+									<div className="flex items-center gap-2">
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+											<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+										</svg>
+										Download {originalFormat.toUpperCase()}
+									</div>
+								)
 								}
 							</button>
 						</div>
@@ -376,15 +353,6 @@ const VideoResizerContent = () => {
 				</div>
 			</div>
 		</div>
-	);
-};
-
-// Main VideoResizer component with FFmpegProvider
-const VideoResizer = () => {
-	return (
-		<FfmpegProvider>
-			<VideoResizerContent />
-		</FfmpegProvider>
 	);
 };
 
