@@ -1,16 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { SelectFile } from './SelectFile';
-import { extractFrames, extractFramesInRange } from '../FFmpegUtils/extractFrames';
 import Loading from './Loading';
-import ControlPanel, { type Tab } from './ControlPanel';
 import JSZip from 'jszip';
+import {
+	extractFramesInRangeWithMediaBunny,
+	extractFramesWithMediaBunny,
+	type ExtractedFrame as ExtractedFrameData,
+	type FrameImageFormat,
+} from '../utils/extractFramesWithMediaBunny';
 
-interface ExtractedFrame {
-  time: number;
-  data: Uint8Array;
-  filename: string;
-  blobUrl?: string;
+interface ExtractedFrame extends ExtractedFrameData {
+	blobUrl?: string;
+}
+
+const SUPPORTED_EXTRACT_FRAME_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv']);
+
+function getFileExtension(filename: string): string {
+	const ext = filename.split('.').pop()?.toLowerCase();
+	return ext ?? '';
 }
 
 const FrameExtractorContent = () => {
@@ -27,21 +34,12 @@ const FrameExtractorContent = () => {
   const [startTime, setStartTime] = useState<string>('0');
   const [endTime, setEndTime] = useState<string>('1');
   const [interval, setInterval] = useState<string>('1');
-  const [frameFormat, setFrameFormat] = useState<'png' | 'jpg'>('png');
+  const [frameFormat, setFrameFormat] = useState<FrameImageFormat>('png');
   
   // Extracted frames
   const [extractedFrames, setExtractedFrames] = useState<ExtractedFrame[]>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Get FFmpeg context
-  const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress } = useFFmpeg();
-
-  // Update processing progress from FFmpeg context
-  useEffect(() => {
-    setProcessingProgress(progress);
-  }, [progress]);
 
   // Clean up blob URLs when component unmounts or frames change
   useEffect(() => {
@@ -79,7 +77,9 @@ const FrameExtractorContent = () => {
 
   // Video file validation function
   const validateVideoFile = (file: File): boolean => {
-    return file.type.startsWith('video/');
+    if (!file.type.startsWith('video/')) return false;
+    const ext = getFileExtension(file.name);
+    return SUPPORTED_EXTRACT_FRAME_EXTENSIONS.has(ext);
   };
 
   // Handle video loaded metadata
@@ -145,7 +145,7 @@ const FrameExtractorContent = () => {
 
   // Extract frames
   const handleExtractFrames = async () => {
-    if (!ffmpeg || !ffmpeg.current || !ffmpegLoaded || !selectedFile) return;
+    if (!selectedFile) return;
 
     const validation = validateTimes();
     if (!validation.valid) {
@@ -154,7 +154,7 @@ const FrameExtractorContent = () => {
     }
 
     setIsProcessing(true);
-    setProgress(0);
+    setProcessingProgress(0);
     setExtractedFrames([]); // Clear previous frames
 
     try {
@@ -162,14 +162,21 @@ const FrameExtractorContent = () => {
 
       if (extractionMode === 'single') {
         const time = parseTime(singleTime);
-        const result = await extractFrames(ffmpeg.current, selectedFile, [time], frameFormat);
+        const result = await extractFramesWithMediaBunny(selectedFile, [time], frameFormat, setProcessingProgress);
         frames = result;
       } else {
         const start = parseTime(startTime);
         const end = parseTime(endTime);
         const intervalSeconds = parseFloat(interval) || 1;
         // Use customizable interval for range extraction
-        const result = await extractFramesInRange(ffmpeg.current, selectedFile, start, end, intervalSeconds, frameFormat);
+        const result = await extractFramesInRangeWithMediaBunny(
+          selectedFile,
+          start,
+          end,
+          intervalSeconds,
+          frameFormat,
+          setProcessingProgress,
+        );
         frames = result;
       }
 
@@ -188,7 +195,7 @@ const FrameExtractorContent = () => {
       alert('Error extracting frames. Please try again.');
     } finally {
       setIsProcessing(false);
-      setProgress(0);
+      setProcessingProgress(0);
     }
   };
 
@@ -263,10 +270,6 @@ const FrameExtractorContent = () => {
     document.dispatchEvent(new CustomEvent('frameExtractorViewChange', {
       detail: { currentView: 'landing' }
     }));
-    
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   // Landing view for file selection
@@ -276,14 +279,9 @@ const FrameExtractorContent = () => {
         <SelectFile
           onFileSelect={handleFileSelect}
           validateFile={validateVideoFile}
-          validationErrorMessage="Please select a valid video file."
+          validationErrorMessage="Please select a valid video file (MP4, MOV, WebM, MKV)."
+          supportText="Supports MP4, WebM, MOV, MKV"
         />
-        
-        {!ffmpegLoaded && (
-          <div className="mt-4 text-sm text-yellow-600 text-center">
-            Loading video processing engine...
-          </div>
-        )}
       </div>
     );
   }
@@ -390,10 +388,14 @@ const FrameExtractorContent = () => {
                 /* Single Time Tab */
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="frame-extractor-single-time"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Time (seconds)
                     </label>
                     <input
+                      id="frame-extractor-single-time"
                       type="number"
                       value={singleTime}
                       onChange={(e) => setSingleTime(e.target.value)}
@@ -435,7 +437,7 @@ const FrameExtractorContent = () => {
                   {/* Extract Button */}
                   <button
                     onClick={handleExtractFrames}
-                    disabled={isProcessing || !ffmpegLoaded}
+                    disabled={isProcessing}
                     className="w-full bg-white hover:bg-gray-50 disabled:bg-gray-200 text-gray-900 border-2 border-gray-900 disabled:border-gray-400 disabled:text-gray-500 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     {isProcessing ? (
@@ -457,10 +459,14 @@ const FrameExtractorContent = () => {
                 /* Time Range Tab */
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="frame-extractor-start-time"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Start Time (seconds)
                     </label>
                     <input
+                      id="frame-extractor-start-time"
                       type="number"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
@@ -472,10 +478,14 @@ const FrameExtractorContent = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="frame-extractor-end-time"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       End Time (seconds)
                     </label>
                     <input
+                      id="frame-extractor-end-time"
                       type="number"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
@@ -487,10 +497,14 @@ const FrameExtractorContent = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="frame-extractor-interval"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Distance between frames (seconds)
                     </label>
                     <input
+                      id="frame-extractor-interval"
                       type="number"
                       value={interval}
                       onChange={(e) => setInterval(e.target.value)}
@@ -531,7 +545,7 @@ const FrameExtractorContent = () => {
                   {/* Extract Button */}
                   <button
                     onClick={handleExtractFrames}
-                    disabled={isProcessing || !ffmpegLoaded}
+                    disabled={isProcessing}
                     className="w-full bg-white hover:bg-gray-50 disabled:bg-gray-200 text-gray-900 border-2 border-gray-900 disabled:border-gray-400 disabled:text-gray-500 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     {isProcessing ? (
@@ -612,13 +626,9 @@ const FrameExtractorContent = () => {
   );
 };
 
-// Main FrameExtractor component with FFmpegProvider
+// Main FrameExtractor component
 const FrameExtractor = () => {
-  return (
-    <FfmpegProvider>
-      <FrameExtractorContent />
-    </FfmpegProvider>
-  );
+  return <FrameExtractorContent />;
 };
 
 export default FrameExtractor;

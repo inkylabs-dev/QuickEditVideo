@@ -5,20 +5,13 @@ test.describe('Frame Extractor page - E2E', () => {
     await page.goto('/extract-frame');
     
     // Check that the page loads with correct title
-    await expect(page).toHaveTitle(/Frame Extractor - Extract Frames from Video Online Free/);
+    await expect(page).toHaveTitle(/Extract Video Frame - Capture Still From Video/);
     
     // Check basic page structure
-    await expect(page.locator('h1')).toContainText('Frame Extractor');
+    await expect(page.locator('h1')).toContainText('Extract Video Frames');
     await expect(page.locator('h3', { hasText: 'Select your video' })).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=Choose file')).toBeVisible();
-    await expect(page.locator('text=Supports MP4, WebM, AVI, MOV and more')).toBeVisible();
-  });
-
-  test('should show FFmpeg loading message initially', async ({ page }) => {
-    await page.goto('/extract-frame');
-    
-    // Should show loading message when FFmpeg is not yet loaded
-    await expect(page.locator('text=Loading video processing engine...')).toBeVisible();
+    await expect(page.locator('text=Supports MP4, WebM, MOV, MKV').first()).toBeVisible();
   });
 
   test('should transition to extraction interface when video is uploaded', async ({ page }) => {
@@ -32,15 +25,15 @@ test.describe('Frame Extractor page - E2E', () => {
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
     // Wait for video to load and interface to change
-    await page.waitForSelector('video', { timeout: 15000 });
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Check that extraction interface is displayed
     await expect(page.locator('button:has-text("Extract Frames")')).toBeVisible();
-    await expect(page.locator('text=Single Time')).toBeVisible();
-    await expect(page.locator('text=Time Range')).toBeVisible();
-    await expect(page.locator('text=Frame Format')).toBeVisible();
-    await expect(page.locator('text=PNG')).toBeVisible();
-    await expect(page.locator('text=JPG')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Single Time' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Time Range' })).toBeVisible();
+    await expect(page.locator('text=Frame Format').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'PNG' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'JPG' })).toBeVisible();
   });
 
   test('should show default values correctly', async ({ page }) => {
@@ -51,23 +44,25 @@ test.describe('Frame Extractor page - E2E', () => {
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
     // Wait for interface to load
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Check default single time value
-    const timeInput = page.locator('input[type="number"]').first();
+    const timeInput = page.locator('#frame-extractor-single-time');
     await expect(timeInput).toHaveValue('0');
     
     // Switch to range mode
-    await page.click('text=Time Range');
+    await page.getByRole('button', { name: 'Time Range' }).click();
     
     // Check default range values
-    const startTimeInput = page.locator('input[placeholder="0"]');
-    const endTimeInput = page.locator('input[placeholder="1"]');
+    const startTimeInput = page.locator('#frame-extractor-start-time');
+    const endTimeInput = page.locator('#frame-extractor-end-time');
+    const intervalInput = page.locator('#frame-extractor-interval');
     await expect(startTimeInput).toHaveValue('0');
     await expect(endTimeInput).toHaveValue('1');
+    await expect(intervalInput).toHaveValue('1');
   });
 
-  test('should not show interval input in range mode', async ({ page }) => {
+  test('should show interval input in range mode', async ({ page }) => {
     await page.goto('/extract-frame');
     
     // Upload test video
@@ -75,16 +70,14 @@ test.describe('Frame Extractor page - E2E', () => {
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
     // Wait for interface to load
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Switch to range mode
-    await page.click('text=Time Range');
+    await page.getByRole('button', { name: 'Time Range' }).click();
     
-    // Should not show interval input
-    await expect(page.locator('text=Interval')).not.toBeVisible();
-    
-    // Should show explanation instead
-    await expect(page.locator('text=Frames will be extracted every 1 second in the specified range')).toBeVisible();
+    // Should show interval input
+    await expect(page.locator('text=Distance between frames (seconds)')).toBeVisible();
+    await expect(page.locator('#frame-extractor-interval')).toHaveValue('1');
   });
 
   test('should have both reset and close buttons', async ({ page }) => {
@@ -95,7 +88,7 @@ test.describe('Frame Extractor page - E2E', () => {
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
     // Wait for interface to load
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Check for both buttons
     await expect(page.locator('text=Reset')).toBeVisible();
@@ -110,7 +103,7 @@ test.describe('Frame Extractor page - E2E', () => {
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
     // Wait for interface to load
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Click reset button
     await page.click('text=Reset');
@@ -129,7 +122,7 @@ test.describe('Frame Extractor page - E2E', () => {
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
     // Wait for interface to load
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Click close button
     await page.click('[title="Close and select new file"]');
@@ -147,17 +140,17 @@ test.describe('Frame Extractor page - E2E', () => {
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
     // Wait for interface to load
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Switch to range mode
-    await page.click('text=Time Range');
+    await page.getByRole('button', { name: 'Time Range' }).click();
     
     // Set invalid range (start > end)
-    const startTimeInput = page.locator('input[placeholder="0"]');
-    const endTimeInput = page.locator('input[placeholder="1"]');
+    const startTimeInput = page.locator('#frame-extractor-start-time');
+    const endTimeInput = page.locator('#frame-extractor-end-time');
     
-    await startTimeInput.fill('5');
-    await endTimeInput.fill('3');
+    await startTimeInput.fill('0.8');
+    await endTimeInput.fill('0.2');
     
     // Listen for alert dialog
     page.on('dialog', dialog => {
@@ -176,12 +169,11 @@ test.describe('Frame Extractor page - E2E', () => {
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
-    // Wait for interface to load and FFmpeg to be ready
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
-    await page.waitForSelector('button:has-text("Extract Frames"):not([disabled])', { timeout: 30000 });
+    // Wait for interface to load
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Set time to 1 second
-    const timeInput = page.locator('input[type="number"]').first();
+    const timeInput = page.locator('#frame-extractor-single-time');
     await timeInput.fill('1');
     
     // Click extract frames button
@@ -205,19 +197,20 @@ test.describe('Frame Extractor page - E2E', () => {
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
-    // Wait for interface to load and FFmpeg to be ready
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
-    await page.waitForSelector('button:has-text("Extract Frames"):not([disabled])', { timeout: 30000 });
+    // Wait for interface to load
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Switch to range mode
-    await page.click('text=Time Range');
+    await page.getByRole('button', { name: 'Time Range' }).click();
     
-    // Set range from 0 to 2 seconds (should extract 3 frames: 0, 1, 2)
-    const startTimeInput = page.locator('input[placeholder="0"]');
-    const endTimeInput = page.locator('input[placeholder="1"]');
+    // Set range from 0 to 0.8 seconds (should extract 3 frames: 0, 0.4, 0.8)
+    const startTimeInput = page.locator('#frame-extractor-start-time');
+    const endTimeInput = page.locator('#frame-extractor-end-time');
+    const intervalInput = page.locator('#frame-extractor-interval');
     
     await startTimeInput.fill('0');
-    await endTimeInput.fill('2');
+    await endTimeInput.fill('0.8');
+    await intervalInput.fill('0.4');
     
     // Click extract frames button
     await page.click('button:has-text("Extract Frames")');
@@ -233,7 +226,7 @@ test.describe('Frame Extractor page - E2E', () => {
     const downloadButtons = page.locator('button:has-text("Download")');
     
     await expect(frameImages).toHaveCount(3);
-    await expect(downloadButtons).toHaveCount(3);
+    await expect(downloadButtons).toHaveCount(4); // includes "Download All" button
   });
 
   test('should download frame successfully', async ({ page }) => {
@@ -243,12 +236,11 @@ test.describe('Frame Extractor page - E2E', () => {
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
-    // Wait for interface to load and FFmpeg to be ready
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
-    await page.waitForSelector('button:has-text("Extract Frames"):not([disabled])', { timeout: 30000 });
+    // Wait for interface to load
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Extract frame at 1 second
-    const timeInput = page.locator('input[type="number"]').first();
+    const timeInput = page.locator('#frame-extractor-single-time');
     await timeInput.fill('1');
     
     await page.click('button:has-text("Extract Frames")');
@@ -277,17 +269,14 @@ test.describe('Frame Extractor page - E2E', () => {
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
     // Wait for interface to load
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Check that both format options are available
-    await expect(page.locator('text=PNG')).toBeVisible();
-    await expect(page.locator('text=JPG')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'PNG' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'JPG' })).toBeVisible();
     
     // Select JPG format
-    await page.click('text=JPG');
-    
-    // Wait for FFmpeg to be ready
-    await page.waitForSelector('button:has-text("Extract Frames"):not([disabled])', { timeout: 30000 });
+    await page.getByRole('button', { name: 'JPG' }).click();
     
     // Extract frame
     await page.click('button:has-text("Extract Frames")');
@@ -307,7 +296,7 @@ test.describe('Frame Extractor page - E2E', () => {
     
     // Listen for alert dialog
     page.on('dialog', dialog => {
-      expect(dialog.message()).toBe('Please select a valid video file.');
+      expect(dialog.message()).toBe('Please select a valid video file (MP4, MOV, WebM, MKV).');
       dialog.accept();
     });
     
@@ -326,9 +315,8 @@ test.describe('Frame Extractor page - E2E', () => {
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
-    // Wait for interface to load and FFmpeg to be ready
-    await page.waitForSelector('button:has-text("Extract Frames")', { timeout: 15000 });
-    await page.waitForSelector('button:has-text("Extract Frames"):not([disabled])', { timeout: 30000 });
+    // Wait for interface to load
+    await page.waitForSelector('h3:has-text("Extract Frames")', { timeout: 20000 });
     
     // Click extract frames button
     await page.click('button:has-text("Extract Frames")');
