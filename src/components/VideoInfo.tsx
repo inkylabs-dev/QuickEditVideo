@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { SelectFile } from './SelectFile';
-import { getVideoInfo, formatDuration, formatFileSize, formatBitrate, type VideoMetadata } from '../FFmpegUtils';
+import { analyzeVideoWithMediaBunny } from '../utils/analyzeVideoWithMediaBunny';
+import {
+	formatDuration,
+	formatFileSize,
+	formatBitrate,
+	type VideoMetadata,
+} from '../FFmpegUtils';
 
 const VideoInfoContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'analyzing'>('landing');
@@ -13,9 +18,6 @@ const VideoInfoContent = () => {
 	const [error, setError] = useState<string>('');
 	
 	const videoRef = useRef<HTMLVideoElement>(null);
-
-	// Get FFmpeg context
-	const { ffmpeg, isLoaded: ffmpegLoaded } = useFFmpeg();
 
 	// Handle file selection from SelectFile component
 	const handleFileSelect = (file: File | FileList | null) => {
@@ -46,9 +48,9 @@ const VideoInfoContent = () => {
 		return file.type.startsWith('video/');
 	};
 
-	// Analyze video metadata when video is loaded and FFmpeg is ready
+	// Analyze video metadata when video is loaded
 	const analyzeVideo = async () => {
-		if (!selectedFile || !ffmpegLoaded || isAnalyzing) {
+		if (!selectedFile || isAnalyzing) {
 			return;
 		}
 
@@ -56,7 +58,7 @@ const VideoInfoContent = () => {
 		setError('');
 
 		try {
-			const videoMetadata = await getVideoInfo(ffmpeg.current!, selectedFile);
+			const videoMetadata = await analyzeVideoWithMediaBunny(selectedFile);
 			setMetadata(videoMetadata);
 		} catch (error) {
 			console.error('Video analysis failed:', error);
@@ -66,12 +68,12 @@ const VideoInfoContent = () => {
 		}
 	};
 
-	// Auto-analyze when video loads and FFmpeg is ready
+	// Auto-analyze when video loads
 	useEffect(() => {
-		if (selectedFile && ffmpegLoaded && currentView === 'analyzing' && !metadata && !isAnalyzing && !error) {
+		if (selectedFile && currentView === 'analyzing' && !metadata && !isAnalyzing && !error) {
 			analyzeVideo();
 		}
-	}, [selectedFile, ffmpegLoaded, currentView, metadata, isAnalyzing, error]);
+	}, [selectedFile, currentView, metadata, isAnalyzing, error]);
 
 	// Handle video play/pause
 	const togglePlayPause = () => {
@@ -194,7 +196,7 @@ const VideoInfoContent = () => {
 								</div>
 								<button 
 									onClick={analyzeVideo}
-									disabled={!ffmpegLoaded}
+									disabled={isAnalyzing}
 									className="mt-3 px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 disabled:opacity-50"
 								>
 									Retry Analysis
@@ -340,13 +342,8 @@ const VideoInfoContent = () => {
 	);
 };
 
-// Main VideoInfo component with FFmpegProvider
 const VideoInfo = () => {
-	return (
-		<FfmpegProvider>
-			<VideoInfoContent />
-		</FfmpegProvider>
-	);
+	return <VideoInfoContent />;
 };
 
 export default VideoInfo;

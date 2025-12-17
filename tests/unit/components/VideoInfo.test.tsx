@@ -2,42 +2,52 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import VideoInfo from '../../../src/components/VideoInfo';
 
-// Mock the FFmpegCore module
-vi.mock('../../../src/FFmpegCore', () => ({
-  FfmpegProvider: ({ children }: { children: any }) => children,
-  useFFmpeg: () => ({
-    ffmpeg: {
-      current: {
-        writeFile: vi.fn(),
-        exec: vi.fn(),
-        readFile: vi.fn(),
-        deleteFile: vi.fn()
-      }
-    },
-    loaded: true,
-    loading: false,
-    isLoaded: true,
-    isLoading: false,
-    error: null,
-    message: '',
-    progress: 0,
-    load: vi.fn(),
-    writeFile: vi.fn(),
-    readFile: vi.fn(),
-    exec: vi.fn(),
-    setProgress: vi.fn()
-  })
+// Mock the MediaBunny metadata analyzer utility
+vi.mock('../../../src/utils/analyzeVideoWithMediaBunny', () => ({
+  analyzeVideoWithMediaBunny: vi.fn(),
 }));
 
-// Mock the getVideoInfo utility (the component imports via the FFmpegUtils barrel)
+// Mock the formatting helpers exported from FFmpegUtils
 vi.mock('../../../src/FFmpegUtils', () => ({
-  getVideoInfo: vi.fn(),
   formatDuration: vi.fn((duration) => (duration ? `${duration}s` : 'Unknown')),
   formatFileSize: vi.fn((size) => (size ? `${size} bytes` : 'Unknown')),
   formatBitrate: vi.fn((bitrate) => (bitrate ? `${bitrate} bps` : 'Unknown')),
 }));
 
-const { getVideoInfo } = await import('../../../src/FFmpegUtils');
+const { analyzeVideoWithMediaBunny } = await import('../../../src/utils/analyzeVideoWithMediaBunny');
+
+const mockMetadata = {
+  format: {
+    filename: 'test.mp4',
+    nb_streams: 2,
+    nb_programs: 0,
+    format_name: 'mp4',
+    format_long_name: 'MP4 (MPEG-4 Part 14)',
+    duration: '60.0',
+    size: '15000000',
+    bit_rate: '2000000'
+  },
+  videoStreams: [{
+    index: 0,
+    codec_name: 'h264',
+    codec_long_name: 'H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10',
+    codec_type: 'video',
+    width: 1920,
+    height: 1080,
+    bit_rate: '2000000',
+    avg_frame_rate: '30/1'
+  }],
+  audioStreams: [{
+    index: 1,
+    codec_name: 'aac',
+    codec_long_name: 'AAC (Advanced Audio Coding)',
+    codec_type: 'audio',
+    sample_rate: '48000',
+    channels: 2,
+    bit_rate: '128000'
+  }],
+  raw: {}
+};
 
 // Mock URL.createObjectURL and revokeObjectURL
 global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
@@ -57,6 +67,7 @@ Object.defineProperty(HTMLVideoElement.prototype, 'pause', {
 describe('VideoInfo Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (analyzeVideoWithMediaBunny as any).mockResolvedValue(mockMetadata);
   });
 
   afterEach(() => {
@@ -138,41 +149,8 @@ describe('VideoInfo Component', () => {
   });
 
   describe('Video Analysis', () => {
-    const mockMetadata = {
-      format: {
-        filename: 'test.mp4',
-        nb_streams: 2,
-        nb_programs: 0,
-        format_name: 'mp4',
-        format_long_name: 'MP4 (MPEG-4 Part 14)',
-        duration: '60.0',
-        size: '15000000',
-        bit_rate: '2000000'
-      },
-      videoStreams: [{
-        index: 0,
-        codec_name: 'h264',
-        codec_long_name: 'H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10',
-        codec_type: 'video',
-        width: 1920,
-        height: 1080,
-        bit_rate: '2000000',
-        avg_frame_rate: '30/1'
-      }],
-      audioStreams: [{
-        index: 1,
-        codec_name: 'aac',
-        codec_long_name: 'AAC (Advanced Audio Coding)',
-        codec_type: 'audio',
-        sample_rate: '48000',
-        channels: 2,
-        bit_rate: '128000'
-      }],
-      raw: {}
-    };
-
     it('displays metadata when analysis completes successfully', async () => {
-      (getVideoInfo as any).mockResolvedValue(mockMetadata);
+      (analyzeVideoWithMediaBunny as any).mockResolvedValue(mockMetadata);
       
       render(<VideoInfo />);
       
@@ -200,7 +178,7 @@ describe('VideoInfo Component', () => {
     });
 
     it('displays error when analysis fails', async () => {
-      (getVideoInfo as any).mockRejectedValue(new Error('Analysis failed'));
+      (analyzeVideoWithMediaBunny as any).mockRejectedValue(new Error('Analysis failed'));
       
       render(<VideoInfo />);
       
@@ -219,7 +197,7 @@ describe('VideoInfo Component', () => {
 
     it('shows retry functionality in error state', async () => {
       // This test verifies the retry button exists and can be clicked when there's an error
-      (getVideoInfo as any).mockRejectedValue(new Error('Analysis failed'));
+      (analyzeVideoWithMediaBunny as any).mockRejectedValue(new Error('Analysis failed'));
       
       render(<VideoInfo />);
       
@@ -241,7 +219,7 @@ describe('VideoInfo Component', () => {
       fireEvent.click(retryButton);
       
       // Verify the function was called (any number is fine, we're just testing the button works)
-      expect(getVideoInfo).toHaveBeenCalled();
+      expect(analyzeVideoWithMediaBunny).toHaveBeenCalled();
     });
   });
 
@@ -381,36 +359,28 @@ describe('VideoInfo Component', () => {
     });
   });
 
-  describe('Integration with FFmpeg Context', () => {
-    it('renders without FFmpeg context errors', () => {
-      // This test verifies that our mocks are working correctly
+  describe('MediaBunny integration', () => {
+    it('renders the landing view without errors', () => {
       render(<VideoInfo />);
-      
-      // Should render the landing view without any FFmpeg loading errors
+
       expect(screen.getByText('Select your video')).toBeInTheDocument();
-      
-      // Should not show any error messages
-      expect(screen.queryByText(/Failed to load video processor/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/Loading video processor/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Analysis failed/i)).not.toBeInTheDocument();
     });
 
-    it('waits for FFmpeg to be loaded before analysis', async () => {
-      // This test will use a different mock setup directly in the component
-      // Since we can't easily re-mock within a test, we'll test the behavior differently
+    it('calls the analyzer when a file is dropped', async () => {
+      (analyzeVideoWithMediaBunny as any).mockResolvedValue(mockMetadata);
       render(<VideoInfo />);
-      
+
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       const mockFile = new File(['mock content'], 'test.mp4', { type: 'video/mp4' });
-      
+
       fireEvent.change(fileInput, { target: { files: [mockFile] } });
-      
+
       await waitFor(() => {
         expect(screen.getByText('Video Information')).toBeInTheDocument();
       });
-      
-      // Should not call getVideoInfo when FFmpeg is not loaded would be tested by integration tests
-      // For unit test, we verify the component renders correctly
-      expect(getVideoInfo).toHaveBeenCalled();
+
+      expect(analyzeVideoWithMediaBunny).toHaveBeenCalled();
     });
   });
 
