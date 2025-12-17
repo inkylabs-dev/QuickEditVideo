@@ -4,8 +4,8 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "node scripts/copy-ffmpeg.js && astro dev",
-    "build": "npm run build:packages && node scripts/copy-ffmpeg.js && astro build",
-    "build:packages": "npm run build --workspace=@quickeditvideo/kittentts",
+    "build": "pnpm run build:packages && node scripts/copy-ffmpeg.js && astro build",
+    "build:packages": "pnpm --filter @quickeditvideo/kittentts run build && pnpm --filter @quickeditvideo/editor run build",
     "preview": "astro preview",
     "astro": "astro",
     "copy-ffmpeg": "node scripts/copy-ffmpeg.js",
@@ -28,6 +28,7 @@
     "@mediabunny/mp3-encoder": "^1.9.0",
     "@preact/signals": "^2.2.1",
     "@quickeditvideo/kittentts": "workspace:*",
+    "@quickeditvideo/editor": "workspace:*",
     "@tailwindcss/typography": "^0.5.16",
     "astro": "^5.12.9",
     "jszip": "^3.10.1",

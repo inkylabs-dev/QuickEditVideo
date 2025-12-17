@@ -1,7 +1,7 @@
 {
-  "name": "@quickeditvideo/kittentts",
+  "name": "@quickeditvideo/editor",
   "version": "0.1.0",
-  "description": "KittenTTS JavaScript implementation for browser-based text-to-speech synthesis",
+  "description": "Quick Editor Video: Editor",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -19,41 +19,27 @@
     "README.md"
   ],
   "scripts": {
-    "download-model": "pnpm exec node scripts/download-model.js",
-    "build": "pnpm run build:code",
-    "build:with-download": "pnpm run download-model && tsc && rollup -c",
-    "build:code": "tsc && rollup -c",
+    "build": "tsc && rollup -c",
     "dev": "tsc --watch",
     "clean": "rm -rf dist assets",
-    "prepublishOnly": "pnpm run clean && pnpm run build:with-download"
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "keywords": [
-    "tts",
-    "text-to-speech",
-    "kitten",
-    "onnx",
-    "speech-synthesis",
-    "browser",
-    "webassembly"
+    "video-editing",
+    "browser"
   ],
   "author": "QuickEditVideo",
   "license": "MIT",
   "dependencies": {
-    "onnxruntime-web": ">=1.22.0",
-    "phonemizer": "^1.2.1"
   },
   "devDependencies": {
-    "@huggingface/hub": "^2.4.1",
     "@rollup/plugin-typescript": "^12.1.1",
-    "@tensorflow/tfjs-node": "^4.22.0",
     "@types/node": "^22.10.2",
     "rollup": "^4.28.1",
     "rollup-plugin-copy": "^3.5.0",
-    "tfjs-npy-node": "^0.4.1",
     "tslib": "^2.8.1",
     "typescript": "^5.7.2"
   },
   "peerDependencies": {
-    "onnxruntime-web": ">=1.22.0"
   }
 }
