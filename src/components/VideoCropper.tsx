@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties, DragEvent, MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } from 'react';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { fetchFile } from '@ffmpeg/util';
 import ControlPanel from './ControlPanel';
 import { SelectFile } from './SelectFile';
+import { cropVideoWithMediaBunny, type CropOutputFormat } from '../utils/cropVideoWithMediaBunny';
 
 interface AspectRatio {
   label: string;
@@ -61,6 +60,13 @@ const calculateScale = (currentWidth: number, currentHeight: number, originalWid
   return Math.round(Math.min(widthScale, heightScale));
 };
 
+const SUPPORTED_CROP_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv']);
+
+function getFileExtension(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase();
+  return ext ?? '';
+}
+
 const VideoCropperContent = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'cropping'>('landing');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -68,6 +74,7 @@ const VideoCropperContent = () => {
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [originalWidth, setOriginalWidth] = useState<number>(0);
   const [originalHeight, setOriginalHeight] = useState<number>(0);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   
   // Crop settings
   const [aspectRatio, setAspectRatio] = useState<string>('freeform');
@@ -75,13 +82,12 @@ const VideoCropperContent = () => {
   const [cropHeight, setCropHeight] = useState<number>(0);
   const [cropLeft, setCropLeft] = useState<number>(0);
   const [cropTop, setCropTop] = useState<number>(0);
-  const [rotation, setRotation] = useState<number>(0);
   const [scale, setScale] = useState<number>(100);
   
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [originalFormat, setOriginalFormat] = useState<string>('mp4');
+  const [originalFormat, setOriginalFormat] = useState<CropOutputFormat>('mp4');
   const [overlayKey, setOverlayKey] = useState<number>(0);
   
   // Drag state
@@ -96,7 +102,6 @@ const VideoCropperContent = () => {
   });
   
   const videoRef = useRef<HTMLVideoElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Aspect ratio options
   const aspectRatios: AspectRatio[] = [
@@ -112,14 +117,6 @@ const VideoCropperContent = () => {
     { label: '2:3', value: '2:3', ratio: 2/3 }
   ];
 
-  // Get FFmpeg context
-  const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress } = useFFmpeg();
-
-  // Update processing progress from FFmpeg context
-  useEffect(() => {
-    setProcessingProgress(progress);
-  }, [progress]);
-
   // Update overlay when crop values change
   useEffect(() => {
     setOverlayKey(prev => prev + 1);
@@ -128,6 +125,7 @@ const VideoCropperContent = () => {
   // Handle file selection from SelectFile component
   const handleFileSelect = (file: File | FileList | null) => {
     // Return early if no file selected
+    setErrorMessage('');
     if (!file) {
       return;
     }
@@ -138,14 +136,8 @@ const VideoCropperContent = () => {
     setSelectedFile(selectedFile);
     
     // Detect original format from file extension
-    const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase() || 'mp4';
-    const detectedFormat = fileExtension === 'mov' ? 'mov' : 
-                          fileExtension === 'mkv' ? 'mkv' :
-                          fileExtension === 'avi' ? 'avi' :
-                          fileExtension === 'webm' ? 'webm' :
-                          'mp4'; // default to mp4
-    
-    setOriginalFormat(detectedFormat);
+    const fileExtension = getFileExtension(selectedFile.name);
+    setOriginalFormat((SUPPORTED_CROP_EXTENSIONS.has(fileExtension) ? fileExtension : 'mp4') as CropOutputFormat);
     
     const url = URL.createObjectURL(selectedFile);
     setVideoUrl(url);
@@ -159,7 +151,9 @@ const VideoCropperContent = () => {
 
   // Video file validation function
   const validateVideoFile = (file: File): boolean => {
-    return file.type.startsWith('video/');
+    if (!file.type.startsWith('video/')) return false;
+    const ext = getFileExtension(file.name);
+    return SUPPORTED_CROP_EXTENSIONS.has(ext);
   };
 
   // Handle video metadata loaded
@@ -293,7 +287,6 @@ const VideoCropperContent = () => {
     setCropLeft(Math.round((originalWidth - initialWidth) / 2));
     setCropTop(Math.round((originalHeight - initialHeight) / 2));
     setAspectRatio('freeform');
-    setRotation(0);
     setScale(100);
   };
 
@@ -308,18 +301,13 @@ const VideoCropperContent = () => {
 
   // Crop and download video
   const cropVideo = async () => {
-    if (!ffmpeg?.current || !ffmpegLoaded || !selectedFile) return;
+    if (!selectedFile) return;
 
     setIsProcessing(true);
-    setProgress(0);
+    setProcessingProgress(0);
+    setErrorMessage('');
 
     try {
-      const inputExt = selectedFile.name.split('.').pop();
-      const inputFile = `input.${inputExt}`;
-      const outputFile = `${selectedFile.name.split('.')[0]}_cropped.${originalFormat}`;
-
-      await ffmpeg.current.writeFile(inputFile, await fetchFile(selectedFile));
-
       // Validate crop parameters
       if (cropWidth <= 0 || cropHeight <= 0) {
         throw new Error('Invalid crop dimensions');
@@ -330,99 +318,34 @@ const VideoCropperContent = () => {
       if (cropLeft + cropWidth > originalWidth || cropTop + cropHeight > originalHeight) {
         throw new Error('Crop area exceeds video boundaries');
       }
-
-      // Get MIME type for the output format
-      const getMimeType = (fmt: string): string => {
-        switch (fmt) {
-          case 'mov': return 'video/quicktime';
-          case 'mkv': return 'video/x-matroska';
-          case 'avi': return 'video/x-msvideo';
-          case 'webm': return 'video/webm';
-          default: return 'video/mp4';
-        }
-      };
-
-      // Build FFmpeg command for rotated crop area
-      let filterChain = '';
-      
-      if (rotation !== 0) {
-        // For rotated crop: rotate video first, then crop from rotated video
-        // This extracts the tilted area as it appears in the original video
-        const radians = (rotation * Math.PI) / 180;
-        
-        // Calculate video center
-        const centerX = originalWidth / 2;
-        const centerY = originalHeight / 2;
-        
-        // Calculate crop area center  
-        const cropCenterX = cropLeft + cropWidth / 2;
-        const cropCenterY = cropTop + cropHeight / 2;
-        
-        // Transform crop coordinates for rotated video
-        // When we rotate the video, the crop area position changes
-        const cos = Math.cos(-radians); // negative because we rotate video opposite direction
-        const sin = Math.sin(-radians);
-        
-        // Translate to origin, rotate, translate back
-        const relativeX = cropCenterX - centerX;
-        const relativeY = cropCenterY - centerY;
-        
-        const rotatedX = relativeX * cos - relativeY * sin;
-        const rotatedY = relativeX * sin + relativeY * cos;
-        
-        const newCropCenterX = rotatedX + centerX;
-        const newCropCenterY = rotatedY + centerY;
-        
-        // Calculate new crop position (top-left corner)
-        const newCropLeft = Math.round(newCropCenterX - cropWidth / 2);
-        const newCropTop = Math.round(newCropCenterY - cropHeight / 2);
-        
-        // Rotate the entire video first
-        filterChain = `rotate=${radians}:fillcolor=black:out_w=${originalWidth}:out_h=${originalHeight}`;
-        
-        // Then crop from the rotated video using transformed coordinates
-        filterChain += `,crop=${cropWidth}:${cropHeight}:${newCropLeft}:${newCropTop}`;
-      } else {
-        // No rotation, just crop normally
-        filterChain = `crop=${cropWidth}:${cropHeight}:${cropLeft}:${cropTop}`;
-      }
-
-      try {
-        await ffmpeg.current.exec([
-          '-i', inputFile,
-          '-vf', filterChain,
-          '-c:a', 'copy', // Copy audio without re-encoding
-          outputFile
-        ]);
-      } catch (ffmpegError) {
-        console.error('FFmpeg processing error:', ffmpegError);
-        
-        // Try without audio copy if that was the issue
-        await ffmpeg.current.exec([
-          '-i', inputFile,
-          '-vf', filterChain,
-          outputFile
-        ]);
-      }
-
-      const data = await ffmpeg.current.readFile(outputFile);
-      const blob = new Blob([data.buffer], { type: getMimeType(originalFormat) });
+      const result = await cropVideoWithMediaBunny(
+        selectedFile,
+        {
+          outputFormat: originalFormat,
+          crop: {
+            left: cropLeft,
+            top: cropTop,
+            width: cropWidth,
+            height: cropHeight,
+          },
+        },
+        setProcessingProgress,
+      );
       
       // Download file
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = outputFile;
+      a.href = URL.createObjectURL(result.blob);
+      a.download = result.filename;
       a.click();
       URL.revokeObjectURL(a.href);
 
-      // Cleanup would be handled automatically by the new FFmpeg API
-
     } catch (error) {
       console.error('Error cropping video:', error);
-      alert('Error processing video. Please try again.');
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      setErrorMessage(message);
     } finally {
       setIsProcessing(false);
-      setProgress(0);
+      setProcessingProgress(0);
     }
   };
 
@@ -837,16 +760,29 @@ const VideoCropperContent = () => {
 
   if (currentView === 'landing') {
     return (
-      <SelectFile
-        onFileSelect={handleFileSelect}
-        validateFile={validateVideoFile}
-        validationErrorMessage="Please select a valid video file."
-      />
+      <div className="space-y-3">
+        {errorMessage ? (
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {errorMessage}
+          </div>
+        ) : null}
+        <SelectFile
+          onFileSelect={handleFileSelect}
+          validateFile={validateVideoFile}
+          validationErrorMessage="Please select a valid video file (MP4, MOV, WebM, MKV)."
+          supportText="Supports MP4, WebM, MOV, MKV"
+        />
+      </div>
     );
   }
 
   return (
     <div className="space-y-6 p-4">
+      {errorMessage ? (
+        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {errorMessage}
+        </div>
+      ) : null}
       {/* Video Player and Controls Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Video Section */}
@@ -856,10 +792,6 @@ const VideoCropperContent = () => {
               <video 
                 ref={videoRef}
                 className="w-full h-full object-contain" 
-                style={{
-                  transform: `rotate(${rotation}deg)`,
-                  transformOrigin: 'center center'
-                }}
                 preload="metadata"
                 src={videoUrl}
                 onLoadedMetadata={handleVideoLoaded}
@@ -1021,24 +953,6 @@ const VideoCropperContent = () => {
               </div>
             </div>
 
-            {/* Rotation Control */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Rotation</label>
-              <div className="flex items-center gap-3">
-                <input 
-                  type="range" 
-                  min="-180" 
-                  max="180" 
-                  step="1"
-                  value={rotation}
-                  onInput={(e) => setRotation(parseInt(e.target.value))}
-                  onChange={(e) => setRotation(parseInt(e.target.value))}
-                  className="flex-1 h-2 bg-gray-300 rounded appearance-none outline-none range-slider"
-                />
-                <div className="text-sm font-medium text-gray-900 min-w-[50px]">{rotation}°</div>
-              </div>
-            </div>
-
             {/* Scale Control */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Scale</label>
@@ -1132,7 +1046,7 @@ const VideoCropperContent = () => {
               
               <button 
                 onClick={cropVideo}
-                disabled={isProcessing || !ffmpegLoaded}
+                disabled={isProcessing}
                 className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
               >
                 {isProcessing ? (
@@ -1146,15 +1060,13 @@ const VideoCropperContent = () => {
                     </svg>
                     <span>Processing {processingProgress}%</span>
                   </div>
-                ) : ffmpegLoaded ? (
+                ) : (
                   <div className="flex items-center gap-2">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
                     </svg>
                     Download {originalFormat.toUpperCase()}
                   </div>
-                ) : (
-                  'Loading...'
                 )}
               </button>
             </div>
@@ -1181,8 +1093,8 @@ const VideoCropperContent = () => {
               <div className="font-medium text-gray-900">{cropLeft}, {cropTop}</div>
             </div>
             <div className="text-center">
-              <div className="text-gray-600 mb-1">Rotation</div>
-              <div className="font-medium text-gray-900">{rotation}°</div>
+              <div className="text-gray-600 mb-1">Format</div>
+              <div className="font-medium text-gray-900">{originalFormat.toUpperCase()}</div>
             </div>
           </div>
         </div>
@@ -1191,13 +1103,9 @@ const VideoCropperContent = () => {
   );
 };
 
-// Main VideoCropper component with FFmpegProvider
+// Main VideoCropper component
 const VideoCropper = () => {
-  return (
-    <FfmpegProvider>
-      <VideoCropperContent />
-    </FfmpegProvider>
-  );
+  return <VideoCropperContent />;
 };
 
 export default VideoCropper;

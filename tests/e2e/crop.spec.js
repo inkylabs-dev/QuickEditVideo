@@ -26,8 +26,8 @@ test.describe('Crop page - E2E', () => {
     // Wait for video to load and interface to change
     await page.waitForSelector('video', { timeout: 15000 });
     
-    // Wait for FFmpeg to load (indicated by download button being enabled)
-    await page.waitForSelector('button:has-text("Download MP4"):not([disabled])', { timeout: 30000 });
+    // Wait for download button to be enabled
+    await page.waitForSelector('button:has-text(\"Download MP4\"):not([disabled])', { timeout: 30000 });
     
     // Check that cropping interface is displayed
     await expect(page.locator('h4:has-text("Set Crop Area")')).toBeVisible();

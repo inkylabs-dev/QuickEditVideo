@@ -3,30 +3,11 @@ import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/re
 import { act } from 'react-dom/test-utils';
 import VideoCropper from '../../../src/components/VideoCropper.tsx';
 
-// Mock the FFmpeg core module
-vi.mock('../../../src/FFmpegCore', () => ({
-  FfmpegProvider: ({ children }: { children: any }) => children,
-  useFFmpeg: () => ({
-    ffmpeg: { current: {
-      load: vi.fn().mockResolvedValue(undefined),
-      writeFile: vi.fn().mockResolvedValue(undefined),
-      readFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
-      exec: vi.fn().mockResolvedValue(undefined),
-      on: vi.fn(),
-      off: vi.fn(),
-    }},
-    loaded: true,
-    loading: false,
-    isLoaded: true,
-    isLoading: false,
-    error: null,
-    message: '',
-    progress: 0,
-    load: vi.fn().mockResolvedValue(undefined),
-    writeFile: vi.fn().mockResolvedValue(undefined),
-    readFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
-    exec: vi.fn().mockResolvedValue(undefined),
-    setProgress: vi.fn(),
+vi.mock('../../../src/utils/cropVideoWithMediaBunny', () => ({
+  cropVideoWithMediaBunny: vi.fn().mockResolvedValue({
+    blob: new Blob([new Uint8Array([1, 2, 3])], { type: 'video/mp4' }),
+    filename: 'test_cropped.mp4',
+    mimeType: 'video/mp4',
   }),
 }));
 
@@ -50,7 +31,7 @@ describe('VideoCropper Component', () => {
       expect(screen.getByText('Select your video')).toBeInTheDocument();
       expect(screen.getByText('Choose file')).toBeInTheDocument();
       expect(screen.getByText('Drop a video file here or click to browse')).toBeInTheDocument();
-      expect(screen.getByText('Supports MP4, WebM, AVI, MOV and more')).toBeInTheDocument();
+      expect(screen.getByText('Supports MP4, WebM, MOV, MKV')).toBeInTheDocument();
     });
 
     it('has proper file input configuration', () => {
@@ -106,7 +87,7 @@ describe('VideoCropper Component', () => {
       });
       
       // Should show alert and stay in landing view
-      expect(mockAlert).toHaveBeenCalledWith('Please select a valid video file.');
+      expect(mockAlert).toHaveBeenCalledWith('Please select a valid video file (MP4, MOV, WebM, MKV).');
       expect(screen.getByText('Select your video')).toBeInTheDocument();
     });
 
@@ -128,9 +109,8 @@ describe('VideoCropper Component', () => {
       const testCases = [
         { filename: 'test.mov', expectedFormat: 'mov' },
         { filename: 'test.mkv', expectedFormat: 'mkv' },
-        { filename: 'test.avi', expectedFormat: 'avi' },
         { filename: 'test.webm', expectedFormat: 'webm' },
-        { filename: 'test.unknown', expectedFormat: 'mp4' }, // default
+        { filename: 'test.mp4', expectedFormat: 'mp4' },
       ];
 
       for (const { filename } of testCases) {
@@ -149,6 +129,23 @@ describe('VideoCropper Component', () => {
         expect(container).toBeInTheDocument();
         unmount();
       }
+    });
+
+    it('rejects unsupported output extensions', async () => {
+      const mockAlert = vi.fn();
+      global.alert = mockAlert;
+
+      const { container } = render(<VideoCropper />);
+      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+      const videoFile = createTestVideoFile('test.avi', 'video/mp4');
+
+      await act(async () => {
+        fireEvent.change(fileInput, { target: { files: [videoFile] } });
+      });
+
+      expect(mockAlert).toHaveBeenCalledWith('Please select a valid video file (MP4, MOV, WebM, MKV).');
+      expect(screen.getByText('Select your video')).toBeInTheDocument();
     });
   });
 
@@ -177,7 +174,6 @@ describe('VideoCropper Component', () => {
       await waitFor(() => {
         expect(screen.getByText('Crop Controls')).toBeInTheDocument();
         expect(screen.getByText('Aspect Ratio')).toBeInTheDocument();
-        expect(screen.getAllByText('Rotation')).toHaveLength(2); // Label and info section
         expect(screen.getByText('Scale')).toBeInTheDocument();
       });
     });
@@ -194,7 +190,7 @@ describe('VideoCropper Component', () => {
         expect(screen.getByText('Original')).toBeInTheDocument();
         expect(screen.getByText('Crop Size')).toBeInTheDocument();
         expect(screen.getByText('Position')).toBeInTheDocument();
-        expect(screen.getAllByText('Rotation')).toHaveLength(2); // Label and info section
+        expect(screen.getByText('Format')).toBeInTheDocument();
       });
     });
   });
@@ -260,19 +256,6 @@ describe('VideoCropper Component', () => {
           fireEvent.loadedMetadata(video);
         });
       }
-    });
-
-    it('handles rotation control', async () => {
-      await waitFor(() => {
-        const rotationSliders = screen.getAllByDisplayValue('0');
-        const rotationSlider = rotationSliders.find(el => el.getAttribute('type') === 'range' && el.getAttribute('min') === '-180');
-        expect(rotationSlider).toBeInTheDocument();
-        
-        if (rotationSlider) {
-          fireEvent.change(rotationSlider, { target: { value: '45' } });
-          expect(rotationSlider).toBeInTheDocument();
-        }
-      });
     });
 
     it('handles scale control', async () => {
@@ -421,9 +404,8 @@ describe('VideoCropper Component', () => {
       }
     });
 
-    it('shows download button when FFmpeg is loaded', async () => {
+    it('shows download button', async () => {
       await waitFor(() => {
-        // The mocked FFmpeg should show the download button as enabled
         expect(screen.getByText(/Download/)).toBeInTheDocument();
       });
     });
