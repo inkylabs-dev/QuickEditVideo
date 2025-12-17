@@ -111,8 +111,15 @@ describe('VideoFlipper Component', () => {
         expect(screen.getByText('Flip Controls')).toBeInTheDocument();
       });
 
-      // Should show download button (not dependent on FFmpeg loading)
-      expect(screen.getByText(/Download/i)).toBeInTheDocument();
+      // Should show download button with format (e.g., "Download MP4")
+      await waitFor(() => {
+        // Look for button with text that includes both "Download" and "MP4"
+        const buttons = screen.getAllByRole('button');
+        const downloadButton = buttons.find(button =>
+          button.textContent?.includes('Download') && button.textContent?.includes('MP4')
+        );
+        expect(downloadButton).toBeDefined();
+      });
     });
   });
 });
