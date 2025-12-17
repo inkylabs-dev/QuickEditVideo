@@ -3,37 +3,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import VideoSpeedComponent from '../../../src/components/VideoSpeed';
 
-// Mock the FFmpeg core module
-vi.mock('../../../src/FFmpegCore', () => ({
-  FfmpegProvider: ({ children }: { children: any }) => children,
-  useFFmpeg: () => ({
-    ffmpeg: {
-      current: {
-        writeFile: vi.fn().mockResolvedValue(undefined),
-        readFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
-        exec: vi.fn().mockResolvedValue(undefined),
-      }
-    },
-    isLoaded: true,
-    progress: 0,
-    setProgress: vi.fn(),
+// Mock the changeVideoSpeedWithMediaBunny utility
+vi.mock('../../../src/utils/changeVideoSpeedWithMediaBunny', () => ({
+  changeVideoSpeedWithMediaBunny: vi.fn().mockResolvedValue({
+    blob: new Blob(['fake video data'], { type: 'video/mp4' }),
+    filename: 'test_2x_fast.mp4',
+    mimeType: 'video/mp4',
   }),
-}));
-
-// Mock @ffmpeg/util
-vi.mock('@ffmpeg/util', () => ({
-  fetchFile: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
 }));
 
 // Mock URL.createObjectURL and revokeObjectURL
 global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url');
 global.URL.revokeObjectURL = vi.fn();
-
-// Mock FFmpegUtils
-vi.mock('../../../src/FFmpegUtils', () => ({
-  changeVideoSpeed: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4])),
-  downloadVideo: vi.fn(),
-}));
 
 // Mock document.createElement for download functionality
 const mockDownloadClick = vi.fn();
@@ -83,8 +64,8 @@ describe('VideoSpeed Component', () => {
 
     it('displays supported formats information', () => {
       render(<VideoSpeedComponent />);
-      
-      expect(screen.getByText('Supports MP4, WebM, AVI, MOV and more')).toBeInTheDocument();
+
+      expect(screen.getByText('Supports MP4, WebM, MOV, MKV')).toBeInTheDocument();
     });
 
     it('has file input with correct attributes', () => {
@@ -147,7 +128,7 @@ describe('VideoSpeed Component', () => {
     it('displays speed slider with correct attributes', () => {
       const speedSlider = screen.getByRole('slider');
       expect(speedSlider).toBeInTheDocument();
-      expect(speedSlider).toHaveAttribute('min', '0.01');
+      expect(speedSlider).toHaveAttribute('min', '0.25');
       expect(speedSlider).toHaveAttribute('max', '4');
       expect(speedSlider).toHaveAttribute('step', '0.01');
     });
@@ -171,8 +152,8 @@ describe('VideoSpeed Component', () => {
       });
     });
 
-    it('shows download button with speed indication', () => {
-      expect(screen.getByText('Download 1x Speed Video')).toBeInTheDocument();
+    it('shows download button with format', () => {
+      expect(screen.getByText('Download MP4')).toBeInTheDocument();
     });
 
     it('shows play preview button', () => {
@@ -206,34 +187,15 @@ describe('VideoSpeed Component', () => {
       expect(screen.getByText('Speed: 2x')).toBeInTheDocument();
     });
 
-    it('updates download button text when speed changes', async () => {
+    it('keeps download button text when speed changes', async () => {
       const speedSlider = screen.getByRole('slider');
-      
+
       await act(async () => {
         fireEvent.change(speedSlider, { target: { value: '2' } });
       });
-      
-      expect(screen.getByText('Download 2x Speed Video')).toBeInTheDocument();
-    });
 
-    it('shows interpolation option for slow speeds', async () => {
-      const speedSlider = screen.getByRole('slider');
-      
-      await act(async () => {
-        fireEvent.change(speedSlider, { target: { value: '0.5' } });
-      });
-      
-      expect(screen.getByText('Use motion interpolation')).toBeInTheDocument();
-    });
-
-    it('hides interpolation option for normal/fast speeds', async () => {
-      const speedSlider = screen.getByRole('slider');
-      
-      await act(async () => {
-        fireEvent.change(speedSlider, { target: { value: '1.5' } });
-      });
-      
-      expect(screen.queryByText('Use motion interpolation')).not.toBeInTheDocument();
+      // Download button text should remain format-based, not speed-based
+      expect(screen.getByText('Download MP4')).toBeInTheDocument();
     });
   });
 

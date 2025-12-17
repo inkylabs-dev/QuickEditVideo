@@ -1,30 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import ControlPanel from './ControlPanel';
 import { SelectFile } from './SelectFile';
-import { changeVideoSpeed, downloadVideo } from '../FFmpegUtils';
+import { changeVideoSpeedWithMediaBunny, type SpeedOutputFormat } from '../utils/changeVideoSpeedWithMediaBunny';
 
-const VideoSpeedContent = () => {
+const SUPPORTED_SPEED_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv']);
+
+function getFileExtension(filename: string): string {
+	const ext = filename.split('.').pop()?.toLowerCase();
+	return ext ?? '';
+}
+
+const VideoSpeed = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'editing'>('landing');
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [videoUrl, setVideoUrl] = useState<string>('');
 	const [videoDuration, setVideoDuration] = useState<number>(0);
 	const [speed, setSpeed] = useState<number>(1.0);
-	const [useInterpolation, setUseInterpolation] = useState<boolean>(false);
 	const [isProcessing, setIsProcessing] = useState<boolean>(false);
 	const [processingProgress, setProcessingProgress] = useState<number>(0);
 	const [isPlaying, setIsPlaying] = useState<boolean>(false);
-	const [originalFormat, setOriginalFormat] = useState<string>('mp4');
-	
+	const [originalFormat, setOriginalFormat] = useState<SpeedOutputFormat>('mp4');
+	const [errorMessage, setErrorMessage] = useState<string>('');
+
 	const videoRef = useRef<HTMLVideoElement>(null);
-
-	// Get FFmpeg context
-	const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress } = useFFmpeg();
-
-	// Update processing progress from FFmpeg context
-	useEffect(() => {
-		setProcessingProgress(progress);
-	}, [progress]);
 
 	// Update video playback rate when speed changes
 	useEffect(() => {
@@ -35,39 +33,41 @@ const VideoSpeedContent = () => {
 
 	// Handle file selection from SelectFile component
 	const handleFileSelect = (file: File | FileList | null) => {
+		setErrorMessage('');
+
 		// Return early if no file selected
 		if (!file) {
 			return;
 		}
-		
-		// SelectFile ensures file is validated before calling this
+
 		const selectedFile = file as File;
-		
+
+		if (!selectedFile.type.startsWith('video/')) {
+			setErrorMessage('This file is not a video.');
+			return;
+		}
+
 		setSelectedFile(selectedFile);
-		
+
 		// Detect original format from file extension
-		const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase() || '';
-		const detectedFormat = fileExtension === 'mov' ? 'mov' : 
-							  fileExtension === 'mkv' ? 'mkv' :
-							  fileExtension === 'avi' ? 'avi' :
-							  fileExtension === 'webm' ? 'webm' :
-							  'mp4'; // default to mp4
-		
+		const fileExtension = getFileExtension(selectedFile.name);
+		if (!SUPPORTED_SPEED_EXTENSIONS.has(fileExtension)) {
+			setSelectedFile(null);
+			setErrorMessage(`This format is not supported: .${fileExtension || '(unknown)'}. Try MP4, MOV, WebM, or MKV.`);
+			return;
+		}
+		const detectedFormat = fileExtension as SpeedOutputFormat;
+
 		setOriginalFormat(detectedFormat);
-		
+
 		const url = URL.createObjectURL(selectedFile);
 		setVideoUrl(url);
 		setCurrentView('editing');
-		
+
 		// Dispatch event to notify page about view change
 		document.dispatchEvent(new CustomEvent('videoSpeedViewChange', {
 			detail: { currentView: 'editing' }
 		}));
-	};
-
-	// Video file validation function
-	const validateVideoFile = (file: File): boolean => {
-		return file.type.startsWith('video/');
 	};
 
 	// Handle video metadata loaded
@@ -98,36 +98,46 @@ const VideoSpeedContent = () => {
 
 	// Process video with speed change
 	const processVideoSpeed = async () => {
-		if (!selectedFile || !ffmpegLoaded || !ffmpeg.current) return;
-		
+		if (!selectedFile) return;
+
 		setIsProcessing(true);
-		setProgress(0);
-		
+		setProcessingProgress(0);
+		setErrorMessage('');
+
 		try {
-			// Change video speed using FFmpeg
-			const outputData = await changeVideoSpeed(ffmpeg.current, selectedFile, speed, useInterpolation);
-			
-			// Generate filename with speed indication
-			const nameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
-			const speedText = speed < 1 ? `${formatSpeed(speed)}x_slow` : `${formatSpeed(speed)}x_fast`;
-			const downloadName = `${nameWithoutExt}_${speedText}.${originalFormat}`;
-			
-			// Download processed video
-			downloadVideo(outputData, downloadName);
-			
+			const result = await changeVideoSpeedWithMediaBunny(
+				selectedFile,
+				{
+					outputFormat: originalFormat,
+					speed: speed,
+				},
+				(progress) => {
+					setProcessingProgress(Math.max(0, Math.min(100, Math.round(progress))));
+				}
+			);
+
+			// Download file
+			const a = document.createElement('a');
+			a.href = URL.createObjectURL(result.blob);
+			a.download = result.filename;
+			a.click();
+			URL.revokeObjectURL(a.href);
+
 		} catch (error) {
 			console.error('Error processing video:', error);
-			alert('Error processing video. Please try again.');
+			const message = error instanceof Error ? error.message : 'Unknown error';
+			setErrorMessage(message.includes('Unsupported output format')
+				? 'This format is not supported. Try MP4, MOV, WebM, or MKV.'
+				: 'Error processing video. Please try again.');
 		} finally {
 			setIsProcessing(false);
-			setProgress(0);
+			setProcessingProgress(0);
 		}
 	};
 
 	// Reset speed to normal
 	const resetSpeed = () => {
 		setSpeed(1.0);
-		setUseInterpolation(false);
 	};
 
 	// Close and return to landing view
@@ -157,16 +167,27 @@ const VideoSpeedContent = () => {
 
 	if (currentView === 'landing') {
 		return (
-			<SelectFile
-				onFileSelect={handleFileSelect}
-				validateFile={validateVideoFile}
-				validationErrorMessage="Please select a valid video file."
-			/>
+			<div className="space-y-3">
+				{errorMessage ? (
+					<div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+						{errorMessage}
+					</div>
+				) : null}
+				<SelectFile
+					onFileSelect={handleFileSelect}
+					supportText="Supports MP4, WebM, MOV, MKV"
+				/>
+			</div>
 		);
 	}
 
 	return (
 		<div className="space-y-6 p-4">
+			{errorMessage ? (
+				<div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+					{errorMessage}
+				</div>
+			) : null}
 			{/* Video Player and Controls Row */}
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				{/* Video Section */}
@@ -226,20 +247,20 @@ const VideoSpeedContent = () => {
 								<div className="flex items-center gap-2">
 									<input
 										type="number"
-										min="0.01"
+										min="0.25"
 										max="4"
 										step="0.01"
 										value={speed}
 										onChange={(e) => {
 											const value = parseFloat((e.target as HTMLInputElement).value);
-											if (!isNaN(value) && value >= 0.01 && value <= 4) {
+											if (!isNaN(value) && value >= 0.25 && value <= 4) {
 												setSpeed(value);
 											}
 										}}
 										onBlur={(e) => {
 											const value = parseFloat((e.target as HTMLInputElement).value);
-											if (isNaN(value) || value < 0.01) {
-												setSpeed(0.01);
+											if (isNaN(value) || value < 0.25) {
+												setSpeed(0.25);
 											} else if (value > 4) {
 												setSpeed(4);
 											}
@@ -250,10 +271,10 @@ const VideoSpeedContent = () => {
 									<span className="text-sm text-gray-500">x speed</span>
 								</div>
 							</div>
-							
+
 							<input
 								type="range"
-								min="0.01"
+								min="0.25"
 								max="4"
 								step="0.01"
 								value={speed}
@@ -261,10 +282,9 @@ const VideoSpeedContent = () => {
 								className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
 							/>
 							<div className="relative text-xs text-gray-500 mt-1">
-								<span className="absolute left-0">0.01x</span>
-								<span className="absolute" style={{ left: '6%' }}>0.25x</span>
-								<span className="absolute" style={{ left: '24.8%' }}>1x</span>
-								<span className="absolute" style={{ left: '49.9%' }}>2x</span>
+								<span className="absolute left-0">0.25x</span>
+								<span className="absolute" style={{ left: '20%' }}>1x</span>
+								<span className="absolute" style={{ left: '46.6%' }}>2x</span>
 								<span className="absolute right-0">4x</span>
 							</div>
 						</div>
@@ -289,25 +309,6 @@ const VideoSpeedContent = () => {
 							</div>
 						</div>
 
-						{/* Interpolation Toggle (only show for slow speeds) */}
-						{speed < 1 && (
-							<div className="border-t border-gray-200 pt-4">
-								<label className="flex items-center">
-									<input
-										type="checkbox"
-										checked={useInterpolation}
-										onChange={(e) => setUseInterpolation((e.target as HTMLInputElement).checked)}
-										className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-									/>
-									<span className="ml-2 text-sm text-gray-700">
-										Use motion interpolation
-									</span>
-								</label>
-								<p className="text-xs text-gray-500 mt-1">
-									Creates smoother slow motion by generating intermediate frames (increases processing time)
-								</p>
-							</div>
-						)}
 					</div>
 
 					{/* Play/Pause Button */}
@@ -327,12 +328,12 @@ const VideoSpeedContent = () => {
 					</button>
 
 					{/* Process Button */}
-					<button 
+					<button
 						onClick={processVideoSpeed}
-						disabled={isProcessing || !ffmpegLoaded}
+						disabled={isProcessing || !selectedFile || Boolean(errorMessage)}
 						className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
 					>
-						{isProcessing ? 
+						{isProcessing ?
 							<div className="flex items-center gap-2">
 								<svg className="progress-ring w-4 h-4" viewBox="0 0 24 24">
 									<circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"
@@ -340,14 +341,12 @@ const VideoSpeedContent = () => {
 								</svg>
 								<span>Processing {processingProgress}%</span>
 							</div> :
-							ffmpegLoaded ? 
-								<div className="flex items-center gap-2">
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-										<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-									</svg>
-									<span>Download {formatSpeed(speed)}x Speed Video</span>
-								</div> :
-								<span>Loading FFmpeg...</span>
+							<div className="flex items-center gap-2">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+								</svg>
+								<span>Download {originalFormat.toUpperCase()}</span>
+							</div>
 						}
 					</button>
 
@@ -356,14 +355,6 @@ const VideoSpeedContent = () => {
 				</div>
 			</div>
 		</div>
-	);
-};
-
-const VideoSpeed = () => {
-	return (
-		<FfmpegProvider>
-			<VideoSpeedContent />
-		</FfmpegProvider>
 	);
 };
 

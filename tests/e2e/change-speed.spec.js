@@ -26,8 +26,8 @@ test.describe('Change Speed page - E2E', () => {
     // Wait for video to load and interface to change
     await page.waitForSelector('video', { timeout: 15000 });
     
-    // Wait for FFmpeg to load (indicated by download button being enabled)
-    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 30000 });
+    // Wait for download button to be enabled (MediaBunny doesn't require loading)
+    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 10000 });
     
     // Check that speed control interface is displayed
     await expect(page.locator('text=Speed Controls')).toBeVisible();
@@ -43,14 +43,14 @@ test.describe('Change Speed page - E2E', () => {
     await speedSlider.fill('2');
     await expect(page.locator('text=Speed: 2x')).toBeVisible();
     
-    // Check that download button text updates
-    await expect(page.locator('button:has-text("Download 2x Speed Video")')).toBeVisible();
-    
+    // Check that download button is visible
+    await expect(page.locator('button:has-text("Download MP4")')).toBeVisible();
+
     // Set up download listener
     const downloadPromise = page.waitForEvent('download');
-    
+
     // Click download button
-    await page.click('button:has-text("Download 2x Speed Video")');
+    await page.click('button:has-text("Download MP4")');
     
     // Wait for download
     const download = await downloadPromise;
@@ -78,7 +78,7 @@ test.describe('Change Speed page - E2E', () => {
     await page.waitForSelector('text=Speed Controls', { timeout: 15000 });
     
     // Check that speed presets are displayed
-    const presets = ['0.25x', '0.5x', '0.75x', '1x', '1.25x', '1.5x', '2x', '3x', '4x'];
+    const presets = ['0.25x', '0.5x', '0.75x', '1x', '1.25x', '1.5x', '2x', '4x'];
     
     for (const preset of presets) {
       await expect(page.locator(`button:has-text("${preset}")`)).toBeVisible();
@@ -93,37 +93,26 @@ test.describe('Change Speed page - E2E', () => {
     await expect(page.locator('text=Speed: 4x')).toBeVisible();
   });
 
-  test('should show interpolation option for slow speeds', async ({ page }) => {
+  test('should allow changing speed with slider and presets', async ({ page }) => {
     await page.goto('/change-speed');
-    
+
     // Upload test video
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
-    
+
     // Wait for interface to load
     await page.waitForSelector('text=Speed Controls', { timeout: 15000 });
-    
-    // Initially at 1x speed, interpolation should not be visible
-    await expect(page.locator('text=Use motion interpolation')).not.toBeVisible();
-    
+
+    // Initially at 1x speed
+    await expect(page.locator('text=Speed: 1x')).toBeVisible();
+
     // Change to slow speed (0.5x)
     await page.click('button:has-text("0.5x")');
-    
-    // Interpolation option should now be visible
-    await expect(page.locator('text=Use motion interpolation')).toBeVisible();
-    
-    // Check that interpolation checkbox is present and unchecked
-    const interpolationCheckbox = page.locator('input[type="checkbox"]');
-    await expect(interpolationCheckbox).toBeVisible();
-    await expect(interpolationCheckbox).not.toBeChecked();
-    
-    // Toggle interpolation
-    await interpolationCheckbox.check();
-    await expect(interpolationCheckbox).toBeChecked();
-    
-    // Change to fast speed (2x) - interpolation should disappear
+    await expect(page.locator('text=Speed: 0.5x')).toBeVisible();
+
+    // Change to fast speed (2x)
     await page.click('button:has-text("2x")');
-    await expect(page.locator('text=Use motion interpolation')).not.toBeVisible();
+    await expect(page.locator('text=Speed: 2x')).toBeVisible();
   });
 
   test('should show correct final duration based on speed', async ({ page }) => {
@@ -229,9 +218,9 @@ test.describe('Change Speed page - E2E', () => {
       // Check that filename is displayed
       await expect(page.locator('text=colors.webm')).toBeVisible();
       
-      // Change speed and verify download button updates
+      // Change speed and verify download button is visible
       await page.click('button:has-text("2x")');
-      await expect(page.locator('button:has-text("Download 2x Speed Video")')).toBeVisible();
+      await expect(page.locator('button:has-text("Download")')).toBeVisible();
       
     } catch (error) {
       // If WebM test file doesn't exist, that's okay for this test
@@ -239,18 +228,17 @@ test.describe('Change Speed page - E2E', () => {
     }
   });
 
-  test('should show loading state initially', async ({ page }) => {
+  test('should show download button when video is loaded', async ({ page }) => {
     await page.goto('/change-speed');
-    
+
     // Upload test video
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
-    
+
     // Wait for interface to load
     await page.waitForSelector('text=Speed Controls', { timeout: 15000 });
-    
-    // Initially, FFmpeg might be loading
-    // The download button should eventually become enabled
-    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 30000 });
+
+    // MediaBunny doesn't require loading - button should be enabled immediately
+    await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 10000 });
   });
 });
