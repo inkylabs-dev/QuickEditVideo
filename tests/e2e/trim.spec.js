@@ -6,10 +6,10 @@ test.describe('Trim page - E2E', () => {
     await page.goto('/trim');
     
     // Check that the page loads with correct title
-    await expect(page).toHaveTitle(/Video Trimmer - Cut & Trim Videos Online Free/);
+    await expect(page).toHaveTitle(/Trim MP4 Online Free.*QuickEditVideo/);
     
     // Check basic page structure
-    await expect(page.locator('h1')).toContainText('Video Trimmer');
+    await expect(page.locator('h1')).toContainText('Trim Video');
     await expect(page.locator('text=Select your video')).toBeVisible({ timeout: 10000 });
   });
 
@@ -26,7 +26,7 @@ test.describe('Trim page - E2E', () => {
     // Wait for video to load and interface to change
     await page.waitForSelector('video', { timeout: 15000 });
     
-    // Wait for FFmpeg to load (indicated by download button being enabled)
+    // Wait for the download button to be enabled
     await page.waitForSelector('button:has-text("Download"):not([disabled])', { timeout: 30000 });
     
     // Check that trimming interface is displayed

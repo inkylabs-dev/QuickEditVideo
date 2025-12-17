@@ -1,10 +1,59 @@
-import { useState, useEffect, useRef } from 'react';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { fetchFile } from '@ffmpeg/util';
+import { useState, useRef } from 'react';
+import {
+	ALL_FORMATS,
+	BlobSource,
+	BufferTarget,
+	Conversion,
+	Input,
+	MkvOutputFormat,
+	MovOutputFormat,
+	Mp4OutputFormat,
+	Output,
+	WebMOutputFormat,
+} from 'mediabunny';
 import ControlPanel from './ControlPanel';
 import { SelectFile } from './SelectFile';
 
-const VideoTrimmerContent = () => {
+const SUPPORTED_TRIM_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv']);
+
+function getFileExtension(filename: string): string {
+	const ext = filename.split('.').pop()?.toLowerCase();
+	return ext ?? '';
+}
+
+function stripFileExtension(filename: string): string {
+	return filename.replace(/\.[^/.]+$/, '');
+}
+
+function getOutputFormatForExtension(extension: string): {
+	format: Mp4OutputFormat | MovOutputFormat | WebMOutputFormat | MkvOutputFormat;
+	fileExtension: string;
+	mimeType: string;
+} {
+	switch (extension) {
+		case 'mov': {
+			const format = new MovOutputFormat();
+			return { format, fileExtension: 'mov', mimeType: 'video/quicktime' };
+		}
+		case 'webm': {
+			const format = new WebMOutputFormat();
+			return { format, fileExtension: 'webm', mimeType: 'video/webm' };
+		}
+		case 'mkv': {
+			const format = new MkvOutputFormat();
+			return { format, fileExtension: 'mkv', mimeType: 'video/x-matroska' };
+		}
+		case 'mp4': {
+			const format = new Mp4OutputFormat();
+			return { format, fileExtension: 'mp4', mimeType: 'video/mp4' };
+		}
+		default: {
+			throw new Error(`Unsupported output format: ${extension}`);
+		}
+	}
+}
+
+const VideoTrimmer = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'trimming'>('landing');
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [videoUrl, setVideoUrl] = useState<string>('');
@@ -17,37 +66,37 @@ const VideoTrimmerContent = () => {
 	const [processingProgress, setProcessingProgress] = useState<number>(0);
 	const [isPlaying, setIsPlaying] = useState<boolean>(false);
 	const [originalFormat, setOriginalFormat] = useState<string>('mp4');
+	const [errorMessage, setErrorMessage] = useState<string>('');
 	
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const timelineRef = useRef<HTMLDivElement>(null);
 
-	// Get FFmpeg context
-	const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress } = useFFmpeg();
-
-	// Update processing progress from FFmpeg context
-	useEffect(() => {
-		setProcessingProgress(progress);
-	}, [progress]);
-
 	// Handle file selection from SelectFile component
 	const handleFileSelect = (file: File | FileList | null) => {
+		setErrorMessage('');
+
 		// Return early if no file selected
 		if (!file) {
 			return;
 		}
 		
-		// SelectFile ensures file is validated before calling this
 		const selectedFile = file as File;
 		
+		if (!selectedFile.type.startsWith('video/')) {
+			setErrorMessage('This file is not a video.');
+			return;
+		}
+
 		setSelectedFile(selectedFile);
 		
 		// Detect original format from file extension
-		const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase() || '';
-		const detectedFormat = fileExtension === 'mov' ? 'mov' : 
-							  fileExtension === 'mkv' ? 'mkv' :
-							  fileExtension === 'avi' ? 'avi' :
-							  fileExtension === 'webm' ? 'webm' :
-							  'mp4'; // default to mp4
+		const fileExtension = getFileExtension(selectedFile.name);
+		if (!SUPPORTED_TRIM_EXTENSIONS.has(fileExtension)) {
+			setSelectedFile(null);
+			setErrorMessage(`This format is not supported: .${fileExtension || '(unknown)'}. Try MP4, MOV, WebM, or MKV.`);
+			return;
+		}
+		const detectedFormat = fileExtension;
 		
 		setOriginalFormat(detectedFormat);
 		
@@ -59,11 +108,6 @@ const VideoTrimmerContent = () => {
 		document.dispatchEvent(new CustomEvent('videoTrimmerViewChange', {
 			detail: { currentView: 'trimming' }
 		}));
-	};
-
-	// Video file validation function
-	const validateVideoFile = (file: File): boolean => {
-		return file.type.startsWith('video/');
 	};
 
 	// Handle video metadata loaded
@@ -137,58 +181,44 @@ const VideoTrimmerContent = () => {
 
 	// Trim and download video
 	const trimVideo = async () => {
-		if (!ffmpeg?.current || !ffmpegLoaded || !selectedFile) return;
-
+		if (!selectedFile) return;
+		if (endTime <= startTime) return;
 		setIsProcessing(true);
-		setProgress(0);
+		setProcessingProgress(0);
+		setErrorMessage('');
 
 		try {
-			const inputExt = selectedFile.name.split('.').pop();
-			const inputFile = `input.${inputExt}`;
-			const outputFile = `${selectedFile.name.split('.')[0]}_trimmed.${originalFormat}`;
+			const { format, fileExtension, mimeType } = getOutputFormatForExtension(originalFormat);
+			const outputFile = `${stripFileExtension(selectedFile.name)}_trimmed.${fileExtension}`;
 
-			await ffmpeg.current.writeFile(inputFile, await fetchFile(selectedFile));
+			const input = new Input({
+				source: new BlobSource(selectedFile),
+				formats: ALL_FORMATS,
+			});
 
-			// Get MIME type for the output format
-			const getMimeType = (fmt: string): string => {
-				switch (fmt) {
-					case 'mov': return 'video/quicktime';
-					case 'mkv': return 'video/x-matroska';
-					case 'avi': return 'video/x-msvideo';
-					case 'webm': return 'video/webm';
-					default: return 'video/mp4';
-				}
+			const output = new Output({
+				format,
+				target: new BufferTarget(),
+			});
+
+			const conversion = await Conversion.init({
+				input,
+				output,
+				trim: { start: startTime, end: endTime },
+			});
+
+			conversion.onProgress = (progress) => {
+				setProcessingProgress(Math.max(0, Math.min(100, Math.round(progress * 100))));
 			};
 
-			// Use re-encoding for short clips (<4s) to ensure frame accuracy
-			// Use stream copy for longer clips for better performance
-			const duration = endTime - startTime;
-			const shouldReencode = duration < 4;
+			await conversion.execute();
 
-			if (shouldReencode) {
-				await ffmpeg.current.exec([
-					'-ss', startTime.toString(),
-					'-i', inputFile,
-					'-t', duration.toString(),
-					'-avoid_negative_ts', 'make_zero',
-					'-c:v', 'libx264',
-					'-preset', 'ultrafast',
-					'-c:a', 'aac',
-					outputFile
-				]);
-			} else {
-				await ffmpeg.current.exec([
-					'-i', inputFile,
-					'-ss', startTime.toString(),
-					'-t', duration.toString(),
-					'-c', 'copy',
-					outputFile
-				]);
+			const buffer = (output.target as BufferTarget).buffer;
+			if (!buffer) {
+				throw new Error('No output buffer generated from MediaBunny');
 			}
 
-			const data = await ffmpeg.current.readFile(outputFile);
-			const uint8Data = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
-			const blob = new Blob([uint8Data], { type: getMimeType(originalFormat) });
+			const blob = new Blob([buffer], { type: mimeType });
 			
 			// Download file
 			const a = document.createElement('a');
@@ -197,14 +227,15 @@ const VideoTrimmerContent = () => {
 			a.click();
 			URL.revokeObjectURL(a.href);
 
-			// Cleanup would be handled automatically by the new FFmpeg API
-
 		} catch (error) {
 			console.error('Error trimming video:', error);
-			alert('Error processing video. Please try again.');
+			const message = error instanceof Error ? error.message : 'Unknown error';
+			setErrorMessage(message.includes('Unsupported output format')
+				? 'This format is not supported. Try MP4, MOV, WebM, or MKV.'
+				: 'Error trimming video. Please try again.');
 		} finally {
 			setIsProcessing(false);
-			setProgress(0);
+			setProcessingProgress(0);
 		}
 	};
 
@@ -240,16 +271,27 @@ const VideoTrimmerContent = () => {
 
 	if (currentView === 'landing') {
 		return (
-			<SelectFile
-				onFileSelect={handleFileSelect}
-				validateFile={validateVideoFile}
-				validationErrorMessage="Please select a valid video file."
-			/>
+			<div className="space-y-3">
+				{errorMessage ? (
+					<div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+						{errorMessage}
+					</div>
+				) : null}
+				<SelectFile
+					onFileSelect={handleFileSelect}
+					supportText="Supports MP4, WebM, MOV, MKV"
+				/>
+			</div>
 		);
 	}
 
 	return (
 		<div className="space-y-6 p-4">
+			{errorMessage ? (
+				<div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+					{errorMessage}
+				</div>
+			) : null}
 			{/* Video Player and Controls Row */}
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				{/* Video Section */}
@@ -388,7 +430,7 @@ const VideoTrimmerContent = () => {
 						
 						<button 
 							onClick={trimVideo}
-							disabled={isProcessing || !ffmpegLoaded}
+							disabled={isProcessing || !selectedFile || endTime <= startTime || Boolean(errorMessage)}
 							className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
 						>
 							{isProcessing ? 
@@ -399,14 +441,12 @@ const VideoTrimmerContent = () => {
 									</svg>
 									<span>Processing {processingProgress}%</span>
 								</div> :
-								ffmpegLoaded ? 
-									<div className="flex items-center gap-2">
-										<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-											<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-										</svg>
-										Download {originalFormat.toUpperCase()}
-									</div> :
-									'Loading...'
+								<div className="flex items-center gap-2">
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+										<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+									</svg>
+									Download {originalFormat.toUpperCase()}
+								</div>
 							}
 						</button>
 					</div>
@@ -461,15 +501,6 @@ const VideoTrimmerContent = () => {
 				</div>
 			</div>
 		</div>
-	);
-};
-
-// Main VideoTrimmer component with FFmpegProvider
-const VideoTrimmer = () => {
-	return (
-		<FfmpegProvider>
-			<VideoTrimmerContent />
-		</FfmpegProvider>
 	);
 };
 
