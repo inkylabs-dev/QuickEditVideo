@@ -6,10 +6,10 @@ test.describe('Merge page - E2E', () => {
     await page.goto('/merge');
     
     // Check that the page loads with correct title
-    await expect(page).toHaveTitle(/Video Merger - Merge Multiple Videos Online Free/);
+    await expect(page).toHaveTitle(/Merge Videos - Combine Video Files.*QuickEditVideo/);
     
     // Check basic page structure
-    await expect(page.locator('h1')).toContainText('Video Merger');
+    await expect(page.locator('h1')).toContainText('Merge Videos');
     await expect(page.locator('text=Select your videos')).toBeVisible({ timeout: 10000 });
   });
 
@@ -31,9 +31,6 @@ test.describe('Merge page - E2E', () => {
     
     // For now, let's test merging with just one video (which should still work)
     // since the "Add more videos" workflow seems complex
-    
-    // Wait for FFmpeg to load and the download button to be enabled
-    await page.waitForTimeout(15000);
     
     // Navigate to settings tab to access the download button
     const settingsTab = page.locator('button').filter({ hasText: 'Settings' });

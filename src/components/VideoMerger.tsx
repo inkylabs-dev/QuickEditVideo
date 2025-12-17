@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { fetchFile } from '@ffmpeg/util';
 import { SelectFile } from './SelectFile';
+import { mergeVideosWithMediaBunny } from '../utils/mergeVideosWithMediaBunny';
 
 interface VideoClip {
 	id: string;
@@ -30,7 +29,7 @@ const CONSTANTS = {
 		MAX_HEIGHT: 2160,
 		MIN_DURATION: 0.1,
 	},
-	SUPPORTED_FORMATS: ['mp4', 'mov', 'mkv', 'avi', 'webm'],
+	SUPPORTED_FORMATS: ['mp4', 'mov', 'mkv', 'webm'],
 } as const;
 
 // Utility functions
@@ -316,14 +315,6 @@ const VideoMergerContent = () => {
 	const preloadVideoRef = useRef<HTMLVideoElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	// Get FFmpeg context
-	const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress } = useFFmpeg();
-
-	// Update processing progress from FFmpeg context
-	useEffect(() => {
-		setProcessingState(prev => ({ ...prev, progress }));
-	}, [progress]);
-
 	const createClipFromFile = async (file: File): Promise<VideoClip> => {
 		const { video, url } = await createVideoElement(file);
 		const thumbnail = await generateThumbnail(url);
@@ -369,7 +360,9 @@ const VideoMergerContent = () => {
 
 	// Video file validation function
 	const validateVideoFile = (file: File): boolean => {
-		return file.type.startsWith('video/');
+		if (!file.type.startsWith('video/')) return false;
+		const extension = file.name.split('.').pop()?.toLowerCase() || '';
+		return CONSTANTS.SUPPORTED_FORMATS.includes(extension as any);
 	};
 
 	// Handle drag and drop reordering with react-dnd
@@ -492,36 +485,8 @@ const VideoMergerContent = () => {
 		}, 50);
 	};
 
-	const processClip = async (clip: VideoClip, index: number, outputDimensions: { width: number; height: number }) => {
-		if (!ffmpeg?.current) throw new Error('FFmpeg not available');
-		
-		const inputExt = clip.file.name.split('.').pop();
-		const inputFile = `input_${index}.${inputExt}`;
-		const outputFile = `processed_${index}.mp4`;
-		
-		// Write input file
-		await ffmpeg.current.writeFile(inputFile, await fetchFile(clip.file));
-		
-		const needsLooping = clip.customDuration > clip.duration;
-		const args = [
-			...(needsLooping ? ['-stream_loop', (Math.ceil(clip.customDuration / clip.duration) - 1).toString()] : []),
-			'-i', inputFile,
-			'-t', clip.customDuration.toString(),
-			'-vf', `scale=${outputDimensions.width}:${outputDimensions.height}`,
-			'-c:v', 'libx264',
-			'-c:a', 'aac',
-			'-y',
-			outputFile
-		];
-		
-		await ffmpeg.current.exec(args);
-		// Cleanup is handled automatically by the new FFmpeg API
-		
-		return outputFile;
-	};
-
 	const mergeVideos = async () => {
-		if (!ffmpeg?.current || !ffmpegLoaded || !clips.length) return;
+		if (!clips.length) return;
 
 		setProcessingState({ isProcessing: true, progress: 0 });
 
@@ -529,32 +494,16 @@ const VideoMergerContent = () => {
 			const outputDimensions = dimensionsState.useCustom 
 				? { width: dimensionsState.width, height: dimensionsState.height }
 				: { width: clips[0].width, height: clips[0].height };
-			
-			const totalSteps = clips.length + 1;
-			const processedFiles: string[] = [];
-			
-			// Process each clip
-			for (let i = 0; i < clips.length; i++) {
-				const progress = Math.round((i / totalSteps) * 100);
-				setProcessingState(prev => ({ ...prev, progress }));
-				
-				const outputFile = await processClip(clips[i], i, outputDimensions);
-				processedFiles.push(outputFile);
-				
-				const completedProgress = Math.round(((i + 1) / totalSteps) * 100);
-				setProcessingState(prev => ({ ...prev, progress: completedProgress }));
-			}
-			
-			// Create and execute concatenation
-			const concatContent = processedFiles.map(file => `file '${file}'`).join('\n');
-			await ffmpeg.current.writeFile('concat.txt', new TextEncoder().encode(concatContent));
-			
-			await ffmpeg.current.exec(['-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', 'merged_video.mp4']);
-			setProcessingState(prev => ({ ...prev, progress: 100 }));
-			
-			// Download result
-			const data = await ffmpeg.current.readFile('merged_video.mp4');
-			const blob = new Blob([data.buffer], { type: 'video/mp4' });
+
+			const blob = await mergeVideosWithMediaBunny(
+				clips.map((clip) => ({
+					file: clip.file,
+					duration: clip.duration,
+					customDuration: clip.customDuration,
+				})),
+				outputDimensions,
+				(progress) => setProcessingState((prev) => ({ ...prev, progress })),
+			);
 			const url = URL.createObjectURL(blob);
 			
 			const link = document.createElement('a');
@@ -562,9 +511,7 @@ const VideoMergerContent = () => {
 			link.download = 'merged_video.mp4';
 			link.click();
 			URL.revokeObjectURL(url);
-			
-			// Cleanup would be handled automatically by the new FFmpeg API
-			
+
 		} catch (error) {
 			console.error('Error merging videos:', error);
 			alert('Error processing videos. Please try again.');
@@ -579,7 +526,8 @@ const VideoMergerContent = () => {
 				multiple={true}
 				onFileSelect={handleFileSelect}
 				validateFile={validateVideoFile}
-				validationErrorMessage="Please select valid video files."
+				validationErrorMessage="Please select valid video files (MP4, MOV, WebM, MKV)."
+				supportText="Supports MP4, WebM, MOV, MKV"
 				title="Select your videos"
 				description="Drop multiple video files here or click to browse"
 				buttonText="Choose files"
@@ -824,7 +772,7 @@ const VideoMergerContent = () => {
 										
 										<button 
 											onClick={mergeVideos}
-											disabled={processingState.isProcessing || !ffmpegLoaded || clips.length === 0}
+											disabled={processingState.isProcessing || clips.length === 0}
 											className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
 										>
 											{processingState.isProcessing ? 
@@ -834,15 +782,14 @@ const VideoMergerContent = () => {
 															style={{ strokeDashoffset: 251.2 - (processingState.progress / 100) * 251.2 }} />
 													</svg>
 													<span>Processing {processingState.progress}%</span>
-												</div> :
-												ffmpegLoaded ? 
-													<div className="flex items-center gap-2">
-														<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-															<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-														</svg>
-														Download MP4
-													</div> :
-													'Loading...'
+												</div> : (
+												<div className="flex items-center gap-2">
+													<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+														<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+													</svg>
+													Download MP4
+												</div>
+											)
 											}
 										</button>
 									</div>
@@ -876,13 +823,6 @@ const VideoMergerContent = () => {
 	);
 };
 
-// Main VideoMerger component with FFmpegProvider
-const VideoMerger = () => {
-	return (
-		<FfmpegProvider>
-			<VideoMergerContent />
-		</FfmpegProvider>
-	);
-};
+const VideoMerger = () => <VideoMergerContent />;
 
 export default VideoMerger;

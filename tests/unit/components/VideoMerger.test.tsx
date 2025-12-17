@@ -13,24 +13,9 @@ vi.mock('react-dnd-html5-backend', () => ({
   HTML5Backend: {},
 }));
 
-// Mock FFmpeg
-vi.mock('../../../src/FFmpegCore', () => ({
-  FfmpegProvider: ({ children }: { children: any }) => children,
-  useFFmpeg: () => ({
-    ffmpeg: { current: null },
-    loaded: false,
-    loading: false,
-    isLoaded: false,
-    isLoading: false,
-    error: null,
-    message: '',
-    progress: 0,
-  }),
-}));
-
-// Mock @ffmpeg/util
-vi.mock('@ffmpeg/util', () => ({
-  fetchFile: vi.fn(),
+// Mock MediaBunny merge helper to avoid depending on WebCodecs in unit tests.
+vi.mock('../../../src/utils/mergeVideosWithMediaBunny', () => ({
+  mergeVideosWithMediaBunny: vi.fn(),
 }));
 
 // Simple download mocking for testing
@@ -54,7 +39,7 @@ describe('VideoMerger Component', () => {
     it('displays supported formats information', () => {
       render(<VideoMerger />);
       
-      expect(screen.getByText('Supports MP4, WebM, AVI, MOV and more')).toBeInTheDocument();
+      expect(screen.getByText('Supports MP4, WebM, MOV, MKV')).toBeInTheDocument();
     });
 
     it('has file input with correct attributes', () => {
