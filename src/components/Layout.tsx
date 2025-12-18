@@ -1,10 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { getCategories } from '../constants/tools';
-import NavTools from './NavTools';
 import Adsterra from './Adsterra';
 import Breadcrumbs, { type BreadcrumbItem } from './Breadcrumbs';
 
@@ -46,8 +44,6 @@ const Layout = ({
   breadcrumbItems,
   blogPost = false,
 }: LayoutProps & { children: React.ReactNode }) => {
-  const categories = useMemo(() => getCategories(), []);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const currentUrl = canonicalUrl || DEFAULT_CANONICAL;
   const resolvedBreadcrumbItems = useMemo<BreadcrumbItem[] | undefined>(() => {
     if (breadcrumbItems && breadcrumbItems.length > 0) {
@@ -105,7 +101,9 @@ const Layout = ({
               </Link>
 
               <div className="hidden lg:flex gap-6 items-center">
-                <NavTools />
+                <Link href="/#all-tools" className="text-gray-700 hover:text-gray-900 font-medium">
+                  Tools
+                </Link>
                 <Link href="/blog" className="text-gray-700 hover:text-gray-900 font-medium">
                   Blog
                 </Link>
@@ -120,45 +118,16 @@ const Layout = ({
               </div>
 
               <div className="lg:hidden flex items-center gap-4">
-                <button
-                  className="p-2 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  onClick={() => setMobileMenuOpen((prev) => !prev)}
-                  aria-expanded={mobileMenuOpen}
-                >
-                  <span className="sr-only">Open tools menu</span>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
-                  </svg>
-                </button>
+                <Link href="/#all-tools" className="text-gray-700 hover:text-gray-900 font-medium">
+                  Tools
+                </Link>
                 <Link href="/blog" className="text-gray-700 hover:text-gray-900 font-medium">
                   Blog
                 </Link>
               </div>
-            </nav>
-          </div>
+          </nav>
+        </div>
 
-          {mobileMenuOpen && (
-            <div className="lg:hidden bg-white border-t border-gray-100 shadow-inner">
-              <div className="px-4 py-3 space-y-6">
-                {categories.map((category) => (
-                  <div key={category.id}>
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">{category.name}</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {category.tools.map((tool) => (
-                        <Link
-                          key={tool.id}
-                          href={tool.url}
-                          className="block p-2 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          {tool.shortName || tool.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </header>
 
         {shouldShowBreadcrumbs && resolvedBreadcrumbItems && (
