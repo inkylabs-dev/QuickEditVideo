@@ -19,12 +19,16 @@ test.describe('Convert to MOV page - E2E', () => {
     await fileInput.setInputFiles('tests/e2e/static/colors.mp4');
     
     await page.waitForSelector('video', { timeout: 15000 });
-    await page.waitForSelector('button:has-text("Download as MOV"):not([disabled])', { timeout: 30000 });
-    
+    // Conversion interface should be displayed
+    await expect(page.getByTestId('converting-to-label')).toBeVisible();
     await expect(page.getByTestId('target-format', { hasText: 'MOV' })).toBeVisible();
-    
+
+    const downloadButton = page.getByRole('button', { name: 'Download as MOV' });
+    await expect(downloadButton).toBeVisible();
+    await expect(downloadButton).toBeEnabled({ timeout: 60000 });
+
     const downloadPromise = page.waitForEvent('download');
-    await page.click('button:has-text("Download as MOV")');
+    await downloadButton.click();
     
     const download = await downloadPromise;
     const downloadPath = await download.path();

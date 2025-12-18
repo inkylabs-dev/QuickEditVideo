@@ -26,18 +26,19 @@ test.describe('Convert to MP4 page - E2E', () => {
     // Wait for video to load and interface to change
     await page.waitForSelector('video', { timeout: 15000 });
     
-    // Wait for FFmpeg to load (indicated by download button being enabled)
-    await page.waitForSelector('button:has-text("Download as MP4"):not([disabled])', { timeout: 30000 });
-    
-    // Check that conversion interface is displayed
+    // Wait for the conversion UI to render
     await expect(page.getByTestId('converting-to-label')).toBeVisible();
     await expect(page.getByTestId('target-format', { hasText: 'MP4' })).toBeVisible();
-    
+
+    const downloadButton = page.getByRole('button', { name: 'Download as MP4' });
+    await expect(downloadButton).toBeVisible();
+    await expect(downloadButton).toBeEnabled({ timeout: 60000 });
+
     // Set up download listener
     const downloadPromise = page.waitForEvent('download');
-    
+
     // Click download button
-    await page.click('button:has-text("Download as MP4")');
+    await downloadButton.click();
     
     // Wait for download to complete
     const download = await downloadPromise;

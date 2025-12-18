@@ -2,7 +2,7 @@ import {
 	ALL_FORMATS,
 	AudioSample,
 	AudioSampleSink,
-	AudioSampleSource,
+	AudioBufferSource,
 	BlobSource,
 	BufferTarget,
 	Input,
@@ -81,35 +81,33 @@ async function resampleAndRemixAudioBuffer(
 	return await context.startRendering();
 }
 
-async function addNormalizedAudioSample(options: {
-	audioSource: AudioSampleSource;
+async function addAudioSampleBuffer(options: {
+	audioSource: AudioBufferSource;
 	inputSample: AudioSample;
-	outputTimestamp: number;
 	target: AudioConfig;
 }) {
-	const { audioSource, inputSample, outputTimestamp, target } = options;
-
+	const { audioSource, inputSample, target } = options;
 	const inputBuffer = inputSample.toAudioBuffer();
-	const normalizedBuffer = await resampleAndRemixAudioBuffer(inputBuffer, target);
-	const normalizedSamples = AudioSample.fromAudioBuffer(normalizedBuffer, outputTimestamp);
 
-	for (const normalized of normalizedSamples) {
-		try {
-			await audioSource.add(normalized);
-		} finally {
-			normalized.close();
-		}
+	if (
+		Math.round(inputBuffer.sampleRate) === Math.round(target.sampleRate)
+		&& inputBuffer.numberOfChannels === target.numberOfChannels
+	) {
+		await audioSource.add(inputBuffer);
+		return;
 	}
+
+	const normalizedBuffer = await resampleAndRemixAudioBuffer(inputBuffer, target);
+	await audioSource.add(normalizedBuffer);
 }
 
 async function addSilence(options: {
-	audioSource: AudioSampleSource;
-	startTimestamp: number;
+	audioSource: AudioBufferSource;
 	duration: number;
 	audioConfig: AudioConfig;
 	chunkSeconds?: number;
 }) {
-	const { audioSource, startTimestamp, duration, audioConfig, chunkSeconds = 1 } = options;
+	const { audioSource, duration, audioConfig, chunkSeconds = 1 } = options;
 	let cursor = 0;
 
 	while (cursor < duration) {
@@ -122,15 +120,7 @@ async function addSilence(options: {
 			numberOfChannels: audioConfig.numberOfChannels,
 		});
 
-		const samples = AudioSample.fromAudioBuffer(audioBuffer, startTimestamp + cursor);
-		for (const sample of samples) {
-			try {
-				await audioSource.add(sample);
-			} finally {
-				sample.close();
-			}
-		}
-
+		await audioSource.add(audioBuffer);
 		cursor += sliceDuration;
 	}
 }
@@ -175,7 +165,7 @@ export async function mergeVideosWithMediaBunny(
 		sampleRate: 44100,
 		numberOfChannels: 2,
 	};
-	const audioSource = new AudioSampleSource({
+	const audioSource = new AudioBufferSource({
 		codec: 'aac',
 		sampleRate: audioConfig.sampleRate,
 		numberOfChannels: audioConfig.numberOfChannels,
@@ -246,12 +236,9 @@ export async function mergeVideosWithMediaBunny(
 					if (audioSink) {
 						for await (const sample of audioSink.samples(audioStart, audioStart + segmentDuration)) {
 							try {
-								const relativeTimestamp = sample.timestamp - audioStart;
-								const timestamp = outputTime + loopOffset + relativeTimestamp;
-								await addNormalizedAudioSample({
+								await addAudioSampleBuffer({
 									audioSource,
 									inputSample: sample,
-									outputTimestamp: timestamp,
 									target: audioConfig,
 								});
 							} finally {
@@ -261,7 +248,6 @@ export async function mergeVideosWithMediaBunny(
 					} else {
 						await addSilence({
 							audioSource,
-							startTimestamp: outputTime + loopOffset,
 							duration: segmentDuration,
 							audioConfig,
 						});

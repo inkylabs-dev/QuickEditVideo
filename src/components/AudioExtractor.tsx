@@ -1,54 +1,47 @@
-import { useState, useEffect, useRef } from 'react';
-import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
-import { fetchFile } from '@ffmpeg/util';
+import { useState, useRef } from 'react';
 import { SelectFile } from './SelectFile';
+import { extractAudioWithMediaBunny, type AudioOutputFormat } from '../utils/extractAudioWithMediaBunny';
 
-const AudioExtractorContent = () => {
+const AudioExtractor = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'extracting'>('landing');
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [videoUrl, setVideoUrl] = useState<string>('');
 	const [videoDuration, setVideoDuration] = useState<number>(0);
 	const [isProcessing, setIsProcessing] = useState<boolean>(false);
 	const [processingProgress, setProcessingProgress] = useState<number>(0);
-	const [audioFormat, setAudioFormat] = useState<'mp3' | 'wav'>('mp3');
-	
+	const [audioFormat, setAudioFormat] = useState<AudioOutputFormat>('mp3');
+	const [errorMessage, setErrorMessage] = useState<string>('');
+
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	// Get FFmpeg context
-	const { ffmpeg, isLoaded: ffmpegLoaded, progress, setProgress, writeFile, readFile, exec } = useFFmpeg();
-
-	// Update processing progress from FFmpeg context
-	useEffect(() => {
-		setProcessingProgress(progress);
-	}, [progress]);
-
 	// Handle file selection from SelectFile component
 	const handleFileSelect = (file: File | FileList | null) => {
+		setErrorMessage('');
+
 		// Return early if no file selected
 		if (!file) {
 			return;
 		}
-		
-		// SelectFile ensures file is validated before calling this
+
 		const selectedFile = file as File;
 
+		if (!selectedFile.type.startsWith('video/')) {
+			setErrorMessage('This file is not a video.');
+			return;
+		}
+
 		setSelectedFile(selectedFile);
-		
+
 		// Create video URL for preview
 		const url = URL.createObjectURL(selectedFile);
 		setVideoUrl(url);
 		setCurrentView('extracting');
-		
+
 		// Dispatch event to notify page about view change
 		document.dispatchEvent(new CustomEvent('videoExtractorViewChange', {
 			detail: { currentView: 'extracting' }
 		}));
-	};
-
-	// Video file validation function
-	const validateVideoFile = (file: File): boolean => {
-		return file.type.startsWith('video/');
 	};
 
 	// Handle video loaded metadata
@@ -67,62 +60,36 @@ const AudioExtractorContent = () => {
 
 	// Extract audio and download
 	const extractAudio = async () => {
-		if (!ffmpeg || !ffmpegLoaded || !selectedFile) return;
+		if (!selectedFile) return;
 
 		setIsProcessing(true);
 		setProcessingProgress(0);
+		setErrorMessage('');
 
 		try {
-			const inputExt = selectedFile.name.split('.').pop();
-			const inputFile = `input.${inputExt}`;
-			const outputFile = `${selectedFile.name.split('.')[0]}_extracted.${audioFormat}`;
-
-			// Write file to FFmpeg filesystem using new API
-			const fileData = await fetchFile(selectedFile);
-			await writeFile(inputFile, fileData);
-
-			// Get MIME type for the output format
-			const getMimeType = (fmt: string): string => {
-				switch (fmt) {
-					case 'wav': return 'audio/wav';
-					default: return 'audio/mpeg';
+			const result = await extractAudioWithMediaBunny(
+				selectedFile,
+				{
+					outputFormat: audioFormat,
+				},
+				(progress) => {
+					setProcessingProgress(Math.max(0, Math.min(100, Math.round(progress))));
 				}
-			};
+			);
 
-			// Extract audio using appropriate codec
-			if (audioFormat === 'mp3') {
-				await exec([
-					'-i', inputFile,
-					'-vn', // No video
-					'-acodec', 'libmp3lame',
-					'-ab', '192k', // Audio bitrate
-					outputFile
-				]);
-			} else {
-				await exec([
-					'-i', inputFile,
-					'-vn', // No video
-					'-acodec', 'pcm_s16le',
-					outputFile
-				]);
-			}
-
-			// Read the output file using new API
-			const data = await readFile(outputFile);
-			const blob = new Blob([data.buffer], { type: getMimeType(audioFormat) });
-			
 			// Download file
 			const a = document.createElement('a');
-			a.href = URL.createObjectURL(blob);
-			a.download = outputFile;
+			a.href = URL.createObjectURL(result.blob);
+			a.download = result.filename;
 			a.click();
 			URL.revokeObjectURL(a.href);
 
-			// Note: Cleanup is handled automatically by the new FFmpeg implementation
-
 		} catch (error) {
 			console.error('Error extracting audio:', error);
-			alert('Error processing video. Please try again.');
+			const message = error instanceof Error ? error.message : 'Unknown error';
+			setErrorMessage(message.includes('Unsupported audio format')
+				? 'This audio format is not supported. Try MP3 or WAV.'
+				: 'Error extracting audio. Please try again.');
 		} finally {
 			setIsProcessing(false);
 			setProcessingProgress(0);
@@ -165,14 +132,19 @@ const AudioExtractorContent = () => {
 						Select your video file to extract the audio as MP3 or WAV. Processing happens entirely in your browser.
 					</p>
 				</div>
-				
+
+				{errorMessage ? (
+					<div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 mb-4">
+						{errorMessage}
+					</div>
+				) : null}
+
 				<SelectFile
 					onFileSelect={handleFileSelect}
-					validateFile={validateVideoFile}
-					validationErrorMessage="Please select a valid video file."
 					buttonText="Select your video"
+					supportText="Supports all major video formats"
 				/>
-				
+
 				<div className="text-sm text-gray-500 mt-4">
 					<p>Your files are processed locally and never uploaded</p>
 				</div>
@@ -182,6 +154,11 @@ const AudioExtractorContent = () => {
 
 	return (
 		<div className="space-y-6 p-4">
+			{errorMessage ? (
+				<div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+					{errorMessage}
+				</div>
+			) : null}
 			{/* Video Player and Controls Row */}
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				{/* Video Section */}
@@ -267,12 +244,12 @@ const AudioExtractorContent = () => {
 
 						{/* Extract Button */}
 						<div className="w-full">
-							<button 
+							<button
 								onClick={extractAudio}
-								disabled={isProcessing || !ffmpegLoaded}
+								disabled={isProcessing || !selectedFile || Boolean(errorMessage)}
 								className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
 							>
-								{isProcessing ? 
+								{isProcessing ?
 									<div className="flex items-center gap-2">
 										<svg className="progress-ring w-4 h-4" viewBox="0 0 24 24">
 											<circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"
@@ -280,14 +257,12 @@ const AudioExtractorContent = () => {
 										</svg>
 										<span>Processing {processingProgress}%</span>
 									</div> :
-									ffmpegLoaded ? 
-										<div className="flex items-center gap-2">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-												<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-											</svg>
-											Extract As {audioFormat.toUpperCase()}
-										</div> :
-										'Loading...'
+									<div className="flex items-center gap-2">
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+											<path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+										</svg>
+										Extract As {audioFormat.toUpperCase()}
+									</div>
 								}
 							</button>
 						</div>
@@ -295,15 +270,6 @@ const AudioExtractorContent = () => {
 				</div>
 			</div>
 		</div>
-	);
-};
-
-// Main AudioExtractor component with FFmpegProvider
-const AudioExtractor = () => {
-	return (
-		<FfmpegProvider>
-			<AudioExtractorContent />
-		</FfmpegProvider>
 	);
 };
 

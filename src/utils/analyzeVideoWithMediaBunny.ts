@@ -5,12 +5,51 @@ import {
 	InputAudioTrack,
 	InputVideoTrack,
 } from 'mediabunny';
-import type {
-	AudioStream,
-	VideoFormat,
-	VideoMetadata,
-	VideoStream,
-} from '../FFmpegUtils/getVideoInfo';
+
+export interface VideoStream {
+  index: number;
+  codec_name: string;
+  codec_long_name: string;
+  codec_type: string;
+  width?: number;
+  height?: number;
+  bit_rate?: string;
+  avg_frame_rate?: string;
+  duration?: string;
+  pix_fmt?: string;
+}
+
+export interface AudioStream {
+  index: number;
+  codec_name: string;
+  codec_long_name: string;
+  codec_type: string;
+  sample_rate?: string;
+  channels?: number;
+  channel_layout?: string;
+  bit_rate?: string;
+  duration?: string;
+}
+
+export interface VideoFormat {
+  filename: string;
+  nb_streams: number;
+  nb_programs: number;
+  format_name: string;
+  format_long_name: string;
+  start_time?: string;
+  duration?: string;
+  size?: string;
+  bit_rate?: string;
+  probe_score?: number;
+}
+
+export interface VideoMetadata {
+  format: VideoFormat;
+  videoStreams: VideoStream[];
+  audioStreams: AudioStream[];
+  raw: any; // Raw ffprobe output for advanced users
+}
 
 type StreamStats = {
 	packetCount: number;

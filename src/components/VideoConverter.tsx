@@ -3,11 +3,17 @@ import { FfmpegProvider, useFFmpeg } from '../FFmpegCore';
 import { convertVideo, createVideoBlob, downloadBlob, type ConversionOptions } from '../FFmpegUtils';
 import Loading from './Loading';
 import { SelectFile } from './SelectFile';
+import {
+	convertVideoWithMediaBunny,
+	type MediaBunnyOutputFormat,
+} from '../utils/convertVideoWithMediaBunny';
 
 interface VideoConverterProps {
   targetFormat: string;
   targetFormatName: string;
 }
+
+const MediaBunnyFormats = new Set<MediaBunnyOutputFormat>(['mp4', 'mov', 'webm', 'mkv']);
 
 const VideoConverterContent = ({ targetFormat, targetFormatName }: VideoConverterProps) => {
   // Use FFmpeg context
@@ -113,37 +119,52 @@ const VideoConverterContent = ({ targetFormat, targetFormatName }: VideoConverte
 
   // Convert and download video
   const convertVideoFile = async () => {
-    if (!ffmpegLoaded || !selectedFile || !ffmpeg.current) return;
+    if (!selectedFile) return;
+
+    const useMediaBunny = MediaBunnyFormats.has(targetFormat as MediaBunnyOutputFormat);
 
     setIsProcessing(true);
 
     try {
-      // Prepare conversion options
-      const options: ConversionOptions = {
-        size: conversionSize,
-        fps: conversionFps,
-        startTime: targetFormat === 'gif' ? conversionStartTime : undefined,
-        endTime: targetFormat === 'gif' ? conversionEndTime : undefined
-      };
-      
-      // Use the convertVideo utility from FFmpegUtils
-      const data = await convertVideo(ffmpeg.current, selectedFile, targetFormat, [], options);
+      if (useMediaBunny) {
+        const bunnyOptions: MediaBunnyConvertOptions = {
+          outputFormat: targetFormat as MediaBunnyOutputFormat,
+          size: conversionSize,
+          fps: conversionFps,
+          startTime: targetFormat === 'gif' ? conversionStartTime : undefined,
+          endTime: targetFormat === 'gif' ? conversionEndTime : undefined,
+        };
 
-      // Validate data before creating blob
-      if (!data || !(data instanceof Uint8Array) || data.length === 0) {
-        throw new Error('Invalid video data returned from conversion');
+        const result = await convertVideoWithMediaBunny(selectedFile, bunnyOptions, setDisplayProgress);
+        downloadBlob(result.blob, result.filename);
+      } else {
+        if (!ffmpegLoaded || !ffmpeg.current) {
+          throw new Error('Video processor is not ready yet');
+        }
+
+        const options: ConversionOptions = {
+          size: conversionSize,
+          fps: conversionFps,
+          startTime: targetFormat === 'gif' ? conversionStartTime : undefined,
+          endTime: targetFormat === 'gif' ? conversionEndTime : undefined,
+        };
+
+        const data = await convertVideo(ffmpeg.current, selectedFile, targetFormat, [], options);
+
+        if (!data || !(data instanceof Uint8Array) || data.length === 0) {
+          throw new Error('Invalid video data returned from conversion');
+        }
+
+        const blob = createVideoBlob(data, targetFormat);
+        const outputFilename = `${selectedFile.name.split('.')[0]}_converted.${targetFormat}`;
+        downloadBlob(blob, outputFilename);
       }
-
-      // Create blob and download
-      const blob = createVideoBlob(data, targetFormat);
-      const outputFilename = `${selectedFile.name.split('.')[0]}_converted.${targetFormat}`;
-      downloadBlob(blob, outputFilename);
-
     } catch (error) {
       console.error('Error converting video:', error);
       alert(`Error processing video: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsProcessing(false);
+      setDisplayProgress(0);
     }
   };
 
@@ -210,7 +231,10 @@ const VideoConverterContent = ({ targetFormat, targetFormatName }: VideoConverte
                 <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded whitespace-nowrap">
                   {formatTime(videoDuration)} duration
                 </div>
-                <div className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded whitespace-nowrap">
+                <div
+                  data-testid="converting-to-label"
+                  className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded whitespace-nowrap"
+                >
                   Converting to {targetFormatName}
                 </div>
               </div>
@@ -346,29 +370,31 @@ const VideoConverterContent = ({ targetFormat, targetFormatName }: VideoConverte
 
               <button
                 onClick={convertVideoFile}
-                disabled={isProcessing || !ffmpegLoaded}
+                disabled={
+                  isProcessing
+                  || (!MediaBunnyFormats.has(targetFormat as MediaBunnyOutputFormat) && !ffmpegLoaded)
+                }
                 className="flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 font-medium transition-colors disabled:bg-gray-200 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm w-full"
               >
-                {isProcessing ?
+                {isProcessing ? (
                   <div className="flex items-center gap-2">
                     <Loading className="scale-50" />
                     <span>Converting... {displayProgress > 0 ? `${displayProgress}%` : ''}</span>
-                  </div> :
-                  ffmpegLoaded ?
-                    <div className="flex items-center gap-2">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
-                      </svg>
-                      Download as {targetFormatName}
-                    </div> :
-                    'Loading...'
-                }
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
+                    </svg>
+                    Download as {targetFormatName}
+                  </div>
+                )}
               </button>
               
               {/* Video info hint */}
               <div className="text-xs text-gray-500 text-center mt-3 space-y-1">
                 <div>Original: {originalFormat.toUpperCase()}</div>
-                <div>Converting to: {targetFormatName}</div>
+                <div data-testid="target-format">Converting to: {targetFormatName}</div>
                 <div>Duration: {formatTime(videoDuration)}</div>
               </div>
             </div>
