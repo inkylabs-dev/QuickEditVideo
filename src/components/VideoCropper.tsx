@@ -957,14 +957,14 @@ const VideoCropperContent = () => {
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Scale</label>
               <div className="flex items-center gap-3">
-                <input 
-                  type="range" 
-                  min="10" 
-                  max="200" 
+                <input
+                  type="range"
+                  min="10"
+                  max="200"
                   step="1"
                   value={scale}
-                  onInput={(e) => handleScaleChange(parseInt(e.target.value))}
-                  onChange={(e) => handleScaleChange(parseInt(e.target.value))}
+                  onInput={(e) => handleScaleChange(parseInt((e.target as HTMLInputElement).value))}
+                  onChange={(e) => handleScaleChange(parseInt((e.target as HTMLInputElement).value))}
                   className="flex-1 h-2 bg-gray-300 rounded appearance-none outline-none range-slider"
                 />
                 <div className="text-sm font-medium text-gray-900 min-w-[50px]">{scale}%</div>

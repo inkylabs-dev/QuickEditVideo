@@ -1,11 +1,9 @@
-import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
-
 /**
  * Utility function to render Astro components to string for testing
  * This is a mock implementation since Astro components can't be easily tested in unit tests
  */
 export async function renderAstroComponentToString(
-  component: AstroComponentFactory,
+  component: any,
   props: Record<string, any> = {}
 ): Promise<string> {
   // Since Astro components are difficult to render in unit tests,

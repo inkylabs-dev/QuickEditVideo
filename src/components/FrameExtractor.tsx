@@ -183,8 +183,8 @@ const FrameExtractorContent = () => {
       // Create blob URLs for display
       const framesWithUrls = frames.map(frame => ({
         ...frame,
-        blobUrl: URL.createObjectURL(new Blob([frame.data], { 
-          type: frameFormat === 'png' ? 'image/png' : 'image/jpeg' 
+        blobUrl: URL.createObjectURL(new Blob([frame.data.slice()], {
+          type: frameFormat === 'png' ? 'image/png' : 'image/jpeg'
         }))
       }));
 

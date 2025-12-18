@@ -5,25 +5,13 @@
  * Manages the generation queue and runs in a separate thread to avoid blocking the main UI
  */
 
-// Configure ONNX Runtime WASM paths BEFORE importing KittenTTS
-import { env } from 'onnxruntime-web';
-
-// Use CDN URLs for ONNX Runtime WASM files
-const ortWasmSimdThreadedUrl = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort-wasm-simd-threaded.wasm';
-const ortWasmSimdThreadedJsepUrl = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort-wasm-simd-threaded.jsep.wasm';
-
-// Configure WASM paths immediately at module load time
-env.wasm.wasmPaths = {
-  'ort-wasm-simd-threaded.wasm': ortWasmSimdThreadedUrl,
-  'ort-wasm-simd-threaded.jsep.wasm': ortWasmSimdThreadedJsepUrl,
-  'ort-wasm.wasm': ortWasmSimdThreadedUrl,
-  'ort-wasm-threaded.wasm': ortWasmSimdThreadedUrl,
-  'ort-wasm-simd.wasm': ortWasmSimdThreadedUrl,
-};
-
 import { KittenTTS, type VoiceId } from '@quickeditvideo/kittentts';
 import { splitTextForPauses, hasPauseMarkers } from '../utils/textProcessing';
 import { applyFadeout, joinAudioSegments, createAudioUrl } from '../utils/audioProcessing';
+
+// Use vite-plugin-wasm for WASM imports via alias
+// import ortWasmSimdThreadedUrl from '@onnx-wasm/ort-wasm-simd-threaded.wasm';
+// import ortWasmSimdThreadedJsepUrl from '@onnx-wasm/ort-wasm-simd-threaded.jsep.wasm';
 
 interface QueueItem {
   id: string;
@@ -58,18 +46,12 @@ async function initializeModel(): Promise<void> {
   try {
     kittenTTS = new KittenTTS({
       sampleRate: 22050,
-      enableBrowserCache: true
+      enableBrowserCache: true,
+      verbose: true,
     });
 
     // Configure WASM paths
-    kittenTTS.configureWasmPaths({
-      'ort-wasm-simd-threaded.wasm': ortWasmSimdThreadedUrl,
-      'ort-wasm-simd-threaded.jsep.wasm': ortWasmSimdThreadedJsepUrl,
-      // Create fallback aliases
-      'ort-wasm.wasm': ortWasmSimdThreadedUrl,
-      'ort-wasm-threaded.wasm': ortWasmSimdThreadedUrl,
-      'ort-wasm-simd.wasm': ortWasmSimdThreadedUrl,
-    });
+    kittenTTS.configureWasmPaths(`${location.origin}/onnxruntime-web/dist/`);
 
     // Load the model
     await kittenTTS.load();
@@ -80,7 +62,7 @@ async function initializeModel(): Promise<void> {
     };
     self.postMessage(response);
     
-    console.log('KittenTTS model loaded successfully in worker');
+    kittenTTS.log('KittenTTS model loaded successfully in worker');
     
     // Start processing any queued items
     processQueue();

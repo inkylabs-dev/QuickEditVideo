@@ -4,13 +4,14 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm run build:packages && next build",
+    "build": "pnpm run build:packages && pnpm run copy:onnxruntime && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
     "test:unit": "vitest run",
     "test:watch": "vitest --watch",
-    "build:packages": "pnpm --filter @quickeditvideo/kittentts run build && pnpm --filter @quickeditvideo/editor run build"
+    "build:packages": "pnpm --filter @quickeditvideo/kittentts run build && pnpm --filter @quickeditvideo/editor run build",
+    "copy:onnxruntime": "mkdir -p public/onnxruntime-web/dist && cp -r node_modules/onnxruntime-web/dist/* public/onnxruntime-web/dist/"
   },
   "dependencies": {
     "@mediabunny/mp3-encoder": "^1.27.0",

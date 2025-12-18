@@ -1,5 +1,5 @@
 import { InferenceSession, env, Tensor } from 'onnxruntime-web';
-import { phonemize } from './phonemizerStub.js';
+import { phonemize } from 'phonemizer';
 import { TextCleaner, cleanTextForTTS, chunkText } from './TextCleaner.js';
 import { 
   getEmbeddedModel, 
@@ -199,7 +199,7 @@ export class KittenTTS {
    * @param message Message to log
    * @param optionalParams Additional parameters
    */
-  private log(message?: any, ...optionalParams: any[]): void {
+  log(message?: any, ...optionalParams: any[]): void {
     if (this.config.verbose) {
       console.log(message, ...optionalParams);
     }
@@ -209,17 +209,15 @@ export class KittenTTS {
    * Configure ONNX Runtime environment with WASM paths
    * @param wasmPaths Object mapping WASM file names to URLs
    */
-  configureWasmPaths(wasmPaths: Record<string, string>) {
-    this.config.wasmPaths = wasmPaths;
-    (env.wasm as any).wasmPaths = wasmPaths;
-    
+  configureWasmPaths(wasmPaths: string) {    
     // Initialize ONNX Runtime environment
     env.wasm.numThreads = 1; // Use single-threaded for compatibility
     env.wasm.simd = true; // Enable SIMD if available
-    env.logLevel = 'warning';
+    env.wasm.wasmPaths = wasmPaths;
+    env.logLevel = 'error';
     
     this.log('ONNX Runtime environment configured:', {
-      wasmPaths: Object.keys(wasmPaths),
+      wasmPaths: env.wasm.wasmPaths,
       numThreads: env.wasm.numThreads,
       simd: env.wasm.simd
     });

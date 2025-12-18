@@ -138,7 +138,7 @@ const VideoTrimmer = () => {
 	const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 
 	// Handle timeline drag (mouse and touch)
-	const handlePointerDown = (e: MouseEvent | TouchEvent, handle: string) => {
+	const handlePointerDown = (e: React.MouseEvent | React.TouchEvent, handle: string) => {
 		e.preventDefault();
 		
 		const getPosition = (event: MouseEvent | TouchEvent): number => {

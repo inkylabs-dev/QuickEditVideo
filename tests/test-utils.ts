@@ -12,7 +12,7 @@ export async function loadTestVideo(filename: string = 'test-video.mp4'): Promis
 
 export function createTestVideoFile(filename: string = 'test-video.mp4', type: string = 'video/mp4'): Promise<File> {
   return loadTestVideo(filename).then(data => {
-    const blob = new Blob([data], { type });
+    const blob = new Blob([data.slice()], { type });
     return new File([blob], filename, { type });
   });
 }

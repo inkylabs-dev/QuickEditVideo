@@ -12,7 +12,7 @@ import {
 	type ConversionVideoOptions,
 } from 'mediabunny';
 
-export type MediaBunnyOutputFormat = 'mp4' | 'mov' | 'webm' | 'mkv';
+export type MediaBunnyOutputFormat = 'mp4' | 'mov' | 'webm' | 'mkv' | 'gif' | 'avi';
 
 export type MediaBunnyConvertOptions = {
 	outputFormat: MediaBunnyOutputFormat;
@@ -28,7 +28,7 @@ export type MediaBunnyConvertResult = {
 	mimeType: string;
 };
 
-const SUPPORTED_SIZES: Record<MediaBunnyConvertOptions['size'], Partial<ConversionVideoOptions>> = {
+const SUPPORTED_SIZES: Record<NonNullable<MediaBunnyConvertOptions['size']>, Partial<ConversionVideoOptions>> = {
 	original: {},
 	'600xauto': { width: 600, fit: 'contain' },
 	'540xauto': { width: 540, fit: 'contain' },
@@ -44,7 +44,7 @@ const clampFps = (fps?: number, targetFormat?: string): number => {
 		return targetFormat === 'gif' ? 10 : 30;
 	}
 
-	return Math.max(5, Math.min(30, fps));
+	return Math.max(5, Math.min(30, fps!));
 };
 
 function stripFileExtension(filename: string): string {
@@ -59,6 +59,12 @@ function getOutputFormat(extension: MediaBunnyOutputFormat) {
 			return { format: new WebMOutputFormat(), fileExtension: 'webm', mimeType: 'video/webm' };
 		case 'mkv':
 			return { format: new MkvOutputFormat(), fileExtension: 'mkv', mimeType: 'video/x-matroska' };
+		case 'gif':
+			// TODO: Implement GIF output format
+			return { format: new Mp4OutputFormat(), fileExtension: 'gif', mimeType: 'image/gif' };
+		case 'avi':
+			// TODO: Implement AVI output format
+			return { format: new Mp4OutputFormat(), fileExtension: 'avi', mimeType: 'video/x-msvideo' };
 		case 'mp4':
 		default:
 			return { format: new Mp4OutputFormat(), fileExtension: 'mp4', mimeType: 'video/mp4' };

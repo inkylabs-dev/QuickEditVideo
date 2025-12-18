@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-static'
+
 import { type NextPage } from 'next';
 import { useRouter, type NextRouter } from 'next/router';
 import ToolPageRenderer from '../src/components/ToolPageRenderer';

@@ -103,7 +103,7 @@ export async function changeVideoSpeedWithMediaBunny(
 				// For 0.5x speed: timestamp becomes double (video plays slower)
 				const adjustedTimestamp = sample.timestamp / options.speed;
 
-				sample.timestamp = adjustedTimestamp;
+				(sample as any).timestamp = adjustedTimestamp;
 				lastTimestamp = adjustedTimestamp;
 				frameIndex++;
 
@@ -113,7 +113,7 @@ export async function changeVideoSpeedWithMediaBunny(
 		audio: {
 			process: (sample) => {
 				// Adjust audio sample timestamp to match video speed
-				sample.timestamp = sample.timestamp / options.speed;
+				(sample as any).timestamp = sample.timestamp / options.speed;
 				return sample;
 			},
 		},

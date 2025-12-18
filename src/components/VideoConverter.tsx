@@ -14,7 +14,7 @@ interface VideoConverterProps {
   targetFormatName: string;
 }
 
-const MediaBunnyFormats = new Set<MediaBunnyOutputFormat>(['mp4', 'mov', 'webm', 'mkv']);
+const MediaBunnyFormats = new Set<MediaBunnyOutputFormat>(['mp4', 'mov', 'webm', 'mkv', 'gif', 'avi']);
 
 const VideoConverter = ({ targetFormat, targetFormatName }: VideoConverterProps) => {
   const [currentView, setCurrentView] = useState<'landing' | 'converting'>('landing');

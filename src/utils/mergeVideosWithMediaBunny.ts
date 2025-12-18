@@ -167,8 +167,6 @@ export async function mergeVideosWithMediaBunny(
 	};
 	const audioSource = new AudioBufferSource({
 		codec: 'aac',
-		sampleRate: audioConfig.sampleRate,
-		numberOfChannels: audioConfig.numberOfChannels,
 		bitrate: 128000,
 	});
 

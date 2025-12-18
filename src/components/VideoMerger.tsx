@@ -43,7 +43,7 @@ const generateClipId = (): string => `${Date.now()}-${Math.random()}`;
 
 const detectVideoFormat = (fileName: string): string => {
 	const extension = fileName.split('.').pop()?.toLowerCase() || '';
-	return CONSTANTS.SUPPORTED_FORMATS.includes(extension) ? extension : 'mp4';
+	return CONSTANTS.SUPPORTED_FORMATS.includes(extension as any) ? extension : 'mp4';
 };
 
 const generateThumbnail = (videoUrl: string): Promise<string> => {

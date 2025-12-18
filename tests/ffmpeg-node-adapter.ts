@@ -116,7 +116,7 @@ export class NodeFFmpeg {
 
 // Utility function to create a File-like object from Uint8Array for testing
 export function createTestFile(data: Uint8Array, name: string, type: string = 'video/mp4'): File {
-  const blob = new Blob([data], { type });
+  const blob = new Blob([data.slice()], { type });
   return new File([blob], name, { type });
 }
 

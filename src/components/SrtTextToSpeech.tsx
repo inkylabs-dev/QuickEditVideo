@@ -336,9 +336,8 @@ const SrtTextToSpeech = () => {
     return subtitles.sort((a, b) => a.startSeconds - b.startSeconds);
   };
 
-  const handleFileUpload = async (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     
     if (!file) return;
     
