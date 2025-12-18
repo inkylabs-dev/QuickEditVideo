@@ -17,7 +17,7 @@ const PrivacyPage: NextPage & { layoutProps?: LayoutProps } = () => (
       <section className="space-y-3 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-2xl font-semibold text-gray-900">Local Processing</h2>
         <p className="text-gray-600">
-          All processing happens in your browser via MediaBunny, KittenTTS, and other WebAssembly helpers. Your files
+          All processing happens in your browser via advanced browser-based media processing technologies. Your files
           never leave your device unless you explicitly download or share them.
         </p>
         <p className="text-gray-600">

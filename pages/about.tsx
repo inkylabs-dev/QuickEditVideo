@@ -9,7 +9,7 @@ const AboutPage: NextPage & { layoutProps?: LayoutProps } = () => (
       <header className="space-y-4">
         <h1 className="text-4xl font-bold text-gray-900">About QuickEditVideo</h1>
         <p className="text-gray-600">
-          QuickEditVideo is a privacy-first suite of browser-native video and voice tools powered by MediaBunny and
+          QuickEditVideo is a privacy-first suite of browser-native video and voice tools powered by MediaBunny, Remotion and
           other lightweight WebAssembly helpers. We believe editing should be instant, secure, and available to anyone,
           without installs, uploads, or complex subscriptions.
         </p>
@@ -21,10 +21,6 @@ const AboutPage: NextPage & { layoutProps?: LayoutProps } = () => (
           Modern editing workflows still rely on bulky native apps or cloud uploads with questionable privacy. We built
           QuickEditVideo to cut through that friction—every tool runs in your browser, every file stays on your device,
           and every experience is optimized for fast, trusted editing.
-        </p>
-        <p className="text-gray-600">
-          MediaBunny and KittenTTS power the heavy lifting under the hood, so we never need ffmpeg binaries or server-side
-          encoding. That allows us to move fast, stay client-only, and keep your projects private by default.
         </p>
       </section>
 
@@ -42,7 +38,7 @@ const AboutPage: NextPage & { layoutProps?: LayoutProps } = () => (
         <h2 className="text-2xl font-semibold text-gray-900">Community & Feedback</h2>
         <p className="text-gray-600">
           We operate quietly—but we still listen. If you spot a bug, have a tool request, or want to share how you're
-          using QuickEditVideo, drop us a line via the GitHub repo or the contact method listed in the footer.
+          using QuickEditVideo, drop us a line via the <a href="https://github.com/inkylabs-dev/quickeditvideo">GitHub repo</a> or the contact method listed in the footer.
         </p>
         <p className="text-gray-600">
           Contributions to tooling, docs, and testing are always welcome. The repo ships under a permissive license so

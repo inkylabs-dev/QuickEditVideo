@@ -5,13 +5,25 @@
  * Manages the generation queue and runs in a separate thread to avoid blocking the main UI
  */
 
+// Configure ONNX Runtime WASM paths BEFORE importing KittenTTS
+import { env } from 'onnxruntime-web';
+
+// Use CDN URLs for ONNX Runtime WASM files
+const ortWasmSimdThreadedUrl = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort-wasm-simd-threaded.wasm';
+const ortWasmSimdThreadedJsepUrl = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort-wasm-simd-threaded.jsep.wasm';
+
+// Configure WASM paths immediately at module load time
+env.wasm.wasmPaths = {
+  'ort-wasm-simd-threaded.wasm': ortWasmSimdThreadedUrl,
+  'ort-wasm-simd-threaded.jsep.wasm': ortWasmSimdThreadedJsepUrl,
+  'ort-wasm.wasm': ortWasmSimdThreadedUrl,
+  'ort-wasm-threaded.wasm': ortWasmSimdThreadedUrl,
+  'ort-wasm-simd.wasm': ortWasmSimdThreadedUrl,
+};
+
 import { KittenTTS, type VoiceId } from '@quickeditvideo/kittentts';
 import { splitTextForPauses, hasPauseMarkers } from '../utils/textProcessing';
 import { applyFadeout, joinAudioSegments, createAudioUrl } from '../utils/audioProcessing';
-
-// Use vite-plugin-wasm for WASM imports via alias
-const ortWasmSimdThreadedUrl = 'https://cdn.jsdelivr.net/npm/@onnx-wasm/ort-wasm-simd-threaded.wasm';
-const ortWasmSimdThreadedJsepUrl = 'https://cdn.jsdelivr.net/npm/@onnx-wasm/ort-wasm-simd-threaded.jsep.wasm';
 
 interface QueueItem {
   id: string;
