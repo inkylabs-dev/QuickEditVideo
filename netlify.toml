@@ -1,6 +1,6 @@
 [build]
   command = "npm run build"
-  publish = "dist"
+  publish = ".next"
 
 [[headers]]
   for = "/*"
@@ -28,14 +28,6 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
     Cross-Origin-Resource-Policy = "cross-origin"
-
-# Handle FFmpeg.wasm files specifically
-[[headers]]
-  for = "*.wasm"
-  [headers.values]
-    Content-Type = "application/wasm"
-    Cross-Origin-Resource-Policy = "cross-origin"
-    Cache-Control = "public, max-age=31536000, immutable"
 
 # SPA fallback for client-side routing
 [[redirects]]

@@ -1,5 +1,5 @@
 import { InferenceSession, env, Tensor } from 'onnxruntime-web';
-import { phonemize } from 'phonemizer';
+import { phonemize } from './phonemizerStub.js';
 import { TextCleaner, cleanTextForTTS, chunkText } from './TextCleaner.js';
 import { 
   getEmbeddedModel, 

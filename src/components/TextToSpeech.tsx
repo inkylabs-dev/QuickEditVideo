@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Loading from './Loading';
 import { VOICE_OPTIONS, type VoiceId } from '@quickeditvideo/kittentts';
-import TextToSpeechWorkerUrl from '../workers/TextToSpeechWorker.ts?worker&url';
 import type { WorkerResponse, QueueItem } from '../workers/TextToSpeechWorker';
 
 
@@ -31,7 +30,9 @@ const TextToSpeech = () => {
   // Initialize worker
   useEffect(() => {
     try {
-      const worker = new Worker(TextToSpeechWorkerUrl, { type: 'module' });
+      const worker = new Worker(new URL('../workers/TextToSpeechWorker.ts', import.meta.url), {
+        type: 'module',
+      });
       workerRef.current = worker;
       
       // Listen for worker messages

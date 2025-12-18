@@ -1,12 +1,9 @@
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { SelectFile } from './SelectFile';
-import { analyzeVideoWithMediaBunny } from '../utils/analyzeVideoWithMediaBunny';
-import {
-	formatDuration,
-	formatFileSize,
-	formatBitrate,
-	type VideoMetadata,
-} from '../FFmpegUtils';
+import { analyzeVideoWithMediaBunny, type VideoMetadata } from '../utils/analyzeVideoWithMediaBunny';
+import { formatDuration, formatFileSize, formatBitrate } from '../utils/formatters';
 
 const VideoInfoContent = () => {
 	const [currentView, setCurrentView] = useState<'landing' | 'analyzing'>('landing');

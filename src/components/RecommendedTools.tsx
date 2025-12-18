@@ -1,0 +1,135 @@
+'use client';
+
+import Link from 'next/link';
+import { getAllTools, getToolById, type Tool } from '../constants/tools';
+
+export interface RecommendedToolsProps {
+  currentToolId?: string;
+  category?: string;
+}
+
+const RecommendedTools = ({ currentToolId, category }: RecommendedToolsProps) => {
+  const allTools = getAllTools().filter((tool) => tool.id !== currentToolId);
+  let recommendedTools: Tool[] = [];
+
+  if (currentToolId) {
+    const currentTool = getToolById(currentToolId);
+    if (currentTool?.recommendedTools) {
+      const toolRecommendations = currentTool.recommendedTools
+        .map((toolId) => allTools.find((tool) => tool.id === toolId))
+        .filter((tool): tool is Tool => tool !== undefined)
+        .slice(0, 4);
+
+      recommendedTools.push(...toolRecommendations);
+    }
+
+    if (recommendedTools.length < 6 && category) {
+      const sameCategory = allTools
+        .filter((tool) => tool.category === category && !recommendedTools.some((rec) => rec.id === tool.id))
+        .slice(0, 6 - recommendedTools.length);
+      recommendedTools.push(...sameCategory);
+    }
+  } else if (category) {
+    const sameCategory = allTools.filter((tool) => tool.category === category).slice(0, 3);
+    recommendedTools.push(...sameCategory);
+
+    const otherFeatured = allTools
+      .filter((tool) => tool.featured && tool.category !== category && !recommendedTools.some((rec) => rec.id === tool.id))
+      .slice(0, 3);
+    recommendedTools.push(...otherFeatured);
+  } else {
+    recommendedTools = allTools.filter((tool) => tool.featured).slice(0, 6);
+  }
+
+  if (recommendedTools.length < 6) {
+    const remaining = allTools.filter((tool) => !recommendedTools.some((rec) => rec.id === tool.id)).slice(0, 6 - recommendedTools.length);
+    recommendedTools.push(...remaining);
+  }
+
+  recommendedTools = recommendedTools.slice(0, 6);
+
+  return (
+    <aside className="lg:col-span-1">
+      <div className="lg:sticky lg:top-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended Tools</h3>
+
+          <div className="space-y-3">
+            {recommendedTools.map((tool) => (
+              <Link
+                key={tool.id}
+                href={tool.url}
+                className="group flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <div className={`w-10 h-10 ${tool.bgColor} rounded-lg flex items-center justify-center ${tool.hoverBgColor} transition-colors flex-shrink-0`}>
+                  {tool.icon.type === 'svg' ? (
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className={tool.iconColor}
+                      dangerouslySetInnerHTML={{ __html: tool.icon.content }}
+                    />
+                  ) : (
+                    <span className={`${tool.icon.className || 'text-xs font-bold'} ${tool.iconColor}`}>{tool.icon.content}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium text-gray-900 group-hover:text-teal-600 transition-colors">
+                    {tool.name}
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{tool.description}</p>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-gray-400 group-hover:text-teal-500 transition-colors flex-shrink-0">
+                  <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <Link
+              href="/#all-tools"
+              className="block w-full text-center px-4 py-2 bg-teal-50 hover:bg-teal-100 text-teal-700 hover:text-teal-800 rounded-lg font-medium text-sm transition-colors"
+            >
+              View All Tools
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-4 bg-green-50 rounded-lg p-4 border border-green-200">
+          <div className="flex items-start gap-3">
+            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-green-600">
+                <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11.5C14.8,12.4 14.4,13.2 13.7,13.7L17.25,17.25L16.17,18.33L12.67,14.83C12.45,14.94 12.23,15 12,15C10.6,15 9.2,13.4 9.2,11.5V10.5C9.2,8.6 10.6,7 12,7Z" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-green-800 mb-1">100% Private</h4>
+              <p className="text-xs text-green-700">All tools work in your browser. Your files never leave your device.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <div className="flex items-start gap-3">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-blue-600">
+                <path d="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2M21,9V7L15,1V3H9V1L3,7V9H1V11H3V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V11H23V9H21Z" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-blue-800 mb-1">Always Free</h4>
+              <p className="text-xs text-blue-700">No signup, no limits, no watermarks. Use all tools forever free.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+export default RecommendedTools;

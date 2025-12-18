@@ -10,8 +10,8 @@ import { splitTextForPauses, hasPauseMarkers } from '../utils/textProcessing';
 import { applyFadeout, joinAudioSegments, createAudioUrl } from '../utils/audioProcessing';
 
 // Use vite-plugin-wasm for WASM imports via alias
-import ortWasmSimdThreadedUrl from '@onnx-wasm/ort-wasm-simd-threaded.wasm?url';
-import ortWasmSimdThreadedJsepUrl from '@onnx-wasm/ort-wasm-simd-threaded.jsep.wasm?url';
+const ortWasmSimdThreadedUrl = 'https://cdn.jsdelivr.net/npm/@onnx-wasm/ort-wasm-simd-threaded.wasm';
+const ortWasmSimdThreadedJsepUrl = 'https://cdn.jsdelivr.net/npm/@onnx-wasm/ort-wasm-simd-threaded.jsep.wasm';
 
 interface QueueItem {
   id: string;

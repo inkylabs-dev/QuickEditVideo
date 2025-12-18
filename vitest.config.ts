@@ -1,19 +1,15 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
-import { getViteConfig } from 'astro/config';
 
-export default defineConfig(
-  getViteConfig({
-    plugins: [react()],
-    test: {
-      environment: 'happy-dom',
-      setupFiles: ['./tests/setup.ts'],
-      globals: true,
-      css: true,
-      include: ['tests/unit/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-      exclude: ['tests/e2e/**/*'],
-      pool: 'forks',
-    },
-  })
-);
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'happy-dom',
+    globals: true,
+    setupFiles: ['./tests/setup.ts'],
+    css: true,
+    include: ['tests/unit/**/*.{test,spec}.{ts,tsx,js,jsx}'],
+    exclude: ['tests/e2e/**/*'],
+  },
+});
