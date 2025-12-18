@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getCategories } from '../constants/tools';
 import NavTools from './NavTools';
 import Adsterra from './Adsterra';
+import Breadcrumbs, { type BreadcrumbItem } from './Breadcrumbs';
 
 export interface LayoutProps {
   title?: string;
@@ -18,6 +19,7 @@ export interface LayoutProps {
   structuredData?: object;
   showBreadcrumbs?: boolean;
   currentPage?: string;
+  breadcrumbItems?: BreadcrumbItem[];
   blogPost?: boolean;
 }
 
@@ -41,11 +43,30 @@ const Layout = ({
   structuredData,
   showBreadcrumbs = false,
   currentPage,
+  breadcrumbItems,
   blogPost = false,
 }: LayoutProps & { children: React.ReactNode }) => {
   const categories = useMemo(() => getCategories(), []);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const currentUrl = canonicalUrl || DEFAULT_CANONICAL;
+  const resolvedBreadcrumbItems = useMemo<BreadcrumbItem[] | undefined>(() => {
+    if (breadcrumbItems && breadcrumbItems.length > 0) {
+      return breadcrumbItems;
+    }
+
+    if (!showBreadcrumbs || !currentPage) {
+      return undefined;
+    }
+
+    const items: BreadcrumbItem[] = [{ label: 'Home', href: '/' }];
+    if (blogPost) {
+      items.push({ label: 'Blog', href: '/blog' });
+    }
+    items.push({ label: currentPage, current: true });
+    return items;
+  }, [breadcrumbItems, blogPost, showBreadcrumbs, currentPage]);
+
+  const shouldShowBreadcrumbs = Boolean(resolvedBreadcrumbItems?.length);
 
   return (
     <>
@@ -140,32 +161,8 @@ const Layout = ({
           )}
         </header>
 
-        {showBreadcrumbs && currentPage && (
-          <nav className="bg-white border-b border-gray-100 py-3" aria-label="Breadcrumb">
-            <div className="max-w-6xl mx-auto px-4 md:px-6">
-              <ol className="flex items-center space-x-2 text-sm">
-                <li>
-                  <Link href="/" className="text-gray-500 hover:text-gray-700">
-                    Home
-                  </Link>
-                </li>
-                <li className="text-gray-400">/</li>
-                {blogPost ? (
-                  <>
-                    <li>
-                      <Link href="/blog" className="text-gray-500 hover:text-gray-700">
-                        Blog
-                      </Link>
-                    </li>
-                    <li className="text-gray-400">/</li>
-                    <li className="text-gray-900 font-medium">{currentPage}</li>
-                  </>
-                ) : (
-                  <li className="text-gray-900 font-medium">{currentPage}</li>
-                )}
-              </ol>
-            </div>
-          </nav>
+        {shouldShowBreadcrumbs && resolvedBreadcrumbItems && (
+          <Breadcrumbs items={resolvedBreadcrumbItems} />
         )}
 
         <main>{children}</main>

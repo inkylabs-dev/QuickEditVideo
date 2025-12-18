@@ -32,6 +32,7 @@ import VideoTrimmer from '../components/VideoTrimmer';
 import VideoWatermark from '../components/VideoWatermark';
 import VideoConverter from '../components/VideoConverter';
 import { getAllTools, getToolById, type Tool } from './tools';
+import type { BreadcrumbItem } from '../components/Breadcrumbs';
 
 const CANONICAL_BASE = 'https://quickeditvideo.com';
 
@@ -99,6 +100,11 @@ type ToolPageMeta = {
 
 const buildLayoutPropsForTool = (tool: Tool): LayoutProps => {
   const baseUrl = `${CANONICAL_BASE}${tool.url.replace(/\/$/, '')}`;
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Home', href: '/' },
+    { label: 'Tools', href: '/#all-tools' },
+    { label: tool.name, current: true },
+  ];
   return {
     title: `${tool.name} | QuickEditVideo`,
     description: tool.description,
@@ -108,6 +114,7 @@ const buildLayoutPropsForTool = (tool: Tool): LayoutProps => {
     canonicalUrl: baseUrl,
     currentPage: tool.name,
     showBreadcrumbs: true,
+    breadcrumbItems,
   };
 };
 
