@@ -119,20 +119,6 @@ const AudioExtractor = () => {
 	if (currentView === 'landing') {
 		return (
 			<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-				<div className="mb-6">
-					<div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-						<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600">
-							<polygon points="11 5,6 9,2 9,2 15,6 15,11 19,11 5"/>
-							<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-							<path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-						</svg>
-					</div>
-					<h2 className="text-2xl font-bold text-gray-900 mb-2">Extract Audio from Video</h2>
-					<p className="text-gray-600 max-w-md mx-auto mb-6">
-						Select your video file to extract the audio as MP3 or WAV. Processing happens entirely in your browser.
-					</p>
-				</div>
-
 				{errorMessage ? (
 					<div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 mb-4">
 						{errorMessage}

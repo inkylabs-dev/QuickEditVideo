@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'export', // Enables static exports
+  trailingSlash: true, // Ensure all routes have trailing slashes
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
   // Empty turbopack config to silence the warning and let it use defaults
   turbopack: {},
