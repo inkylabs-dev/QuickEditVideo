@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-static';
+
 import type { NextPage } from 'next';
 import Link from 'next/link';
 import type { LayoutProps } from '../../src/components/Layout';
