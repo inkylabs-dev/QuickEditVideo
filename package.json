@@ -47,6 +47,13 @@
       "@tensorflow/tfjs-node",
       "esbuild",
       "sharp"
+    ],
+    "onlyBuiltDependencies": [
+      "@tensorflow/tfjs-node",
+      "core-js",
+      "esbuild",
+      "protobufjs",
+      "sharp"
     ]
   }
 }
