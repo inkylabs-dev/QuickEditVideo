@@ -19,7 +19,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "pnpm run build:modal && pnpm run build:code",
+    "build": "pnpm run build:model && pnpm run build:code",
     "build:model": "pnpm exec node scripts/download-model.js",
     "build:code": "tsc && rollup -c",
     "dev": "tsc --watch",
