@@ -19,9 +19,8 @@
     "README.md"
   ],
   "scripts": {
-    "download-model": "pnpm exec node scripts/download-model.js",
-    "build": "pnpm run build:code",
-    "build:with-download": "pnpm run download-model && tsc && rollup -c",
+    "build": "pnpm run build:modal && pnpm run build:code",
+    "build:model": "pnpm exec node scripts/download-model.js",
     "build:code": "tsc && rollup -c",
     "dev": "tsc --watch",
     "clean": "rm -rf dist assets",
