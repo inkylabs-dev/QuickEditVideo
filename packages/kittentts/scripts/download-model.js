@@ -23,7 +23,7 @@ async function downloadModel() {
   }
 
   const filesToDownload = [
-    'kitten_tts_nano_v0_1.onnx',
+    'kitten_tts_nano_v0_2.onnx',
     'voices.npz', 
     'config.json'
   ];
