@@ -40,4 +40,7 @@ pnpm-debug.log*
 
 # nix
 .envrc
+
+# next
 .next
+out/
