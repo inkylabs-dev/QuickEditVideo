@@ -43,8 +43,10 @@
     "vitest": "^1.6.1"
   },
   "pnpm": {
-     "@tensorflow/tfjs-node",
-     "esbuild",
-     "sharp"
+    "approvedBuilds": [
+      "@tensorflow/tfjs-node",
+      "esbuild",
+      "sharp"
+    ]
   }
 }
