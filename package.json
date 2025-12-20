@@ -11,7 +11,11 @@
     "test:unit": "vitest run",
     "test:watch": "vitest --watch",
     "build:packages": "pnpm --filter @quickeditvideo/kittentts run build && pnpm --filter @quickeditvideo/editor run build",
-    "copy:onnxruntime": "mkdir -p public/onnxruntime-web/dist && cp -r node_modules/onnxruntime-web/dist/* public/onnxruntime-web/dist/"
+    "copy:onnxruntime": "mkdir -p public/onnxruntime-web/dist && cp -r node_modules/onnxruntime-web/dist/* public/onnxruntime-web/dist/",
+    "release:patch": "pnpm build && pnpm version patch && git push",
+    "release:minor": "pnpm build && pnpm version minor && git push",
+    "release:major": "pnpm build && pnpm version major && git push",
+    "release": "pnpm run release:patch"
   },
   "dependencies": {
     "@mediabunny/mp3-encoder": "^1.27.0",

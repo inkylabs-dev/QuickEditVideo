@@ -1,7 +1,7 @@
 'use client';
 
 import type { Layout, GroupImperativeHandle } from 'react-resizable-panels';
-import { Group, Panel, Separator } from 'react-resizable-panels';
+import { Group, Panel, Separator, useGroupRef } from 'react-resizable-panels';
 import { useCallback, useMemo, useState } from 'react';
 import type { ReactNode, Ref } from 'react';
 
@@ -16,7 +16,6 @@ export interface EditorLayoutProps {
   topPanel: ReactNode;
   bottomPanel: ReactNode;
   navRight?: ReactNode;
-  groupRef?: Ref<GroupImperativeHandle | null>;
 }
 
 const DEFAULT_LAYOUT: Layout = {
@@ -24,8 +23,9 @@ const DEFAULT_LAYOUT: Layout = {
   [MAIN_PANEL_ID]: DEFAULT_MAIN_SIZE,
 };
 
-const EditorLayout = ({ sidebar, topPanel, bottomPanel, navRight, groupRef }: EditorLayoutProps) => {
+const EditorLayout = ({ sidebar, topPanel, bottomPanel, navRight }: EditorLayoutProps) => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const groupRef = useGroupRef();
 
   const collapseSidebar = useCallback(() => {
     groupRef?.current?.setLayout({
@@ -89,7 +89,7 @@ const EditorLayout = ({ sidebar, topPanel, bottomPanel, navRight, groupRef }: Ed
       <Group
         orientation="horizontal"
         className="flex flex-1"
-        groupRef={groupRef}
+        groupRef={groupRef as Ref<GroupImperativeHandle>}
         defaultLayout={DEFAULT_LAYOUT}
         onLayoutChange={handleLayoutChange}
       >

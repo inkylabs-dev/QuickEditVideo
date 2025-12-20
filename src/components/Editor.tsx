@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useGroupRef } from 'react-resizable-panels';
 import DownloadButton from './Editor/DownloadButton';
 import EditorLayout from './Editor/Layout';
 import Player from './Editor/Player';
@@ -22,8 +21,6 @@ const TIMELINE_TRACKS = [
 ];
 
 const Editor = () => {
-  const groupRef = useGroupRef();
-
   const sidebar = useMemo(
     () => (
       <div className="flex h-full flex-col p-6 space-y-8">
@@ -85,7 +82,6 @@ const Editor = () => {
 
   return (
     <EditorLayout
-      groupRef={groupRef}
       sidebar={sidebar}
       topPanel={playerPanel}
       bottomPanel={timelinePanel}

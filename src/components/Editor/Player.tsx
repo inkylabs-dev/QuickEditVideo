@@ -28,6 +28,9 @@ const Player = () => (
       loop
       controls
       style={PLAYER_STYLE}
+      // QuickEditVideo project is ran by non-profit organization so we can
+      // use Remotion Player for free by acknowledging the license.
+      acknowledgeRemotionLicense={true}
     />
   </div>
 );
