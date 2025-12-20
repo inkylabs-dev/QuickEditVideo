@@ -17,6 +17,9 @@ importers:
       '@quickeditvideo/kittentts':
         specifier: workspace:*
         version: link:packages/kittentts
+      '@remotion/media':
+        specifier: ^4.0.394
+        version: 4.0.394(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@remotion/player':
         specifier: ^4.0.394
         version: 4.0.394(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -867,6 +870,12 @@ packages:
 
   '@react-dnd/shallowequal@4.0.2':
     resolution: {integrity: sha512-/RVXdLvJxLg4QKvMoM5WlwNR9ViO9z8B/qPcc+C0Sa/teJY7QG7kJ441DwzOjMYEY7GmU4dj5EcGHIkKZiQZCA==}
+
+  '@remotion/media@4.0.394':
+    resolution: {integrity: sha512-b+0L3zgckqatuCSZOtfrcmzQT2fuljHVMwFjFMpaA53i5Lx00/WUDS7RhBwJetpr75cgSFjea0BnMKrv2dT/aA==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
 
   '@remotion/player@4.0.394':
     resolution: {integrity: sha512-1oWotvy1ERl66oLzXEIVlKryPH/bLqR3rvIQwYLlcmpHHn8wGMf2/SJIJxcY69jOM5hYm03cUJxkLuINdePKPA==}
@@ -3448,6 +3457,13 @@ snapshots:
   '@react-dnd/invariant@4.0.2': {}
 
   '@react-dnd/shallowequal@4.0.2': {}
+
+  '@remotion/media@4.0.394(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      mediabunny: 1.27.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      remotion: 4.0.394(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
   '@remotion/player@4.0.394(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:

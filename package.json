@@ -21,6 +21,7 @@
     "@mediabunny/mp3-encoder": "^1.27.0",
     "@quickeditvideo/editor": "workspace:*",
     "@quickeditvideo/kittentts": "workspace:*",
+    "@remotion/media": "^4.0.394",
     "@remotion/player": "^4.0.394",
     "@remotion/web-renderer": "^4.0.394",
     "@tailwindcss/typography": "^0.5.19",
