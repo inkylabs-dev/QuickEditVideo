@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
-import { useGroupRef, type Layout as PanelLayout } from 'react-resizable-panels';
-import EditorLayout, { LEFT_PANEL_ID, MAIN_PANEL_ID } from './Editor/Layout';
+import { useMemo } from 'react';
+import { useGroupRef } from 'react-resizable-panels';
+import EditorLayout from './Editor/Layout';
 
 const PANEL_ITEMS = [
   { label: 'Materials', description: 'Clips, images, and assets' },
@@ -18,37 +18,6 @@ const TIMELINE_TRACKS = [
 
 const Editor = () => {
   const groupRef = useGroupRef();
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
-
-  const handleLayoutChange = useCallback((layout: PanelLayout) => {
-    const currentSize = layout[LEFT_PANEL_ID] ?? 0;
-    setSidebarOpen(currentSize > 0);
-  }, []);
-
-  const collapseSidebar = useCallback(() => {
-    groupRef.current?.setLayout({
-      [LEFT_PANEL_ID]: 0,
-      [MAIN_PANEL_ID]: 100,
-    });
-    setSidebarOpen(false);
-  }, [groupRef]);
-
-  const expandSidebar = useCallback(() => {
-    const defaultWidth = 20;
-    groupRef.current?.setLayout({
-      [LEFT_PANEL_ID]: defaultWidth,
-      [MAIN_PANEL_ID]: 100 - defaultWidth,
-    });
-    setSidebarOpen(true);
-  }, [groupRef]);
-
-  const toggleSidebar = useCallback(() => {
-    if (isSidebarOpen) {
-      collapseSidebar();
-    } else {
-      expandSidebar();
-    }
-  }, [collapseSidebar, expandSidebar, isSidebarOpen]);
 
   const sidebar = useMemo(
     () => (
@@ -133,9 +102,6 @@ const Editor = () => {
       sidebar={sidebar}
       topPanel={playerPanel}
       bottomPanel={timelinePanel}
-      isSidebarOpen={isSidebarOpen}
-      onLayoutChange={handleLayoutChange}
-      onToggleSidebar={toggleSidebar}
     />
   );
 };
