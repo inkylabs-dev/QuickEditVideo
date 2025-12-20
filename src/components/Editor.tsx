@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useGroupRef } from 'react-resizable-panels';
+import DownloadButton from './Editor/DownloadButton';
 import EditorLayout from './Editor/Layout';
 import Player from './Editor/Player';
 
@@ -85,6 +86,7 @@ const Editor = () => {
       sidebar={sidebar}
       topPanel={playerPanel}
       bottomPanel={timelinePanel}
+      navRight={<DownloadButton />}
     />
   );
 };

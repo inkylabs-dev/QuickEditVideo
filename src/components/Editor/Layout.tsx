@@ -15,6 +15,7 @@ export interface EditorLayoutProps {
   sidebar: ReactNode;
   topPanel: ReactNode;
   bottomPanel: ReactNode;
+  navRight?: ReactNode;
   groupRef?: Ref<GroupImperativeHandle | null>;
 }
 
@@ -23,7 +24,7 @@ const DEFAULT_LAYOUT: Layout = {
   [MAIN_PANEL_ID]: DEFAULT_MAIN_SIZE,
 };
 
-const EditorLayout = ({ sidebar, topPanel, bottomPanel, groupRef }: EditorLayoutProps) => {
+const EditorLayout = ({ sidebar, topPanel, bottomPanel, navRight, groupRef }: EditorLayoutProps) => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const collapseSidebar = useCallback(() => {
@@ -118,14 +119,7 @@ const EditorLayout = ({ sidebar, topPanel, bottomPanel, groupRef }: EditorLayout
                 {toggleButton}
                 <p className="text-sm font-medium uppercase tracking-wide text-gray-500">Project editor</p>
               </div>
-
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Live</span>
-                <div className="inline-flex items-center gap-2 rounded-full bg-gray-200/70 px-3 py-1 text-xs font-medium text-gray-700">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  Remote render ready
-                </div>
-              </div>
+              <div className="flex items-center gap-4">{navRight ?? null}</div>
             </header>
 
             <main className="flex flex-1 min-h-0 flex-col gap-6">
