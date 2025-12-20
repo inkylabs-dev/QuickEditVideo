@@ -1,6 +1,7 @@
 export const dynamic = 'force-static';
 
-import type { GetStaticPaths, GetStaticProps, NextPage, NextRouter } from 'next';
+import type { GetStaticPaths, GetStaticProps, NextPage } from 'next';
+import type { NextRouter } from 'next/router';
 import ToolPageRenderer from '../src/components/ToolPageRenderer';
 import { TOOL_PAGE_RENDERERS, getToolPageMeta } from '../src/constants/toolPages';
 import type { LayoutProps } from '../src/components/Layout';
