@@ -1,43 +1,49 @@
-'use client';
+export const dynamic = 'force-static';
 
-export const dynamic = 'force-static'
-
-import { type NextPage } from 'next';
-import { useRouter, type NextRouter } from 'next/router';
+import type { GetStaticPaths, GetStaticProps, NextPage, NextRouter } from 'next';
 import ToolPageRenderer from '../src/components/ToolPageRenderer';
-import { getToolPageMeta } from '../src/constants/toolPages';
+import { TOOL_PAGE_RENDERERS, getToolPageMeta } from '../src/constants/toolPages';
 import type { LayoutProps } from '../src/components/Layout';
 
-const ToolPage: NextPage & {
-  getDynamicLayoutProps?: (context: { router: NextRouter }) => LayoutProps | undefined;
-} = () => {
-  const router = useRouter();
-  const rawTool = router.query.tool;
-  const toolId = Array.isArray(rawTool) ? rawTool[0] : rawTool;
+interface ToolPageProps {
+  toolId: string;
+}
 
-  if (!toolId) {
-    return (
-      <div className="bg-gray-50 min-h-screen py-16 px-4">
-        <div className="max-w-6xl mx-auto text-center text-gray-500">Loading tool…</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-gray-50 py-8 px-4 min-h-screen">
-      <div className="max-w-6xl mx-auto">
-        <ToolPageRenderer toolId={toolId} />
-      </div>
+const ToolPage: NextPage<ToolPageProps> & {
+  getDynamicLayoutProps?: (context: { router: NextRouter; pageProps: LayoutProps & { toolId?: string } }) => LayoutProps | undefined;
+} = ({ toolId }) => (
+  <div className="bg-gray-50 py-8 px-4 min-h-screen">
+    <div className="max-w-6xl mx-auto">
+      <ToolPageRenderer toolId={toolId} />
     </div>
-  );
-};
+  </div>
+);
 
-ToolPage.getDynamicLayoutProps = ({ router }) => {
-  const rawTool = router.query.tool;
-  const toolId = Array.isArray(rawTool) ? rawTool[0] : rawTool;
-
+ToolPage.getDynamicLayoutProps = ({ pageProps }) => {
+  const toolId = typeof pageProps.toolId === 'string' ? pageProps.toolId : undefined;
   if (!toolId) return undefined;
   return getToolPageMeta(toolId)?.layoutProps;
+};
+
+export const getStaticPaths: GetStaticPaths<{ tool: string }> = () => ({
+  paths: Object.keys(TOOL_PAGE_RENDERERS).map((toolId) => ({
+    params: { tool: toolId },
+  })),
+  fallback: false,
+});
+
+export const getStaticProps: GetStaticProps<ToolPageProps, { tool: string }> = async ({ params }) => {
+  const rawTool = params?.tool;
+  const toolId = Array.isArray(rawTool) ? rawTool[0] : rawTool;
+  if (!toolId || !TOOL_PAGE_RENDERERS[toolId]) {
+    return { notFound: true };
+  }
+
+  return {
+    props: {
+      toolId,
+    },
+  };
 };
 
 export default ToolPage;

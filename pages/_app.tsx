@@ -7,7 +7,7 @@ import '../styles/globals.css';
 
 type LayoutAwarePageProps = {
   layoutProps?: LayoutProps;
-};
+} & Record<string, unknown>;
 
 type LayoutContext = {
   router: NextRouter;
