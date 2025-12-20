@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import DownloadButton from './Editor/DownloadButton';
 import EditorLayout from './Editor/Layout';
 import Player from './Editor/Player';
+import Menubar from './Editor/Menubar';
 
 // force static
 export const dynamic = 'force-static';
@@ -85,6 +86,7 @@ const Editor = () => {
       sidebar={sidebar}
       topPanel={playerPanel}
       bottomPanel={timelinePanel}
+      navLeft={<Menubar />}
       navRight={<DownloadButton />}
     />
   );
