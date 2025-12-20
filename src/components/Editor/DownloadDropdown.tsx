@@ -7,6 +7,7 @@ import { renderRootComposition, ROOT_DURATION_IN_FRAMES } from './WebRender';
 
 export interface DownloadDropdownProps {
   className?: string;
+  isOpen?: boolean;
   onRequestClose?: () => void;
 }
 
@@ -23,8 +24,12 @@ const QUALITY_MAP: Record<typeof QUALITY_OPTIONS[number], WebRendererQuality> = 
   '1080p': 'high',
 };
 
-const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, onRequestClose }) => {
-  const classes = ['absolute right-0 top-full z-10 mt-2 w-56 rounded-3xl border border-gray-200 bg-white p-4 shadow-xl', className]
+const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true, onRequestClose }) => {
+  const classes = [
+    'absolute right-0 top-full z-10 mt-2 w-56 rounded-3xl border border-gray-200 bg-white p-4 shadow-xl',
+    !isOpen && 'hidden',
+    className,
+  ]
     .filter(Boolean)
     .join(' ');
 
@@ -79,7 +84,7 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, onRequestClose
   }, [filetype, isRendering, onRequestClose, qualityLabel]);
 
   return (
-    <div className={classes}>
+    <div className={classes} aria-hidden={!isOpen}>
       <div className="space-y-3 text-sm">
         <div>
           <label className="text-[0.6rem] uppercase tracking-[0.3em] text-gray-500" htmlFor="download-filetype">

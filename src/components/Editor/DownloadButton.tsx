@@ -57,7 +57,7 @@ const DownloadButton = () => {
         Download
       </button>
 
-      {isOpen && <DownloadDropdown onRequestClose={closeMenu} />}
+      <DownloadDropdown isOpen={isOpen} onRequestClose={closeMenu} />
     </div>
   );
 };
