@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useGroupRef } from 'react-resizable-panels';
 import EditorLayout from './Editor/Layout';
+import Player from './Editor/Player';
 
 const PANEL_ITEMS = [
   { label: 'Materials', description: 'Clips, images, and assets' },
@@ -44,35 +45,17 @@ const Editor = () => {
     [],
   );
 
-  const playerPanel = useMemo(
-    () => (
-      <>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Remotion Player</h2>
-          <span className="text-xs uppercase tracking-wide text-gray-500">Preview</span>
-        </div>
-        <div className="flex-1 rounded-2xl border border-dashed border-gray-200 bg-gradient-to-br from-white to-gray-100 p-6">
-          <div className="flex h-full flex-col items-center justify-center gap-3">
-            <div className="rounded-full border border-gray-300 px-6 py-3 text-sm font-medium text-gray-600">
-              Remotion player placeholder
-            </div>
-            <p className="text-center text-xs uppercase tracking-[0.3em] text-gray-400">Rendered frame</p>
-          </div>
-        </div>
-      </>
-    ),
-    [],
-  );
+  const playerPanel = useMemo(() => <Player />, []);
 
   const timelinePanel = useMemo(
     () => (
-      <>
+      <div className="flex h-full flex-1 flex-col gap-4 p-5">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">Timeline</h3>
           <div className="text-xs text-gray-500">00:00 - 00:48</div>
         </div>
 
-        <div className="space-y-3 overflow-hidden">
+        <div className="flex-1 space-y-3 overflow-hidden">
           {TIMELINE_TRACKS.map((track, index) => (
             <div key={`track-${index}`} className="space-y-2">
               <div className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">
@@ -91,7 +74,7 @@ const Editor = () => {
             </div>
           ))}
         </div>
-      </>
+      </div>
     ),
     [],
   );

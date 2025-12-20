@@ -130,7 +130,7 @@ const EditorLayout = ({ sidebar, topPanel, bottomPanel, groupRef }: EditorLayout
 
             <main className="flex flex-1 min-h-0 flex-col gap-6">
               <Group orientation="vertical" className="flex min-h-0 flex-1">
-                <Panel className="flex min-h-[240px] flex-col gap-4 p-6">
+                <Panel className="flex flex-1 min-h-[240px] flex-col">
                   {topPanel}
                 </Panel>
 
@@ -139,7 +139,7 @@ const EditorLayout = ({ sidebar, topPanel, bottomPanel, groupRef }: EditorLayout
                   aria-label="Resize editor panels"
                 />
 
-                <Panel className="flex min-h-[180px] flex-col gap-4 p-5">
+                <Panel className="flex flex-1 min-h-[180px] flex-col">
                   {bottomPanel}
                 </Panel>
               </Group>
