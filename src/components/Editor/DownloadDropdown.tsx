@@ -3,7 +3,8 @@
 import { useCallback, useState } from 'react';
 import type { FC } from 'react';
 import type { WebRendererQuality } from '@remotion/web-renderer';
-import { renderRootComposition, ROOT_DURATION_IN_FRAMES } from './WebRender';
+import { renderRootComposition } from './WebRender';
+import { getRootCompositionDurationInFrames, ROOT_TRACKS } from './compositions/tracks';
 
 export interface DownloadDropdownProps {
   className?: string;
@@ -51,13 +52,16 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true,
 
     try {
       const container = filetype === 'webm' ? 'webm' : 'mp4';
+      const compositionTracks = ROOT_TRACKS;
+      const durationInFrames = getRootCompositionDurationInFrames(compositionTracks);
       const result = await renderRootComposition({
         container,
         quality: QUALITY_MAP[qualityLabel],
+        tracks: compositionTracks,
         onProgress: (progress) => {
           const percent = Math.min(
             100,
-            Math.round((progress.renderedFrames / ROOT_DURATION_IN_FRAMES) * 100),
+            Math.round((progress.renderedFrames / durationInFrames) * 100),
           );
           setRenderProgress(percent);
         },

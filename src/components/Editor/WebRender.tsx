@@ -7,31 +7,43 @@ import type {
 } from '@remotion/web-renderer';
 import { renderMediaOnWeb } from '@remotion/web-renderer';
 import RootComposition from './RootComposition';
+import {
+  CompositionTrack,
+  getRootCompositionDurationInFrames,
+  ROOT_TRACKS,
+} from './compositions/tracks';
 
-export const ROOT_DURATION_IN_FRAMES = 150;
+const COMPOSITION_WIDTH = 1280;
+const COMPOSITION_HEIGHT = 720;
+const COMPOSITION_FPS = 30;
 
-const ROOT_COMPOSITION_OPTIONS = {
+const buildCompositionOptions = (tracks: CompositionTrack[]) => ({
   component: RootComposition,
   id: 'RootComposition',
-  width: 1280,
-  height: 720,
-  fps: 30,
-  durationInFrames: ROOT_DURATION_IN_FRAMES,
-};
+  width: COMPOSITION_WIDTH,
+  height: COMPOSITION_HEIGHT,
+  fps: COMPOSITION_FPS,
+  durationInFrames: getRootCompositionDurationInFrames(tracks),
+  inputProps: {
+    tracks,
+  },
+});
 
 export interface RenderRootCompositionOptions {
   container: WebRendererContainer;
   quality: WebRendererQuality;
   onProgress?: RenderMediaOnWebProgressCallback;
+  tracks?: CompositionTrack[];
 }
 
 export const renderRootComposition = async ({
   container,
   quality,
   onProgress,
+  tracks = ROOT_TRACKS,
 }: RenderRootCompositionOptions) =>
   renderMediaOnWeb({
-    composition: ROOT_COMPOSITION_OPTIONS,
+    composition: buildCompositionOptions(tracks),
     container,
     videoBitrate: quality,
     onProgress: onProgress ?? null,

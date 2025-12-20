@@ -3,11 +3,20 @@
 import type { CSSProperties } from 'react';
 import { Player as RemotionPlayer } from '@remotion/player';
 import RootComposition from './RootComposition';
+import {
+  ROOT_TRACKS,
+  getRootCompositionDurationInFrames,
+  RootCompositionInputProps,
+} from './compositions/tracks';
 
 const COMPOSITION_WIDTH = 1280;
 const COMPOSITION_HEIGHT = 720;
 const COMPOSITION_FPS = 30;
-const COMPOSITION_DURATION = 150;
+const COMPOSITION_DURATION = getRootCompositionDurationInFrames(ROOT_TRACKS);
+
+const ROOT_INPUT_PROPS: RootCompositionInputProps = {
+  tracks: ROOT_TRACKS,
+};
 
 const PLAYER_STYLE: CSSProperties = {
   width: '100%',
@@ -24,6 +33,7 @@ const Player = () => (
       compositionWidth={COMPOSITION_WIDTH}
       compositionHeight={COMPOSITION_HEIGHT}
       fps={COMPOSITION_FPS}
+      inputProps={ROOT_INPUT_PROPS}
       autoPlay
       loop
       controls

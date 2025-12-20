@@ -15,6 +15,7 @@ export interface EditorLayoutProps {
   sidebar: ReactNode;
   topPanel: ReactNode;
   bottomPanel: ReactNode;
+  navLeft?: ReactNode;
   navRight?: ReactNode;
 }
 
@@ -23,7 +24,7 @@ const DEFAULT_LAYOUT: Layout = {
   [MAIN_PANEL_ID]: DEFAULT_MAIN_SIZE,
 };
 
-const EditorLayout = ({ sidebar, topPanel, bottomPanel, navRight }: EditorLayoutProps) => {
+const EditorLayout = ({ sidebar, topPanel, bottomPanel, navLeft, navRight }: EditorLayoutProps) => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const groupRef = useGroupRef();
 
@@ -117,6 +118,7 @@ const EditorLayout = ({ sidebar, topPanel, bottomPanel, navRight }: EditorLayout
             <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
               <div className="flex items-center gap-3">
                 {toggleButton}
+                {navLeft ?? null}
                 <p className="text-sm font-medium uppercase tracking-wide text-gray-500">Project editor</p>
               </div>
               <div className="flex items-center gap-4">{navRight ?? null}</div>

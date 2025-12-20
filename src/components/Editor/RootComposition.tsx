@@ -1,47 +1,63 @@
 'use client';
 
-import type { CSSProperties, FC } from 'react';
+import type { CSSProperties } from 'react';
+import type { CompositionProps } from 'remotion';
+import { AbsoluteFill, Sequence } from 'remotion';
+import ImageComposition from './compositions/ImageComposition';
+import VideoComposition from './compositions/VideoComposition';
+import TextComposition from './compositions/TextComposition';
+import {
+  CompositionTrack,
+  ROOT_TRACKS,
+  RootCompositionInputProps,
+} from './compositions/tracks';
 
 const containerStyle: CSSProperties = {
-  backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(236, 72, 153, 0.35), transparent 40%)',
-  backgroundColor: '#0f172a',
+  background: 'radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.25), transparent 40%), #020617',
   color: '#f8fafc',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '8px',
-  height: '100%',
-  width: '100%',
-  padding: '60px 40px',
-  textAlign: 'center',
+  position: 'relative',
 };
 
-const badgeStyle: CSSProperties = {
-  letterSpacing: '0.35em',
-  fontSize: '0.65rem',
-  textTransform: 'uppercase',
-  color: '#94a3b8',
+const renderTrack = (track: CompositionTrack) => {
+  if (track.type === 'text') {
+    return <TextComposition {...track.props} />;
+  }
+
+  if (track.type === 'image') {
+    return <ImageComposition {...track.props} />;
+  }
+
+  if (track.type === 'video') {
+    return <VideoComposition {...track.props} />;
+  }
+
+  return null;
 };
 
-const titleStyle: CSSProperties = {
-  fontSize: '2.2rem',
-  fontWeight: 600,
-  margin: 0,
-};
+const RootComposition = ({ inputProps }: CompositionProps<RootCompositionInputProps>) => {
+  const tracks = inputProps?.tracks?.length ? inputProps.tracks : ROOT_TRACKS;
 
-const subtitleStyle: CSSProperties = {
-  color: '#cbd5f5',
-  margin: 0,
-  maxWidth: '320px',
-};
+  return (
+    <AbsoluteFill style={containerStyle}>
+      {tracks.map((track) => {
+        const element = renderTrack(track);
 
-const RootComposition: FC = () => (
-  <div style={containerStyle}>
-    <p style={badgeStyle}>QuickEditVideo</p>
-    <h1 style={titleStyle}>Hello from Remotion</h1>
-    <p style={subtitleStyle}>This simple scene proves the player wiring inside the editor.</p>
-  </div>
-);
+        if (!element) {
+          return null;
+        }
+
+        return (
+          <Sequence
+            key={track.id}
+            from={track.startInFrames}
+            durationInFrames={Math.max(1, track.durationInFrames)}
+          >
+            {element}
+          </Sequence>
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
 
 export default RootComposition;
