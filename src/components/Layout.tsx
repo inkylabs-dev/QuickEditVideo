@@ -19,6 +19,7 @@ export interface LayoutProps {
   currentPage?: string;
   breadcrumbItems?: BreadcrumbItem[];
   blogPost?: boolean;
+  skipLayout?: boolean;
 }
 
 const DEFAULT_TITLE = 'QuickEditVideo - Free Online Video Editor';

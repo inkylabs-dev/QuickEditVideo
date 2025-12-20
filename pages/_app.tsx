@@ -19,6 +19,8 @@ type LayoutAwareComponent = AppProps['Component'] & {
   getDynamicLayoutProps?: (context: LayoutContext) => LayoutProps | undefined;
 };
 
+type LayoutPropsWithSkip = LayoutProps & { skipLayout?: boolean };
+
 const MyApp = ({ Component, pageProps }: AppProps<LayoutAwarePageProps>) => {
   const router = useRouter();
   const ComponentWithLayout = Component as LayoutAwareComponent;
@@ -27,10 +29,18 @@ const MyApp = ({ Component, pageProps }: AppProps<LayoutAwarePageProps>) => {
     pageProps,
   });
 
-  const layoutProps = dynamicLayoutProps ?? pageProps.layoutProps ?? ComponentWithLayout.layoutProps;
+  const resolvedLayoutProps = (dynamicLayoutProps ?? pageProps.layoutProps ?? ComponentWithLayout.layoutProps) as
+    | LayoutPropsWithSkip
+    | undefined;
+
+  const { skipLayout, ...remainingLayoutProps } = resolvedLayoutProps ?? {};
+
+  if (skipLayout) {
+    return <Component {...pageProps} />;
+  }
 
   return (
-    <Layout {...layoutProps}>
+    <Layout {...(remainingLayoutProps as LayoutProps)}>
       <Component {...pageProps} />
     </Layout>
   );
