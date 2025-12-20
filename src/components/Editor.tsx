@@ -6,6 +6,9 @@ import DownloadButton from './Editor/DownloadButton';
 import EditorLayout from './Editor/Layout';
 import Player from './Editor/Player';
 
+// force static
+export const dynamic = 'force-static';
+
 const PANEL_ITEMS = [
   { label: 'Materials', description: 'Clips, images, and assets' },
   { label: 'Effects', description: 'Transitions & overlays' },
