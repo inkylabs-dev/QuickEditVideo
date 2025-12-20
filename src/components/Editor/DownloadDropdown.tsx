@@ -1,7 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { FC } from 'react';
+import type { WebRendererQuality } from '@remotion/web-renderer';
+import { renderRootComposition, ROOT_DURATION_IN_FRAMES } from './WebRender';
 
 export interface DownloadDropdownProps {
   className?: string;
@@ -12,9 +14,14 @@ const QUALITY_OPTIONS = ['360p', '480p', '720p', '1080p'] as const;
 const FILETYPE_OPTIONS = [
   { label: 'MP4 Video', value: 'mp4' },
   { label: 'WebM Video', value: 'webm' },
-  { label: 'MOV Video', value: 'mov' },
-  { label: 'MKV Video', value: 'mkv' },
 ];
+
+const QUALITY_MAP: Record<typeof QUALITY_OPTIONS[number], WebRendererQuality> = {
+  '360p': 'very-low',
+  '480p': 'low',
+  '720p': 'medium',
+  '1080p': 'high',
+};
 
 const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, onRequestClose }) => {
   const classes = ['absolute right-0 top-full z-10 mt-2 w-56 rounded-3xl border border-gray-200 bg-white p-4 shadow-xl', className]
@@ -23,7 +30,54 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, onRequestClose
 
   const [qualityIndex, setQualityIndex] = useState(QUALITY_OPTIONS.length - 1);
   const [filetype, setFiletype] = useState(FILETYPE_OPTIONS[0].value);
-  const qualityLabel = useMemo(() => QUALITY_OPTIONS[qualityIndex], [qualityIndex]);
+  const [renderProgress, setRenderProgress] = useState(0);
+  const [isRendering, setIsRendering] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const qualityLabel = QUALITY_OPTIONS[qualityIndex];
+
+  const handleDownload = useCallback(async () => {
+    if (isRendering) {
+      return;
+    }
+
+    setIsRendering(true);
+    setRenderProgress(0);
+    setErrorMessage(null);
+
+    try {
+      const container = filetype === 'webm' ? 'webm' : 'mp4';
+      const result = await renderRootComposition({
+        container,
+        quality: QUALITY_MAP[qualityLabel],
+        onProgress: (progress) => {
+          const percent = Math.min(
+            100,
+            Math.round((progress.renderedFrames / ROOT_DURATION_IN_FRAMES) * 100),
+          );
+          setRenderProgress(percent);
+        },
+      });
+
+      const blob = await result.getBlob();
+      const url = URL.createObjectURL(blob);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `quickeditvideo-${timestamp}.${filetype}`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setRenderProgress(100);
+      URL.revokeObjectURL(url);
+      onRequestClose?.();
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(error instanceof Error ? error.message : 'Rendering failed');
+    } finally {
+      setIsRendering(false);
+    }
+  }, [filetype, isRendering, onRequestClose, qualityLabel]);
+
   return (
     <div className={classes}>
       <div className="space-y-3 text-sm">
@@ -66,11 +120,20 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, onRequestClose
         </div>
         <button
           type="button"
-          className="w-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow-md"
-          onClick={onRequestClose}
+          disabled={isRendering}
+          className="w-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow-md disabled:cursor-not-allowed disabled:opacity-70"
+          onClick={handleDownload}
         >
-          Download
+          {isRendering ? 'Rendering...' : 'Download'}
         </button>
+        {isRendering && (
+          <p className="text-[0.55rem] uppercase tracking-[0.4em] text-emerald-600">
+            Rendering {renderProgress}%
+          </p>
+        )}
+        {errorMessage && (
+          <p className="text-[0.55rem] uppercase tracking-[0.4em] text-rose-500">{errorMessage}</p>
+        )}
       </div>
     </div>
   );
