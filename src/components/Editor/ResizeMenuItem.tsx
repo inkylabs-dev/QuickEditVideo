@@ -5,12 +5,9 @@ import type { FC } from 'react';
 import ResizeDialog from './ResizeDialog';
 import { useVideoSize } from './useVideoSize';
 import type { VideoSizePreset } from './useVideoSize';
+import { MenubarItem } from '../ui/menubar';
 
-export interface ResizeMenuItemProps {
-  onMenuItemClick?: () => void;
-}
-
-const ResizeMenuItem: FC<ResizeMenuItemProps> = ({ onMenuItemClick }) => {
+const ResizeMenuItem: FC = () => {
   const [isResizeDialogOpen, setResizeDialogOpen] = useState(false);
   const { videoSize, setPreset, setCustomSize } = useVideoSize();
 
@@ -18,9 +15,8 @@ const ResizeMenuItem: FC<ResizeMenuItemProps> = ({ onMenuItemClick }) => {
 
   const handleClick = useCallback(() => {
     console.log('Resize clicked, opening dialog');
-    onMenuItemClick?.();
     setResizeDialogOpen(true);
-  }, [onMenuItemClick]);
+  }, []);
 
   const handleResizeConfirm = useCallback(
     (preset: VideoSizePreset, customWidth?: number, customHeight?: number) => {
@@ -37,13 +33,9 @@ const ResizeMenuItem: FC<ResizeMenuItemProps> = ({ onMenuItemClick }) => {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleClick}
-        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition"
-      >
+      <MenubarItem inset onSelect={handleClick}>
         Resize
-      </button>
+      </MenubarItem>
 
       <ResizeDialog
         isOpen={isResizeDialogOpen}
