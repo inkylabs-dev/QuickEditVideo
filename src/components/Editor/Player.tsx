@@ -24,7 +24,11 @@ const Player = () => {
   const { width, height } = useVideoSize();
   const { tracks } = useTracks();
   const durationInFrames = getRootCompositionDurationInFrames(tracks);
-  const inputProps: RootCompositionInputProps = useMemo(() => ({ tracks }), [tracks]);
+  const inputProps: RootCompositionInputProps = useMemo(() => {
+    return {
+      tracks,
+    }
+  }, [tracks]);
   const hasTracks = tracks.length > 0;
 
   if (!hasTracks) {

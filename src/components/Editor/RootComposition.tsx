@@ -1,7 +1,6 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import type { CompositionProps } from 'remotion';
 import { AbsoluteFill, Sequence } from 'remotion';
 import AudioComposition from './compositions/AudioComposition';
 import ImageComposition from './compositions/ImageComposition';
@@ -36,12 +35,18 @@ const renderTrack = (track: CompositionTrack) => {
   return null;
 };
 
-const RootComposition = ({ inputProps }: CompositionProps<RootCompositionInputProps>) => {
-  const tracks = inputProps?.tracks ?? DEFAULT_TRACKS;
+type RootCompositionProps = {
+  tracks?: CompositionTrack[];
+  inputProps?: RootCompositionInputProps;
+};
+
+const RootComposition = ({ tracks, inputProps }: RootCompositionProps) => {
+  const resolvedTracks = tracks ?? inputProps?.tracks ?? [];
+  const compositionTracks = resolvedTracks.length > 0 ? resolvedTracks : DEFAULT_TRACKS;
 
   return (
     <AbsoluteFill style={containerStyle}>
-      {tracks.map((track) => {
+      {compositionTracks.map((track) => {
         const element = renderTrack(track);
 
         if (!element) {

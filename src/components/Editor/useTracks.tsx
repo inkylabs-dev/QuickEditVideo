@@ -6,51 +6,15 @@ import type { CompositionTrack } from './compositions/tracks';
 
 export const DEFAULT_TRACKS: CompositionTrack[] = [
   {
-    id: 'intro-text',
-    type: 'text',
-    startInFrames: 0,
-    durationInFrames: 120,
-    props: {
-      message: 'Compose videos without leaving the browser',
-      subtext: 'Every edit stays on your device for privacy-first workflows.',
-      accentColor: '#38bdf8',
-    },
-  },
-  {
     id: 'hero-image',
     type: 'image',
-    startInFrames: 120,
-    durationInFrames: 100,
+    startInFrames: 0,
+    durationInFrames: 150,
     props: {
       src: '/logo.png',
       alt: 'QuickEditVideo logo',
       width: 640,
       height: 360,
-    },
-  },
-  {
-    id: 'hero-video',
-    type: 'video',
-    startInFrames: 220,
-    durationInFrames: 140,
-    props: {
-      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-      startInFrames: 0,
-      endInFrames: 140,
-      loop: true,
-    },
-  },
-  {
-    id: 'background-audio',
-    type: 'audio',
-    startInFrames: 0,
-    durationInFrames: 360,
-    props: {
-      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
-      startInFrames: 0,
-      endInFrames: 360,
-      loop: true,
-      volume: 0.7,
     },
   },
 ];
