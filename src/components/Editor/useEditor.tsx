@@ -4,20 +4,15 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef } f
 import type { ReactNode } from 'react';
 import type { CompositionTrack } from './compositions/tracks';
 
-export const DEFAULT_TRACKS: CompositionTrack[] = [
-  {
-    id: 'hero-image',
-    type: 'image',
-    startInFrames: 0,
-    durationInFrames: 150,
-    props: {
-      src: '/logo.png',
-      alt: 'QuickEditVideo logo',
-      width: 640,
-      height: 360,
-    },
-  },
-];
+export interface VideoSize {
+  width: number;
+  height: number;
+}
+
+interface VideoSizeContextValue extends VideoSize {
+  setWidth: (width: number) => void;
+  setHeight: (height: number) => void;
+}
 
 interface TracksContextValue {
   tracks: CompositionTrack[];
@@ -25,6 +20,7 @@ interface TracksContextValue {
   promptOpenFile: () => void;
 }
 
+const VideoSizeContext = createContext<VideoSizeContextValue | null>(null);
 const TracksContext = createContext<TracksContextValue | null>(null);
 
 const parseTracksFromPayload = (payload: string): CompositionTrack[] | undefined => {
@@ -42,9 +38,34 @@ const parseTracksFromPayload = (payload: string): CompositionTrack[] | undefined
   }
 };
 
-export const TracksProvider = ({ children }: { children: ReactNode }) => {
+export const DEFAULT_TRACKS: CompositionTrack[] = [
+  {
+    id: 'hero-image',
+    type: 'image',
+    startInFrames: 0,
+    durationInFrames: 150,
+    props: {
+      src: '/logo.png',
+      alt: 'QuickEditVideo logo',
+      width: 640,
+      height: 360,
+    },
+  },
+];
+
+export const EditorProvider = ({ children }: { children: ReactNode }) => {
+  const [width, setWidthState] = useState(1920);
+  const [height, setHeightState] = useState(1080);
   const [tracks, setTracksState] = useState<CompositionTrack[]>(DEFAULT_TRACKS);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const setWidth = useCallback((nextWidth: number) => {
+    setWidthState(nextWidth);
+  }, []);
+
+  const setHeight = useCallback((nextHeight: number) => {
+    setHeightState(nextHeight);
+  }, []);
 
   const setTracks = useCallback((nextTracks: CompositionTrack[]) => {
     setTracksState(nextTracks);
@@ -109,16 +130,26 @@ export const TracksProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <TracksContext.Provider value={{ tracks, setTracks, promptOpenFile }}>
-      {children}
-    </TracksContext.Provider>
+    <VideoSizeContext.Provider value={{ width, height, setWidth, setHeight }}>
+      <TracksContext.Provider value={{ tracks, setTracks, promptOpenFile }}>
+        {children}
+      </TracksContext.Provider>
+    </VideoSizeContext.Provider>
   );
+};
+
+export const useVideoSize = () => {
+  const context = useContext(VideoSizeContext);
+  if (!context) {
+    throw new Error('useVideoSize must be used within EditorProvider');
+  }
+  return context;
 };
 
 export const useTracks = () => {
   const context = useContext(TracksContext);
   if (!context) {
-    throw new Error('useTracks must be used within a TracksProvider');
+    throw new Error('useTracks must be used within EditorProvider');
   }
   return context;
 };

@@ -8,7 +8,7 @@ import type {
 import { renderMediaOnWeb } from '@remotion/web-renderer';
 import RootComposition from './RootComposition';
 import { CompositionTrack, getRootCompositionDurationInFrames, getTracksFingerprint } from './compositions/tracks';
-import type { VideoSize } from './useVideoSize';
+import type { VideoSize } from './useEditor';
 
 const COMPOSITION_FPS = 30;
 

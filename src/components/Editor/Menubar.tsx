@@ -16,7 +16,7 @@ import {
 	MenubarTrigger,
 } from '../ui/menubar';
 import { RedoIcon, UndoIcon } from 'lucide-react';
-import { useTracks } from './useTracks';
+import { useTracks } from './useEditor';
 
 export interface MenubarProps {
 	className?: string;

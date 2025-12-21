@@ -7,7 +7,7 @@ import ImageComposition from './compositions/ImageComposition';
 import VideoComposition from './compositions/VideoComposition';
 import TextComposition from './compositions/TextComposition';
 import { CompositionTrack, RootCompositionInputProps } from './compositions/tracks';
-import { DEFAULT_TRACKS } from './useTracks';
+import { DEFAULT_TRACKS } from './useEditor';
 
 const containerStyle: CSSProperties = {
   background: 'radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.25), transparent 40%), #020617',

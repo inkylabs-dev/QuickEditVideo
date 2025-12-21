@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { FC } from 'react';
-import { useVideoSize } from './useVideoSize';
+import { useVideoSize } from './useEditor';
 import {
   Dialog,
   DialogContent,

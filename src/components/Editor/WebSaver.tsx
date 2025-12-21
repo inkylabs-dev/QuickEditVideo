@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import type { CompositionTrack } from './compositions/tracks';
-import { useTracks } from './useTracks';
+import { useTracks } from './useEditor';
 
 const compactTrack = (track: CompositionTrack) => ({
   id: track.id,

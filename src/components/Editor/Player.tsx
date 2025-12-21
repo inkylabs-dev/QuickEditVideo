@@ -8,8 +8,7 @@ import {
   getRootCompositionDurationInFrames,
   RootCompositionInputProps,
 } from './compositions/tracks';
-import { useVideoSize } from './useVideoSize';
-import { useTracks } from './useTracks';
+import { useVideoSize, useTracks } from './useEditor';
 
 const COMPOSITION_FPS = 30;
 
