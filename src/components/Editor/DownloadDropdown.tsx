@@ -9,6 +9,7 @@ import { useVideoSize } from './useVideoSize';
 import { useTracks } from './useTracks';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 
 export interface DownloadDropdownProps {
   className?: string;
@@ -103,18 +104,18 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, onRequestClose
           ))}
         </div>
       </div>
-      <button
+      <Button
         type="button"
         disabled={isRendering}
-        className="w-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow-md disabled:cursor-not-allowed disabled:opacity-70"
+        className="w-full rounded-full"
         onClick={handleDownload}
       >
         {isRendering ? 'Rendering...' : 'Download'}
-      </button>
+      </Button>
       {isRendering && (
         <div className="space-y-1">
           <p className="text-[0.55rem] uppercase tracking-[0.4em] text-emerald-600">
-            Rendering
+            {renderProgress}%
           </p>
           <Progress value={renderProgress} className="h-1" />
         </div>
