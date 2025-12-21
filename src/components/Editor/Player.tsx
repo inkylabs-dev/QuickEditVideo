@@ -34,9 +34,9 @@ const Player = () => (
       compositionHeight={COMPOSITION_HEIGHT}
       fps={COMPOSITION_FPS}
       inputProps={ROOT_INPUT_PROPS}
-      autoPlay
-      loop
-      controls
+      autoPlay={false}
+      loop={false}
+      controls={true}
       style={PLAYER_STYLE}
       // QuickEditVideo project is ran by non-profit organization so we can
       // use Remotion Player for free by acknowledging the license.

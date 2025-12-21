@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useRef, useEffect } from 'react';
 import type { FC } from 'react';
+import ResizeMenuItem from './ResizeMenuItem';
 
 export interface MenubarProps {
   className?: string;
@@ -62,6 +63,7 @@ const Menubar: FC<MenubarProps> = ({ className }) => {
         {isFileMenuOpen && (
           <div className="absolute left-0 top-full z-10 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg">
             <div className="py-1">
+              <ResizeMenuItem onMenuItemClick={() => setFileMenuOpen(false)} />
               <button
                 type="button"
                 onClick={handleSave}
