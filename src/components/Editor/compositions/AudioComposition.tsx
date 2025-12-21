@@ -26,12 +26,12 @@ const AudioComposition = ({
   loop = false,
 }: AudioCompositionProps) => {
   const { fps } = useVideoConfig();
-  const startFrom = startInFrames / fps;
-  const endAt = endInFrames !== undefined ? endInFrames / fps : undefined;
+  const trimBefore = startInFrames / fps;
+  const trimAfter = endInFrames !== undefined ? endInFrames / fps : undefined;
 
   return (
     <AbsoluteFill style={containerStyle}>
-      <Audio src={src} startFrom={startFrom} endAt={endAt} volume={volume} loop={loop} />
+      <Audio src={src} trimBefore={trimBefore} trimAfter={trimAfter} volume={volume} loop={loop} />
     </AbsoluteFill>
   );
 };

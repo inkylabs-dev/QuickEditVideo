@@ -27,12 +27,12 @@ const videoStyle: CSSProperties = {
 
 const VideoComposition = ({ src, loop = true, startInFrames = 0, endInFrames }: VideoCompositionProps) => {
   const { fps } = useVideoConfig();
-  const startFrom = startInFrames / fps;
-  const endAt = endInFrames !== undefined ? endInFrames / fps : undefined;
+  const trimBefore = startInFrames / fps;
+  const trimAfter = endInFrames !== undefined ? endInFrames / fps : undefined;
 
   return (
     <AbsoluteFill style={containerStyle}>
-      <Video src={src} loop={loop} startFrom={startFrom} endAt={endAt} style={videoStyle} />
+      <Video src={src} loop={loop} trimBefore={trimBefore} trimAfter={trimAfter} style={videoStyle} />
     </AbsoluteFill>
   );
 };
