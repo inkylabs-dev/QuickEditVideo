@@ -18,6 +18,12 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
     "types": [
       "node"
     ],
