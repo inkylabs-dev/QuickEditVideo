@@ -12,9 +12,7 @@ import {
 	Menubar as MenubarRoot,
 	MenubarContent,
 	MenubarGroup,
-	MenubarItem,
 	MenubarMenu,
-	MenubarSeparator,
 	MenubarTrigger,
 } from '../ui/menubar';
 import { RedoIcon, UndoIcon } from 'lucide-react';
@@ -48,10 +46,6 @@ const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 	const handleResetConfirm = useCallback(() => {
 		setTracks([]);
 	}, [setTracks]);
-
-	const handleReportIssue = useCallback(() => {
-		window.open('https://github.com/inkylabs-dev/quickeditvideo/issues', '_blank');
-	}, []);
 
 	const handleUndo = useCallback(() => {
 		console.log('Undo clicked');
@@ -98,12 +92,10 @@ const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 					<MenubarTrigger>File</MenubarTrigger>
 					<MenubarContent>
 						<MenubarGroup>
-							<ResizeMenuItem setResizeDialogOpen={openResizeDialog} />
-							<MenubarSeparator />
 							<OpenMenuItem />
 							<SaveMenuItem />
+              <ResizeMenuItem setResizeDialogOpen={openResizeDialog} />
 							<ResetMenuItem onSelect={openResetDialog} />
-							<MenubarItem onSelect={handleReportIssue}>Report Issue</MenubarItem>
 						</MenubarGroup>
 					</MenubarContent>
 				</MenubarMenu>

@@ -30,7 +30,7 @@ const Player = () => {
   if (!hasTracks) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <div className="text-sm font-semibold text-white/70">
+        <div className="text-sm font-semibold text-slate-900">
           No tracks to preview. Add or open a project to render the player.
         </div>
       </div>

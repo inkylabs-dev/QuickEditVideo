@@ -1,7 +1,10 @@
 'use client';
 
+'use client';
+
 import type { FC } from 'react';
 import { MenubarItem } from '../ui/menubar';
+import { FolderOpenIcon } from 'lucide-react';
 import { useTracks } from './useTracks';
 
 const OpenMenuItem: FC = () => {
@@ -9,6 +12,7 @@ const OpenMenuItem: FC = () => {
 
   return (
     <MenubarItem inset onSelect={promptOpenFile} shortcut="⌘O">
+      <FolderOpenIcon className="mr-2 h-4 w-4 text-slate-500" />
       Open...
     </MenubarItem>
   );
