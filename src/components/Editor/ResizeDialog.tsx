@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { FC } from 'react';
 import type { VideoSizePreset, VideoSize } from './useVideoSize';
 
@@ -45,20 +46,26 @@ const ResizeDialog: FC<ResizeDialogProps> = ({ isOpen, onClose, onResize, curren
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
-  return (
+  console.log('ResizeDialog rendering, isOpen:', isOpen);
+
+  const dialog = (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black bg-opacity-50"
+        className="fixed inset-0 bg-black bg-opacity-50"
+        style={{ zIndex: 9998 }}
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Dialog */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
+      <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 9999, pointerEvents: 'auto' }}>
+        <div
+          className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Resize Video</h2>
 
           <div className="space-y-2">
@@ -142,6 +149,8 @@ const ResizeDialog: FC<ResizeDialogProps> = ({ isOpen, onClose, onResize, curren
       </div>
     </>
   );
+
+  return createPortal(dialog, document.body);
 };
 
 export default ResizeDialog;

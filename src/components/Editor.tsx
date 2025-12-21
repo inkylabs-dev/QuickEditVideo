@@ -5,6 +5,7 @@ import DownloadButton from './Editor/DownloadButton';
 import EditorLayout from './Editor/Layout';
 import Player from './Editor/Player';
 import Menubar from './Editor/Menubar';
+import { VideoSizeProvider } from './Editor/useVideoSize';
 
 // force static
 export const dynamic = 'force-static';
@@ -82,13 +83,15 @@ const Editor = () => {
   );
 
   return (
-    <EditorLayout
-      sidebar={sidebar}
-      topPanel={playerPanel}
-      bottomPanel={timelinePanel}
-      navLeft={<Menubar />}
-      navRight={<DownloadButton />}
-    />
+    <VideoSizeProvider>
+      <EditorLayout
+        sidebar={sidebar}
+        topPanel={playerPanel}
+        bottomPanel={timelinePanel}
+        navLeft={<Menubar />}
+        navRight={<DownloadButton />}
+      />
+    </VideoSizeProvider>
   );
 };
 

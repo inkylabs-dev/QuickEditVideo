@@ -8,9 +8,8 @@ import {
   getRootCompositionDurationInFrames,
   RootCompositionInputProps,
 } from './compositions/tracks';
+import { useVideoSize } from './useVideoSize';
 
-const COMPOSITION_WIDTH = 1280;
-const COMPOSITION_HEIGHT = 720;
 const COMPOSITION_FPS = 30;
 const COMPOSITION_DURATION = getRootCompositionDurationInFrames(ROOT_TRACKS);
 
@@ -25,24 +24,28 @@ const PLAYER_STYLE: CSSProperties = {
   backgroundColor: '#0f172a',
 };
 
-const Player = () => (
-  <div className="flex h-full w-full">
-    <RemotionPlayer
-      component={RootComposition}
-      durationInFrames={COMPOSITION_DURATION}
-      compositionWidth={COMPOSITION_WIDTH}
-      compositionHeight={COMPOSITION_HEIGHT}
-      fps={COMPOSITION_FPS}
-      inputProps={ROOT_INPUT_PROPS}
-      autoPlay={false}
-      loop={false}
-      controls={true}
-      style={PLAYER_STYLE}
-      // QuickEditVideo project is ran by non-profit organization so we can
-      // use Remotion Player for free by acknowledging the license.
-      acknowledgeRemotionLicense={true}
-    />
-  </div>
-);
+const Player = () => {
+  const { videoSize } = useVideoSize();
+
+  return (
+    <div className="flex h-full w-full">
+      <RemotionPlayer
+        component={RootComposition}
+        durationInFrames={COMPOSITION_DURATION}
+        compositionWidth={videoSize.width}
+        compositionHeight={videoSize.height}
+        fps={COMPOSITION_FPS}
+        inputProps={ROOT_INPUT_PROPS}
+        autoPlay={false}
+        loop={false}
+        controls={true}
+        style={PLAYER_STYLE}
+        // QuickEditVideo project is ran by non-profit organization so we can
+        // use Remotion Player for free by acknowledging the license.
+        acknowledgeRemotionLicense={true}
+      />
+    </div>
+  );
+};
 
 export default Player;

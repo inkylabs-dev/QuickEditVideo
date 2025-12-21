@@ -5,6 +5,7 @@ import type { FC } from 'react';
 import type { WebRendererQuality } from '@remotion/web-renderer';
 import { renderRootComposition } from './WebRender';
 import { getRootCompositionDurationInFrames, ROOT_TRACKS } from './compositions/tracks';
+import { useVideoSize } from './useVideoSize';
 
 export interface DownloadDropdownProps {
   className?: string;
@@ -26,6 +27,7 @@ const QUALITY_MAP: Record<typeof QUALITY_OPTIONS[number], WebRendererQuality> = 
 };
 
 const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true, onRequestClose }) => {
+  const { videoSize } = useVideoSize();
   const classes = [
     'absolute right-0 top-full z-10 mt-2 w-56 rounded-3xl border border-gray-200 bg-white p-4 shadow-xl',
     !isOpen && 'hidden',
@@ -58,6 +60,7 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true,
         container,
         quality: QUALITY_MAP[qualityLabel],
         tracks: compositionTracks,
+        videoSize,
         onProgress: (progress) => {
           const percent = Math.min(
             100,
@@ -85,7 +88,7 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true,
     } finally {
       setIsRendering(false);
     }
-  }, [filetype, isRendering, onRequestClose, qualityLabel]);
+  }, [filetype, isRendering, onRequestClose, qualityLabel, videoSize]);
 
   return (
     <div className={classes} aria-hidden={!isOpen}>

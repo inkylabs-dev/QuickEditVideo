@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
+import type { ReactNode } from 'react';
 
 export type VideoSizePreset = 'landscape' | 'mobile' | 'square' | 'custom';
 
@@ -14,12 +15,20 @@ const PRESETS: Record<Exclude<VideoSizePreset, 'custom'>, { width: number; heigh
   square: { width: 1080, height: 1080 },
 };
 
-export const useVideoSize = (initialPreset: VideoSizePreset = 'landscape') => {
-  const [videoSize, setVideoSize] = useState<VideoSize>(() => {
-    if (initialPreset === 'custom') {
-      return { width: 1920, height: 1080, preset: 'custom' };
-    }
-    return { ...PRESETS[initialPreset], preset: initialPreset };
+interface VideoSizeContextValue {
+  videoSize: VideoSize;
+  setPreset: (preset: VideoSizePreset) => void;
+  setCustomSize: (width: number, height: number) => void;
+  setWidth: (width: number) => void;
+  setHeight: (height: number) => void;
+}
+
+const VideoSizeContext = createContext<VideoSizeContextValue | null>(null);
+
+export const VideoSizeProvider = ({ children }: { children: ReactNode }) => {
+  const [videoSize, setVideoSize] = useState<VideoSize>({
+    ...PRESETS.landscape,
+    preset: 'landscape',
   });
 
   const setPreset = useCallback((preset: VideoSizePreset) => {
@@ -42,11 +51,25 @@ export const useVideoSize = (initialPreset: VideoSizePreset = 'landscape') => {
     setVideoSize((prev) => ({ ...prev, height, preset: 'custom' }));
   }, []);
 
-  return {
-    videoSize,
-    setPreset,
-    setCustomSize,
-    setWidth,
-    setHeight,
-  };
+  return (
+    <VideoSizeContext.Provider
+      value={{
+        videoSize,
+        setPreset,
+        setCustomSize,
+        setWidth,
+        setHeight,
+      }}
+    >
+      {children}
+    </VideoSizeContext.Provider>
+  );
+};
+
+export const useVideoSize = () => {
+  const context = useContext(VideoSizeContext);
+  if (!context) {
+    throw new Error('useVideoSize must be used within VideoSizeProvider');
+  }
+  return context;
 };

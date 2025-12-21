@@ -14,7 +14,10 @@ const ResizeMenuItem: FC<ResizeMenuItemProps> = ({ onMenuItemClick }) => {
   const [isResizeDialogOpen, setResizeDialogOpen] = useState(false);
   const { videoSize, setPreset, setCustomSize } = useVideoSize();
 
+  console.log('ResizeMenuItem render, isResizeDialogOpen:', isResizeDialogOpen);
+
   const handleClick = useCallback(() => {
+    console.log('Resize clicked, opening dialog');
     onMenuItemClick?.();
     setResizeDialogOpen(true);
   }, [onMenuItemClick]);

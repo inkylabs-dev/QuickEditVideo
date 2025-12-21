@@ -12,16 +12,19 @@ import {
   getRootCompositionDurationInFrames,
   ROOT_TRACKS,
 } from './compositions/tracks';
+import type { VideoSize } from './useVideoSize';
 
-const COMPOSITION_WIDTH = 1280;
-const COMPOSITION_HEIGHT = 720;
 const COMPOSITION_FPS = 30;
 
-const buildCompositionOptions = (tracks: CompositionTrack[]) => ({
+const buildCompositionOptions = (
+  tracks: CompositionTrack[],
+  width: number,
+  height: number
+) => ({
   component: RootComposition,
   id: 'RootComposition',
-  width: COMPOSITION_WIDTH,
-  height: COMPOSITION_HEIGHT,
+  width,
+  height,
   fps: COMPOSITION_FPS,
   durationInFrames: getRootCompositionDurationInFrames(tracks),
   inputProps: {
@@ -34,6 +37,7 @@ export interface RenderRootCompositionOptions {
   quality: WebRendererQuality;
   onProgress?: RenderMediaOnWebProgressCallback;
   tracks?: CompositionTrack[];
+  videoSize?: VideoSize;
 }
 
 export const renderRootComposition = async ({
@@ -41,10 +45,15 @@ export const renderRootComposition = async ({
   quality,
   onProgress,
   tracks = ROOT_TRACKS,
-}: RenderRootCompositionOptions) =>
-  renderMediaOnWeb({
-    composition: buildCompositionOptions(tracks),
+  videoSize,
+}: RenderRootCompositionOptions) => {
+  const width = videoSize?.width ?? 1280;
+  const height = videoSize?.height ?? 720;
+
+  return renderMediaOnWeb({
+    composition: buildCompositionOptions(tracks, width, height),
     container,
     videoBitrate: quality,
     onProgress: onProgress ?? null,
   });
+};
