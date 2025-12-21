@@ -4,8 +4,9 @@ import { useCallback, useState } from 'react';
 import type { FC } from 'react';
 import type { WebRendererQuality } from '@remotion/web-renderer';
 import { renderRootComposition } from './WebRender';
-import { getRootCompositionDurationInFrames, ROOT_TRACKS } from './compositions/tracks';
+import { getRootCompositionDurationInFrames } from './compositions/tracks';
 import { useVideoSize } from './useVideoSize';
+import { useTracks } from './useTracks';
 
 export interface DownloadDropdownProps {
   className?: string;
@@ -28,6 +29,8 @@ const QUALITY_MAP: Record<typeof QUALITY_OPTIONS[number], WebRendererQuality> = 
 
 const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true, onRequestClose }) => {
   const { width, height } = useVideoSize();
+  const { tracks } = useTracks();
+
   const classes = [
     'absolute right-0 top-full z-10 mt-2 w-56 rounded-3xl border border-gray-200 bg-white p-4 shadow-xl',
     !isOpen && 'hidden',
@@ -54,7 +57,7 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true,
 
     try {
       const container = filetype === 'webm' ? 'webm' : 'mp4';
-      const compositionTracks = ROOT_TRACKS;
+      const compositionTracks = tracks;
       const durationInFrames = getRootCompositionDurationInFrames(compositionTracks);
 
       const result = await renderRootComposition({
@@ -89,7 +92,7 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true,
     } finally {
       setIsRendering(false);
     }
-  }, [filetype, height, isRendering, onRequestClose, qualityLabel, width]);
+  }, [filetype, height, isRendering, onRequestClose, qualityLabel, tracks, width]);
 
   return (
     <div className={classes} aria-hidden={!isOpen}>

@@ -5,6 +5,7 @@ import DownloadButton from './Editor/DownloadButton';
 import EditorLayout from './Editor/Layout';
 import Player from './Editor/Player';
 import Menubar from './Editor/Menubar';
+import { TracksProvider } from './Editor/useTracks';
 import { VideoSizeProvider } from './Editor/useVideoSize';
 
 // force static
@@ -48,7 +49,7 @@ const Editor = () => {
     [],
   );
 
-  const playerPanel = useMemo(() => <Player />, []);
+  const playerPanel = <Player />;
 
   const timelinePanel = useMemo(
     () => (
@@ -84,13 +85,15 @@ const Editor = () => {
 
   return (
     <VideoSizeProvider>
-      <EditorLayout
-        sidebar={sidebar}
-        topPanel={playerPanel}
-        bottomPanel={timelinePanel}
-        navLeft={<Menubar />}
-        navRight={<DownloadButton />}
-      />
+      <TracksProvider>
+        <EditorLayout
+          sidebar={sidebar}
+          topPanel={playerPanel}
+          bottomPanel={timelinePanel}
+          navLeft={<Menubar />}
+          navRight={<DownloadButton />}
+        />
+      </TracksProvider>
     </VideoSizeProvider>
   );
 };

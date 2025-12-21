@@ -1,21 +1,17 @@
 'use client';
 
 import type { CSSProperties } from 'react';
+import { useMemo } from 'react';
 import { Player as RemotionPlayer } from '@remotion/player';
 import RootComposition from './RootComposition';
 import {
-  ROOT_TRACKS,
   getRootCompositionDurationInFrames,
   RootCompositionInputProps,
 } from './compositions/tracks';
 import { useVideoSize } from './useVideoSize';
+import { useTracks } from './useTracks';
 
 const COMPOSITION_FPS = 30;
-const COMPOSITION_DURATION = getRootCompositionDurationInFrames(ROOT_TRACKS);
-
-const ROOT_INPUT_PROPS: RootCompositionInputProps = {
-  tracks: ROOT_TRACKS,
-};
 
 const PLAYER_STYLE: CSSProperties = {
   width: '100%',
@@ -26,16 +22,30 @@ const PLAYER_STYLE: CSSProperties = {
 
 const Player = () => {
   const { width, height } = useVideoSize();
+  const { tracks } = useTracks();
+  const durationInFrames = getRootCompositionDurationInFrames(tracks);
+  const inputProps: RootCompositionInputProps = useMemo(() => ({ tracks }), [tracks]);
+  const hasTracks = tracks.length > 0;
+
+  if (!hasTracks) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="text-sm font-semibold text-white/70">
+          No tracks to preview. Add or open a project to render the player.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full w-full">
       <RemotionPlayer
         component={RootComposition}
-        durationInFrames={COMPOSITION_DURATION}
+        durationInFrames={durationInFrames}
         compositionWidth={width}
         compositionHeight={height}
         fps={COMPOSITION_FPS}
-        inputProps={ROOT_INPUT_PROPS}
+        inputProps={inputProps}
         autoPlay={false}
         loop={false}
         controls={true}

@@ -22,58 +22,40 @@ export interface RootCompositionInputProps {
   tracks: CompositionTrack[];
 }
 
-export const ROOT_TRACKS: CompositionTrack[] = [
-  {
-    id: 'intro-text',
-    type: 'text',
-    startInFrames: 0,
-    durationInFrames: 120,
-    props: {
-      message: 'Compose videos without leaving the browser',
-      subtext: 'Every edit stays on your device for privacy-first workflows.',
-      accentColor: '#38bdf8',
-    },
-  },
-  {
-    id: 'hero-image',
-    type: 'image',
-    startInFrames: 120,
-    durationInFrames: 100,
-    props: {
-      src: '/logo.png',
-      alt: 'QuickEditVideo logo',
-      width: 640,
-      height: 360,
-    },
-  },
-  {
-    id: 'hero-video',
-    type: 'video',
-    startInFrames: 220,
-    durationInFrames: 140,
-    props: {
-      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-      startInFrames: 0,
-      endInFrames: 140,
-      loop: true,
-    },
-  },
-  {
-    id: 'background-audio',
-    type: 'audio',
-    startInFrames: 0,
-    durationInFrames: 360,
-    props: {
-      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
-      startInFrames: 0,
-      endInFrames: 360,
-      loop: true,
-      volume: 0.7,
-    },
-  },
-];
-
 export const getRootCompositionDurationInFrames = (tracks: CompositionTrack[]) =>
   tracks.length === 0
     ? 1
     : tracks.reduce((max, track) => Math.max(max, track.startInFrames + track.durationInFrames), 0);
+
+const stableStringify = (value: unknown): string => {
+  if (value === null) {
+    return 'null';
+  }
+  if (value === undefined) {
+    return 'undefined';
+  }
+  if (typeof value === 'object') {
+    if (Array.isArray(value)) {
+      return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+    }
+    const entries = Object.keys(value as Record<string, unknown>).sort();
+    return `{${entries.map((key) => `${key}:${stableStringify((value as Record<string, unknown>)[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+};
+
+export const getTracksFingerprint = (tracks: CompositionTrack[]) => {
+  const serial = tracks
+    .map((track) => {
+      const propsValue = stableStringify(track.props);
+      return `${track.id}|${track.type}|${track.startInFrames}|${track.durationInFrames}|${propsValue}`;
+    })
+    .join(';');
+
+  let hash = 0;
+  for (let i = 0; i < serial.length; i += 1) {
+    hash = (hash * 31 + serial.charCodeAt(i)) >>> 0;
+  }
+
+  return hash.toString(36);
+};

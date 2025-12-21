@@ -7,11 +7,7 @@ import type {
 } from '@remotion/web-renderer';
 import { renderMediaOnWeb } from '@remotion/web-renderer';
 import RootComposition from './RootComposition';
-import {
-  CompositionTrack,
-  getRootCompositionDurationInFrames,
-  ROOT_TRACKS,
-} from './compositions/tracks';
+import { CompositionTrack, getRootCompositionDurationInFrames, getTracksFingerprint } from './compositions/tracks';
 import type { VideoSize } from './useVideoSize';
 
 const COMPOSITION_FPS = 30;
@@ -20,23 +16,26 @@ const buildCompositionOptions = (
   tracks: CompositionTrack[],
   width: number,
   height: number
-) => ({
-  component: RootComposition,
-  id: 'RootComposition',
-  width,
-  height,
-  fps: COMPOSITION_FPS,
-  durationInFrames: getRootCompositionDurationInFrames(tracks),
-  inputProps: {
-    tracks,
-  },
-});
+) => {
+  const fingerprint = getTracksFingerprint(tracks);
+  return {
+    component: RootComposition,
+    id: `RootComposition-${fingerprint}`,
+    width,
+    height,
+    fps: COMPOSITION_FPS,
+    durationInFrames: getRootCompositionDurationInFrames(tracks),
+    inputProps: {
+      tracks,
+    },
+  };
+};
 
 export interface RenderRootCompositionOptions {
   container: WebRendererContainer;
   quality: WebRendererQuality;
   onProgress?: RenderMediaOnWebProgressCallback;
-  tracks?: CompositionTrack[];
+  tracks: CompositionTrack[];
   videoSize?: VideoSize;
 }
 
@@ -44,7 +43,7 @@ export const renderRootComposition = async ({
   container,
   quality,
   onProgress,
-  tracks = ROOT_TRACKS,
+  tracks,
   videoSize,
 }: RenderRootCompositionOptions) => {
   const width = videoSize?.width ?? 1280;

@@ -2,8 +2,12 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { FC } from 'react';
+import ResetDialog from './ResetDialog';
 import ResizeMenuItem from './ResizeMenuItem';
 import ResizeDialog from './ResizeDialog';
+import OpenMenuItem from './OpenMenuItem';
+import ResetMenuItem from './ResetMenuItem';
+import SaveMenuItem from './SaveMenuItem';
 import {
 	Menubar as MenubarRoot,
 	MenubarContent,
@@ -14,6 +18,7 @@ import {
 	MenubarTrigger,
 } from '../ui/menubar';
 import { RedoIcon, UndoIcon } from 'lucide-react';
+import { useTracks } from './useTracks';
 
 export interface MenubarProps {
 	className?: string;
@@ -21,6 +26,8 @@ export interface MenubarProps {
 
 const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 	const [isResizeDialogOpen, setResizeDialogOpen] = useState(false);
+	const [isResetDialogOpen, setResetDialogOpen] = useState(false);
+	const { setTracks } = useTracks();
 
 	const openResizeDialog = useCallback(() => {
 		setResizeDialogOpen(true);
@@ -30,9 +37,17 @@ const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 		setResizeDialogOpen(false);
 	}, []);
 
-	const handleSave = useCallback(() => {
-		console.log('Save clicked');
+	const openResetDialog = useCallback(() => {
+		setResetDialogOpen(true);
 	}, []);
+
+	const closeResetDialog = useCallback(() => {
+		setResetDialogOpen(false);
+	}, []);
+
+	const handleResetConfirm = useCallback(() => {
+		setTracks([]);
+	}, [setTracks]);
 
 	const handleReportIssue = useCallback(() => {
 		window.open('https://github.com/inkylabs-dev/quickeditvideo/issues', '_blank');
@@ -85,9 +100,9 @@ const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 						<MenubarGroup>
 							<ResizeMenuItem setResizeDialogOpen={openResizeDialog} />
 							<MenubarSeparator />
-							<MenubarItem onSelect={handleSave} shortcut="⌘S">
-								Save
-							</MenubarItem>
+							<OpenMenuItem />
+							<SaveMenuItem />
+							<ResetMenuItem onSelect={openResetDialog} />
 							<MenubarItem onSelect={handleReportIssue}>Report Issue</MenubarItem>
 						</MenubarGroup>
 					</MenubarContent>
@@ -98,6 +113,11 @@ const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 			{undoButton}
 			{redoButton}
 			<ResizeDialog isOpen={isResizeDialogOpen} onClose={closeResizeDialog} />
+			<ResetDialog
+				isOpen={isResetDialogOpen}
+				onClose={closeResetDialog}
+				onConfirm={handleResetConfirm}
+			/>
 		</div>
 	);
 };

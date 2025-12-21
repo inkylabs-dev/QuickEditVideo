@@ -7,11 +7,8 @@ import AudioComposition from './compositions/AudioComposition';
 import ImageComposition from './compositions/ImageComposition';
 import VideoComposition from './compositions/VideoComposition';
 import TextComposition from './compositions/TextComposition';
-import {
-  CompositionTrack,
-  ROOT_TRACKS,
-  RootCompositionInputProps,
-} from './compositions/tracks';
+import { CompositionTrack, RootCompositionInputProps } from './compositions/tracks';
+import { DEFAULT_TRACKS } from './useTracks';
 
 const containerStyle: CSSProperties = {
   background: 'radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.25), transparent 40%), #020617',
@@ -40,7 +37,7 @@ const renderTrack = (track: CompositionTrack) => {
 };
 
 const RootComposition = ({ inputProps }: CompositionProps<RootCompositionInputProps>) => {
-  const tracks = inputProps?.tracks?.length ? inputProps.tracks : ROOT_TRACKS;
+  const tracks = inputProps?.tracks ?? DEFAULT_TRACKS;
 
   return (
     <AbsoluteFill style={containerStyle}>

@@ -21,6 +21,7 @@
     "@mediabunny/mp3-encoder": "^1.27.0",
     "@quickeditvideo/editor": "workspace:*",
     "@quickeditvideo/kittentts": "workspace:*",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-menubar": "^1.1.16",
     "@radix-ui/react-slot": "^1.2.4",
