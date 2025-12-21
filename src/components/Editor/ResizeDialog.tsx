@@ -23,8 +23,8 @@ interface PresetOption {
 }
 
 const PRESET_OPTIONS: PresetOption[] = [
-  { label: '9:16', value: 'landscape', dimensions: '1920×1080', width: 1920, height: 1080 },
-  { label: '16:9', value: 'mobile', dimensions: '1080×1920', width: 1080, height: 1920 },
+  { label: '16:9', value: 'landscape', dimensions: '1920×1080', width: 1920, height: 1080 },
+  { label: '9:16', value: 'mobile', dimensions: '1080×1920', width: 1080, height: 1920 },
   { label: '1:1', value: 'square', dimensions: '1080×1080', width: 1080, height: 1080 },
   { label: 'Custom Size', value: 'custom', dimensions: '' },
 ];
