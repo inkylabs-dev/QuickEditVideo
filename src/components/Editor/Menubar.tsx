@@ -7,7 +7,7 @@ import ResizeMenuItem from './ResizeMenuItem';
 import ResizeDialog from './ResizeDialog';
 import OpenMenuItem from './OpenMenuItem';
 import ResetMenuItem from './ResetMenuItem';
-import SaveMenuItem from './SaveMenuItem';
+import SaveToMenuItem from './SaveToMenuItem';
 import {
 	Menubar as MenubarRoot,
 	MenubarContent,
@@ -93,7 +93,7 @@ const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 					<MenubarContent>
 						<MenubarGroup>
 							<OpenMenuItem />
-							<SaveMenuItem />
+							<SaveToMenuItem />
               <ResizeMenuItem setResizeDialogOpen={openResizeDialog} />
 							<ResetMenuItem onSelect={openResetDialog} />
 						</MenubarGroup>
