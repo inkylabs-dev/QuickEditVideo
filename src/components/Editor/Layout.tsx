@@ -119,7 +119,6 @@ const EditorLayout = ({ sidebar, topPanel, bottomPanel, navLeft, navRight }: Edi
               <div className="flex items-center gap-3">
                 {toggleButton}
                 {navLeft ?? null}
-                <p className="text-sm font-medium uppercase tracking-wide text-gray-500">Project editor</p>
               </div>
               <div className="flex items-center gap-4">{navRight ?? null}</div>
             </header>

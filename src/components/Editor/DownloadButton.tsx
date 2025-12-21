@@ -1,65 +1,50 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import DownloadDropdown from './DownloadDropdown';
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const DownloadButton = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  const toggleMenu = useCallback(() => {
-    setIsOpen((open) => !open);
-  }, []);
-
-  const closeMenu = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      if (
-        isOpen &&
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        closeMenu();
-      }
-    };
-
-    window.addEventListener('mousedown', handleClick);
-    return () => window.removeEventListener('mousedown', handleClick);
-  }, [isOpen, closeMenu]);
+  const [open, setOpen] = useState(false);
 
   return (
-    <div ref={containerRef} className="relative">
-      <Button
-        type="button"
-        onClick={toggleMenu}
-        aria-haspopup="true"
-        aria-expanded={isOpen}
-        variant="ghost"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-current"
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          aria-haspopup="true"
+          aria-expanded={open}
+          variant="ghost"
+          className="flex items-center gap-1"
         >
-          <path d="M12 5v13m0 0l4-4m-4 4l-4-4" />
-          <path d="M5 19h14" />
-        </svg>
-        Download
-      </Button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-current"
+          >
+            <path d="M12 5v13m0 0l4-4m-4 4l-4-4" />
+            <path d="M5 19h14" />
+          </svg>
+          Download
+        </Button>
+      </PopoverTrigger>
 
-      <DownloadDropdown isOpen={isOpen} onRequestClose={closeMenu} />
-    </div>
+      <PopoverContent
+        align="end"
+        sideOffset={4}
+        className="w-56 border border-gray-200 bg-white p-4 shadow-xl"
+      >
+        <DownloadDropdown onRequestClose={() => setOpen(false)} />
+      </PopoverContent>
+    </Popover>
   );
 };
 
