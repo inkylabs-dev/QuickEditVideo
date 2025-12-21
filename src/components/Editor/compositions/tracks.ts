@@ -1,8 +1,9 @@
+import type { AudioCompositionProps } from './AudioComposition';
 import type { ImageCompositionProps } from './ImageComposition';
 import type { TextCompositionProps } from './TextComposition';
 import type { VideoCompositionProps } from './VideoComposition';
 
-export type TrackType = 'text' | 'image' | 'video';
+export type TrackType = 'text' | 'image' | 'video' | 'audio';
 
 interface BaseCompositionTrack {
   id: string;
@@ -14,7 +15,8 @@ interface BaseCompositionTrack {
 export type CompositionTrack =
   | (BaseCompositionTrack & { type: 'text'; props: TextCompositionProps })
   | (BaseCompositionTrack & { type: 'image'; props: ImageCompositionProps })
-  | (BaseCompositionTrack & { type: 'video'; props: VideoCompositionProps });
+  | (BaseCompositionTrack & { type: 'video'; props: VideoCompositionProps })
+  | (BaseCompositionTrack & { type: 'audio'; props: AudioCompositionProps });
 
 export interface RootCompositionInputProps {
   tracks: CompositionTrack[];
@@ -54,6 +56,19 @@ export const ROOT_TRACKS: CompositionTrack[] = [
       startInFrames: 0,
       endInFrames: 140,
       loop: true,
+    },
+  },
+  {
+    id: 'background-audio',
+    type: 'audio',
+    startInFrames: 0,
+    durationInFrames: 360,
+    props: {
+      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
+      startInFrames: 0,
+      endInFrames: 360,
+      loop: true,
+      volume: 0.7,
     },
   },
 ];

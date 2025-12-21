@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react';
 import type { CompositionProps } from 'remotion';
 import { AbsoluteFill, Sequence } from 'remotion';
+import AudioComposition from './compositions/AudioComposition';
 import ImageComposition from './compositions/ImageComposition';
 import VideoComposition from './compositions/VideoComposition';
 import TextComposition from './compositions/TextComposition';
@@ -19,6 +20,10 @@ const containerStyle: CSSProperties = {
 };
 
 const renderTrack = (track: CompositionTrack) => {
+  if (track.type === 'audio') {
+    return <AudioComposition {...track.props} />;
+  }
+
   if (track.type === 'text') {
     return <TextComposition {...track.props} />;
   }
