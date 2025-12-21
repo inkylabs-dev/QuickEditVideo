@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import DownloadDropdown from './DownloadDropdown';
+import { Button } from "@/components/ui/button"
 
 const DownloadButton = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,12 +33,12 @@ const DownloadButton = () => {
 
   return (
     <div ref={containerRef} className="relative">
-      <button
+      <Button
         type="button"
         onClick={toggleMenu}
         aria-haspopup="true"
         aria-expanded={isOpen}
-        className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 shadow-sm transition hover:bg-gray-50"
+        variant="ghost"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -55,7 +56,7 @@ const DownloadButton = () => {
           <path d="M5 19h14" />
         </svg>
         Download
-      </button>
+      </Button>
 
       <DownloadDropdown isOpen={isOpen} onRequestClose={closeMenu} />
     </div>
