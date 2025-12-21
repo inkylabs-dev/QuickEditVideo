@@ -27,7 +27,7 @@ const QUALITY_MAP: Record<typeof QUALITY_OPTIONS[number], WebRendererQuality> = 
 };
 
 const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true, onRequestClose }) => {
-  const { videoSize } = useVideoSize();
+  const { width, height } = useVideoSize();
   const classes = [
     'absolute right-0 top-full z-10 mt-2 w-56 rounded-3xl border border-gray-200 bg-white p-4 shadow-xl',
     !isOpen && 'hidden',
@@ -56,11 +56,12 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true,
       const container = filetype === 'webm' ? 'webm' : 'mp4';
       const compositionTracks = ROOT_TRACKS;
       const durationInFrames = getRootCompositionDurationInFrames(compositionTracks);
+
       const result = await renderRootComposition({
         container,
         quality: QUALITY_MAP[qualityLabel],
         tracks: compositionTracks,
-        videoSize,
+        videoSize: { width, height },
         onProgress: (progress) => {
           const percent = Math.min(
             100,
@@ -88,7 +89,7 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, isOpen = true,
     } finally {
       setIsRendering(false);
     }
-  }, [filetype, isRendering, onRequestClose, qualityLabel, videoSize]);
+  }, [filetype, height, isRendering, onRequestClose, qualityLabel, width]);
 
   return (
     <div className={classes} aria-hidden={!isOpen}>

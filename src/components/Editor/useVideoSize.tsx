@@ -1,24 +1,14 @@
+'use client';
+
 import { createContext, useContext, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
-
-export type VideoSizePreset = 'landscape' | 'mobile' | 'square' | 'custom';
 
 export interface VideoSize {
   width: number;
   height: number;
-  preset: VideoSizePreset;
 }
 
-const PRESETS: Record<Exclude<VideoSizePreset, 'custom'>, { width: number; height: number }> = {
-  landscape: { width: 1920, height: 1080 },
-  mobile: { width: 1080, height: 1920 },
-  square: { width: 1080, height: 1080 },
-};
-
-interface VideoSizeContextValue {
-  videoSize: VideoSize;
-  setPreset: (preset: VideoSizePreset) => void;
-  setCustomSize: (width: number, height: number) => void;
+interface VideoSizeContextValue extends VideoSize {
   setWidth: (width: number) => void;
   setHeight: (height: number) => void;
 }
@@ -26,41 +16,19 @@ interface VideoSizeContextValue {
 const VideoSizeContext = createContext<VideoSizeContextValue | null>(null);
 
 export const VideoSizeProvider = ({ children }: { children: ReactNode }) => {
-  const [videoSize, setVideoSize] = useState<VideoSize>({
-    ...PRESETS.landscape,
-    preset: 'landscape',
-  });
+  const [width, setWidthState] = useState(1920);
+  const [height, setHeightState] = useState(1080);
 
-  const setPreset = useCallback((preset: VideoSizePreset) => {
-    if (preset === 'custom') {
-      setVideoSize((prev) => ({ ...prev, preset: 'custom' }));
-    } else {
-      setVideoSize({ ...PRESETS[preset], preset });
-    }
+  const setWidth = useCallback((nextWidth: number) => {
+    setWidthState(nextWidth);
   }, []);
 
-  const setCustomSize = useCallback((width: number, height: number) => {
-    setVideoSize({ width, height, preset: 'custom' });
-  }, []);
-
-  const setWidth = useCallback((width: number) => {
-    setVideoSize((prev) => ({ ...prev, width, preset: 'custom' }));
-  }, []);
-
-  const setHeight = useCallback((height: number) => {
-    setVideoSize((prev) => ({ ...prev, height, preset: 'custom' }));
+  const setHeight = useCallback((nextHeight: number) => {
+    setHeightState(nextHeight);
   }, []);
 
   return (
-    <VideoSizeContext.Provider
-      value={{
-        videoSize,
-        setPreset,
-        setCustomSize,
-        setWidth,
-        setHeight,
-      }}
-    >
+    <VideoSizeContext.Provider value={{ width, height, setWidth, setHeight }}>
       {children}
     </VideoSizeContext.Provider>
   );

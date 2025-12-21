@@ -25,15 +25,15 @@ const PLAYER_STYLE: CSSProperties = {
 };
 
 const Player = () => {
-  const { videoSize } = useVideoSize();
+  const { width, height } = useVideoSize();
 
   return (
     <div className="flex h-full w-full">
       <RemotionPlayer
         component={RootComposition}
         durationInFrames={COMPOSITION_DURATION}
-        compositionWidth={videoSize.width}
-        compositionHeight={videoSize.height}
+        compositionWidth={width}
+        compositionHeight={height}
         fps={COMPOSITION_FPS}
         inputProps={ROOT_INPUT_PROPS}
         autoPlay={false}

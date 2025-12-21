@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { FC } from 'react';
 import ResizeMenuItem from './ResizeMenuItem';
+import ResizeDialog from './ResizeDialog';
 import {
 	Menubar as MenubarRoot,
 	MenubarContent,
@@ -12,13 +13,23 @@ import {
 	MenubarSeparator,
 	MenubarTrigger,
 } from '../ui/menubar';
-import { RedoIcon, UndoIcon } from "lucide-react"
+import { RedoIcon, UndoIcon } from 'lucide-react';
 
 export interface MenubarProps {
 	className?: string;
 }
 
 const EditorMenubar: FC<MenubarProps> = ({ className }) => {
+	const [isResizeDialogOpen, setResizeDialogOpen] = useState(false);
+
+	const openResizeDialog = useCallback(() => {
+		setResizeDialogOpen(true);
+	}, []);
+
+	const closeResizeDialog = useCallback(() => {
+		setResizeDialogOpen(false);
+	}, []);
+
 	const handleSave = useCallback(() => {
 		console.log('Save clicked');
 	}, []);
@@ -72,7 +83,7 @@ const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 					<MenubarTrigger>File</MenubarTrigger>
 					<MenubarContent>
 						<MenubarGroup>
-							<ResizeMenuItem />
+							<ResizeMenuItem setResizeDialogOpen={openResizeDialog} />
 							<MenubarSeparator />
 							<MenubarItem onSelect={handleSave} shortcut="⌘S">
 								Save
@@ -86,6 +97,7 @@ const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 			<div className="h-5 w-px bg-slate-200" />
 			{undoButton}
 			{redoButton}
+			<ResizeDialog isOpen={isResizeDialogOpen} onClose={closeResizeDialog} />
 		</div>
 	);
 };
