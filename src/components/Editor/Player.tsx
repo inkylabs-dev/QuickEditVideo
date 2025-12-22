@@ -1,14 +1,14 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { useMemo } from 'react';
-import { Player as RemotionPlayer } from '@remotion/player';
+import { useMemo, useCallback } from 'react';
+import { Player as RemotionPlayer, PlayerRef } from '@remotion/player';
 import RootComposition from './RootComposition';
 import {
   getRootCompositionDurationInFrames,
   RootCompositionInputProps,
 } from './compositions/tracks';
-import { useVideoSize, useElements } from './useEditor';
+import { useVideoSize, useElements, usePlayerRef, usePlaybackRate } from './useEditor';
 
 const COMPOSITION_FPS = 30;
 
@@ -20,11 +20,19 @@ const PLAYER_STYLE: CSSProperties = {
 };
 
 const Player = () => {
+  const { setPlayerRef } = usePlayerRef();
   const { width, height } = useVideoSize();
   const { elements } = useElements();
+  const playbackRate = usePlaybackRate();
   const durationInFrames = getRootCompositionDurationInFrames(elements);
   const inputProps: RootCompositionInputProps = useMemo(() => ({ elements }), [elements]);
   const hasElements = elements.length > 0;
+
+  const handlePlayerRef = useCallback((ref: PlayerRef | null) => {
+    if (ref) {
+      setPlayerRef(ref);
+    }
+  }, [setPlayerRef]);
 
   if (!hasElements) {
     return (
@@ -39,6 +47,7 @@ const Player = () => {
   return (
     <div className="flex h-full w-full">
       <RemotionPlayer
+        ref={handlePlayerRef}
         component={RootComposition}
         durationInFrames={durationInFrames}
         compositionWidth={width}
@@ -48,6 +57,7 @@ const Player = () => {
         autoPlay={false}
         loop={false}
         controls={true}
+        playbackRate={playbackRate}
         style={PLAYER_STYLE}
         // QuickEditVideo project is ran by non-profit organization so we can
         // use Remotion Player for free by acknowledging the license.

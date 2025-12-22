@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useElements } from './useEditor';
 import type { CompositionTrack } from './compositions/tracks';
+import TimelineControls from './TimelineControls';
 
 const Timeline = () => {
   const { elements } = useElements();
@@ -25,7 +26,9 @@ const Timeline = () => {
   }, [elements]);
 
   return (
-    <div className="flex h-full flex-1 flex-col gap-4 p-5">
+    <div className="flex h-full flex-1 flex-col">
+      <TimelineControls />
+      <div className="flex h-full flex-1 flex-col gap-4 p-5">
       <div className="flex-1 space-y-3 overflow-hidden">
         {tracks.map(({ trackNumber, elements: trackElements }) => (
           <div key={`track-${trackNumber}`} className="space-y-2">
@@ -41,6 +44,7 @@ const Timeline = () => {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

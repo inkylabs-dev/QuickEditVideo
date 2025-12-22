@@ -2,7 +2,9 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
+import type { PlayerRef } from '@remotion/player';
 import type { CompositionTrack, TrackType } from './compositions/tracks';
+import { getRootCompositionDurationInFrames } from './compositions/tracks';
 
 export const PROJECT_TYPE = 'quickeditvideo';
 export const PROJECT_VERSION = 1;
@@ -30,8 +32,15 @@ interface ElementsContextValue {
   setAppState: (appState: Record<string, unknown>) => void;
 }
 
+interface PlayerRefContextValue {
+  getPlayerRef: () => PlayerRef | null;
+  setPlayerRef: (ref: PlayerRef | null) => void;
+  getTotalFrames: () => number;
+}
+
 const VideoSizeContext = createContext<VideoSizeContextValue | null>(null);
 const ElementsContext = createContext<ElementsContextValue | null>(null);
+const PlayerRefContext = createContext<PlayerRefContextValue | null>(null);
 
 type QuickEditMetadata = Record<string, unknown>;
 
@@ -170,6 +179,16 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [files, setFilesState] = useState<unknown[]>([]);
   const [appState, setAppStateState] = useState<Record<string, unknown>>({});
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const playerRefInternal = useRef<PlayerRef | null>(null);
+
+  const getPlayerRef = useCallback(() => playerRefInternal.current, []);
+  const setPlayerRef = useCallback((ref: PlayerRef | null) => {
+    playerRefInternal.current = ref;
+  }, []);
+
+  const getTotalFrames = useCallback(() => {
+    return getRootCompositionDurationInFrames(elements);
+  }, [elements]);
 
   const setWidth = useCallback((nextWidth: number) => {
     setWidthState(nextWidth);
@@ -288,7 +307,9 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
           setAppState,
         }}
       >
-        {children}
+        <PlayerRefContext.Provider value={{ getPlayerRef, setPlayerRef, getTotalFrames }}>
+          {children}
+        </PlayerRefContext.Provider>
       </ElementsContext.Provider>
     </VideoSizeContext.Provider>
   );
@@ -308,4 +329,19 @@ export const useElements = () => {
     throw new Error('useElements must be used within EditorProvider');
   }
   return context;
+};
+
+export const usePlayerRef = () => {
+  const context = useContext(PlayerRefContext);
+  if (!context) {
+    throw new Error('usePlayerRef must be used within EditorProvider');
+  }
+  return context;
+};
+
+export const usePlaybackRate = () => {
+  const { appState } = useElements();
+  const playbackRateString = (appState.timelinePlaybackRate as string) || '1x';
+  const playbackRate = parseFloat(playbackRateString.replace('x', ''));
+  return playbackRate;
 };
