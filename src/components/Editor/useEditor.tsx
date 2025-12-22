@@ -126,8 +126,6 @@ const parseProjectPayload = (payload: string): ParsedProjectPayload | undefined 
 
     const rawElements = Array.isArray(parsed.elements)
       ? parsed.elements
-      : Array.isArray(parsed.tracks)
-      ? parsed.tracks
       : undefined;
 
     if (!rawElements) {

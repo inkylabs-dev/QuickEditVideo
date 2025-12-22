@@ -41,7 +41,7 @@ type RootCompositionProps = {
 };
 
 const RootComposition = ({ elements, inputProps }: RootCompositionProps) => {
-  const resolvedElements = elements ?? inputProps?.elements ?? inputProps?.tracks ?? [];
+  const resolvedElements = elements ?? inputProps?.elements ?? [];
   const compositionElements = resolvedElements.length > 0 ? resolvedElements : DEFAULT_ELEMENTS;
 
   const elementsByTrack = compositionElements.reduce<Record<number, CompositionTrack[]>>(

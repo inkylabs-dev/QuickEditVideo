@@ -21,10 +21,6 @@ export type CompositionTrack =
 
 export interface RootCompositionInputProps {
   elements?: CompositionTrack[];
-  /**
-   * Legacy property kept for backward compatibility with older project files.
-   */
-  tracks?: CompositionTrack[];
 }
 
 export const getRootCompositionDurationInFrames = (elements: CompositionTrack[]) =>
