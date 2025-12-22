@@ -34,25 +34,27 @@ const Timeline = () => {
       <div className="flex-1 overflow-hidden">
         <TimelineScrollArea>
           <div className="relative">
-            <TimelineRuler />
+            <div className="sticky top-0 z-20 relative">
+              <TimelineRuler />
+            </div>
             <TimelinePlayhead />
-          </div>
-          <div className="flex h-full flex-1 flex-col gap-4 p-5">
-            <div className="flex-1 space-y-3 overflow-hidden">
-              {tracks.map(({ trackNumber, elements: trackElements }) => (
-                <div key={`track-${trackNumber}`} className="space-y-2">
-                  <div className="flex gap-3">
-                    {trackElements.map((element) => (
-                      <div
-                        key={element.id}
-                        className="flex-1 rounded-lg border border-gray-200 bg-gradient-to-br from-white to-gray-100 p-3 text-xs font-semibold text-gray-700 shadow-sm"
-                      >
-                        {element.type} ({element.durationInFrames}f)
-                      </div>
-                    ))}
+            <div className="flex flex-col gap-4 p-5">
+              <div className="space-y-3">
+                {tracks.map(({ trackNumber, elements: trackElements }) => (
+                  <div key={`track-${trackNumber}`} className="space-y-2">
+                    <div className="flex gap-3">
+                      {trackElements.map((element) => (
+                        <div
+                          key={element.id}
+                          className="flex-1 rounded-lg border border-gray-200 bg-gradient-to-br from-white to-gray-100 p-3 text-xs font-semibold text-gray-700 shadow-sm"
+                        >
+                          {element.type} ({element.durationInFrames}f)
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </TimelineScrollArea>

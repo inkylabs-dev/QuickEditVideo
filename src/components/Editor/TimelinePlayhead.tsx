@@ -7,6 +7,7 @@ const TimelinePlayhead = () => {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const playheadRef = useRef<HTMLDivElement>(null);
+  const iconRef = useRef<HTMLDivElement>(null);
 
   const scale = (appState.timelineScale as number) || 100;
   const pixelsPerFrame = scale / 100;
@@ -67,17 +68,17 @@ const TimelinePlayhead = () => {
   return (
     <div
       ref={playheadRef}
-      className="absolute top-0 z-10 cursor-ew-resize"
-      style={{ left: `${position}px` }}
+      className="absolute top-0 z-30 h-full cursor-ew-resize"
+      style={{ left: `${position}px`, width: '20px', marginLeft: '-10px' }}
       onMouseDown={handleMouseDown}
     >
-      <div className="flex flex-col items-center">
-        <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div className="sticky top-0 flex flex-col items-center">
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-[10px]">
           <path d="M9.9 2.121a2 2 0 0 1-.586 1.414l-2.95 2.95a2 2 0 0 1-2.828 0l-2.95-2.95A2 2 0 0 1 0 2.122V2a2 2 0 0 1 2-2h5.9a2 2 0 0 1 2 2v.121Z" fill="#0E1318"/>
         </svg>
         <div className="h-2" />
-        <div className="w-0.5 bg-black" style={{ height: 'calc(100vh - 200px)' }} />
       </div>
+      <div className="w-0.5 bg-black ml-[14.75px]" style={{ height: 'calc(100% - 1.5rem)' }} />
     </div>
   );
 };
