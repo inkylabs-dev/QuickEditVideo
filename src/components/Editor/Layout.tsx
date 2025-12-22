@@ -1,9 +1,10 @@
 'use client';
 
-import type { Layout, GroupImperativeHandle } from 'react-resizable-panels';
-import { Group, Panel, Separator, useGroupRef } from 'react-resizable-panels';
+import type { GroupImperativeHandle, Layout } from 'react-resizable-panels';
 import { useCallback, useMemo, useState } from 'react';
 import type { ReactNode, Ref } from 'react';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { useGroupRef } from 'react-resizable-panels';
 
 export const LEFT_PANEL_ID = 'editor-sidebar';
 export const MAIN_PANEL_ID = 'editor-main';
@@ -87,14 +88,14 @@ const EditorLayout = ({ sidebar, topPanel, bottomPanel, navLeft, navRight }: Edi
 
   return (
     <div className="flex min-h-screen bg-gray-100 text-gray-900">
-      <Group
+      <ResizablePanelGroup
         orientation="horizontal"
         className="flex flex-1"
         groupRef={groupRef as Ref<GroupImperativeHandle>}
         defaultLayout={DEFAULT_LAYOUT}
         onLayoutChange={handleLayoutChange}
       >
-        <Panel
+        <ResizablePanel
           id={LEFT_PANEL_ID}
           collapsible
           collapsedSize="0%"
@@ -106,16 +107,16 @@ const EditorLayout = ({ sidebar, topPanel, bottomPanel, navLeft, navRight }: Edi
           }`}
         >
           {sidebar}
-        </Panel>
+        </ResizablePanel>
 
-        <Separator
+        <ResizableHandle
           className="w-1 cursor-col-resize bg-gradient-to-b from-transparent via-gray-300 to-transparent"
           aria-label="Resize sidebar"
         />
 
-        <Panel id={MAIN_PANEL_ID} className="flex-1 min-h-screen">
+        <ResizablePanel id={MAIN_PANEL_ID} className="flex-1 min-h-screen">
           <div className="flex h-full flex-col">
-            <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+            <header className="flex items-center justify-between border-b border-gray-200 bg-white px-2 py-2">
               <div className="flex items-center gap-3">
                 {toggleButton}
                 {navLeft ?? null}
@@ -124,24 +125,24 @@ const EditorLayout = ({ sidebar, topPanel, bottomPanel, navLeft, navRight }: Edi
             </header>
 
             <main className="flex flex-1 min-h-0 flex-col gap-6">
-              <Group orientation="vertical" className="flex min-h-0 flex-1">
-                <Panel className="flex flex-1 min-h-[240px] flex-col">
+              <ResizablePanelGroup orientation="vertical" className="flex min-h-0 flex-1">
+                <ResizablePanel className="flex flex-1 min-h-[240px] flex-col">
                   {topPanel}
-                </Panel>
+                </ResizablePanel>
 
-                <Separator
+                <ResizableHandle
                   className="h-1 cursor-row-resize bg-gradient-to-r from-transparent via-gray-300 to-transparent"
                   aria-label="Resize editor panels"
                 />
 
-                <Panel className="flex flex-1 min-h-[180px] flex-col">
+                <ResizablePanel className="flex flex-1 min-h-[180px] flex-col">
                   {bottomPanel}
-                </Panel>
-              </Group>
+                </ResizablePanel>
+              </ResizablePanelGroup>
             </main>
           </div>
-        </Panel>
-      </Group>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
