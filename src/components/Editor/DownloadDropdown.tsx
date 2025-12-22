@@ -5,7 +5,7 @@ import type { FC } from 'react';
 import type { WebRendererQuality } from '@remotion/web-renderer';
 import { renderRootComposition } from './WebRender';
 import { getRootCompositionDurationInFrames } from './compositions/tracks';
-import { useVideoSize, useTracks } from './useEditor';
+import { useVideoSize, useElements } from './useEditor';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ const QUALITY_MAP: Record<typeof QUALITY_OPTIONS[number], WebRendererQuality> = 
 
 const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, onRequestClose }) => {
   const { width, height } = useVideoSize();
-  const { tracks } = useTracks();
+  const { elements } = useElements();
 
   const [qualityIndex, setQualityIndex] = useState(QUALITY_OPTIONS.length - 1);
   const [renderProgress, setRenderProgress] = useState(0);
@@ -44,13 +44,13 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, onRequestClose
 
     try {
       const container = 'mp4';
-      const compositionTracks = tracks;
-      const durationInFrames = getRootCompositionDurationInFrames(compositionTracks);
+      const compositionElements = elements;
+      const durationInFrames = getRootCompositionDurationInFrames(compositionElements);
 
       const result = await renderRootComposition({
         container,
         quality: QUALITY_MAP[qualityLabel],
-        tracks: compositionTracks,
+        elements: compositionElements,
         videoSize: { width, height },
         onProgress: (progress) => {
           const percent = Math.min(
@@ -79,7 +79,7 @@ const DownloadDropdown: FC<DownloadDropdownProps> = ({ className, onRequestClose
     } finally {
       setIsRendering(false);
     }
-  }, [height, isRendering, onRequestClose, qualityLabel, tracks, width]);
+  }, [elements, height, isRendering, onRequestClose, qualityLabel, width]);
 
   return (
     <div className={cn('space-y-3 text-sm', className)}>

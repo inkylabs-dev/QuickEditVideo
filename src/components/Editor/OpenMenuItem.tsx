@@ -5,10 +5,10 @@
 import type { FC } from 'react';
 import { MenubarItem } from '../ui/menubar';
 import { FolderOpenIcon } from 'lucide-react';
-import { useTracks } from './useEditor';
+import { useElements } from './useEditor';
 
 const OpenMenuItem: FC = () => {
-  const { promptOpenFile } = useTracks();
+  const { promptOpenFile } = useElements();
 
   return (
     <MenubarItem inset onSelect={promptOpenFile} shortcut="⌘O">

@@ -2,20 +2,36 @@
 
 import { useCallback } from 'react';
 import type { CompositionTrack } from './compositions/tracks';
-import { useTracks } from './useEditor';
+import { useElements, useVideoSize, PROJECT_TYPE, PROJECT_VERSION } from './useEditor';
 
-const compactTrack = (track: CompositionTrack) => ({
+const compactTrack = (track: CompositionTrack, fallbackTrack: number) => ({
   id: track.id,
   type: track.type,
+  track: typeof track.track === 'number' ? track.track : Math.max(0, fallbackTrack),
   startInFrames: track.startInFrames,
   durationInFrames: track.durationInFrames,
   props: track.props,
 });
 
-const buildPayload = (tracks: CompositionTrack[]) => ({
-  version: 1,
+const buildPayload = (
+  elements: CompositionTrack[],
+  metadata: Record<string, unknown>,
+  width: number,
+  height: number,
+  files: unknown[],
+  appState: Record<string, unknown>,
+) => ({
+  type: PROJECT_TYPE,
+  version: PROJECT_VERSION,
   exportedAt: new Date().toISOString(),
-  tracks: tracks.map(compactTrack),
+  metadata: {
+    ...metadata,
+    width,
+    height,
+  },
+  elements: elements.map((track, index) => compactTrack(track, index)),
+  files,
+  appState,
 });
 
 const downloadPayload = async (payload: string) => {
@@ -59,10 +75,15 @@ const downloadPayload = async (payload: string) => {
 };
 
 export const useWebSaver = () => {
-  const { tracks } = useTracks();
+  const { elements, files, metadata, appState } = useElements();
+  const { width, height } = useVideoSize();
 
   return useCallback(async () => {
-    const json = JSON.stringify(buildPayload(tracks), null, 2);
+    const json = JSON.stringify(
+      buildPayload(elements, metadata, width, height, files, appState),
+      null,
+      2,
+    );
     await downloadPayload(json);
-  }, [tracks]);
+  }, [elements, metadata, width, height, files, appState]);
 };

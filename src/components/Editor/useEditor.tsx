@@ -2,7 +2,11 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { CompositionTrack } from './compositions/tracks';
+import type { CompositionTrack, TrackType } from './compositions/tracks';
+
+export const PROJECT_TYPE = 'quickeditvideo';
+export const PROJECT_VERSION = 1;
+const VALID_TRACK_TYPES: TrackType[] = ['text', 'image', 'video', 'audio'];
 
 export interface VideoSize {
   width: number;
@@ -14,34 +18,138 @@ interface VideoSizeContextValue extends VideoSize {
   setHeight: (height: number) => void;
 }
 
-interface TracksContextValue {
-  tracks: CompositionTrack[];
-  setTracks: (tracks: CompositionTrack[]) => void;
+interface ElementsContextValue {
+  elements: CompositionTrack[];
+  setElements: (elements: CompositionTrack[]) => void;
   promptOpenFile: () => void;
+  files: unknown[];
+  setFiles: (files: unknown[]) => void;
+  metadata: QuickEditMetadata;
+  setMetadata: (metadata: QuickEditMetadata) => void;
+  appState: Record<string, unknown>;
+  setAppState: (appState: Record<string, unknown>) => void;
 }
 
 const VideoSizeContext = createContext<VideoSizeContextValue | null>(null);
-const TracksContext = createContext<TracksContextValue | null>(null);
+const ElementsContext = createContext<ElementsContextValue | null>(null);
 
-const parseTracksFromPayload = (payload: string): CompositionTrack[] | undefined => {
+type QuickEditMetadata = Record<string, unknown>;
+
+interface ParsedProjectPayload {
+  elements: CompositionTrack[];
+  metadata: QuickEditMetadata;
+  files: unknown[];
+  appState: Record<string, unknown>;
+}
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value && typeof value === 'object' && !Array.isArray(value));
+
+const toFiniteNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : undefined;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value.trim());
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return undefined;
+};
+
+const normalizeTrackElement = (element: unknown, fallbackTrack: number): CompositionTrack | null => {
+  if (!isPlainObject(element)) {
+    return null;
+  }
+
+  const { id, type, startInFrames, durationInFrames, props, track } = element as Record<string, unknown>;
+
+  if (typeof id !== 'string' || typeof type !== 'string' || !VALID_TRACK_TYPES.includes(type as TrackType)) {
+    return null;
+  }
+
+  const parsedStart = toFiniteNumber(startInFrames);
+  const parsedDuration = toFiniteNumber(durationInFrames);
+
+  if (parsedStart === undefined || parsedDuration === undefined) {
+    return null;
+  }
+
+  if (!props || typeof props !== 'object') {
+    return null;
+  }
+
+  const parsedTrackIndex = toFiniteNumber(track);
+  const normalizedTrack = parsedTrackIndex !== undefined ? Math.max(0, Math.floor(parsedTrackIndex)) : fallbackTrack;
+
+  return {
+    id,
+    type: type as TrackType,
+    startInFrames: Math.max(0, Math.floor(parsedStart)),
+    durationInFrames: Math.max(1, Math.floor(parsedDuration)),
+    props: props as CompositionTrack['props'],
+    track: normalizedTrack,
+  };
+};
+
+const buildElementsFromPayload = (elements: unknown[]): CompositionTrack[] =>
+  elements
+    .map((element, index) => normalizeTrackElement(element, index))
+    .filter((track): track is CompositionTrack => Boolean(track));
+
+const parseProjectPayload = (payload: string): ParsedProjectPayload | undefined => {
   try {
     const parsed = JSON.parse(payload);
+
     if (Array.isArray(parsed)) {
-      return parsed as CompositionTrack[];
+      return {
+        elements: buildElementsFromPayload(parsed),
+        metadata: {},
+        files: [],
+        appState: {},
+      };
     }
-    if (Array.isArray(parsed?.tracks)) {
-      return parsed.tracks as CompositionTrack[];
+
+    if (!isPlainObject(parsed)) {
+      return undefined;
     }
-    return undefined;
+
+    if (typeof parsed.type === 'string' && parsed.type !== PROJECT_TYPE) {
+      return undefined;
+    }
+
+    const parsedVersion = toFiniteNumber(parsed.version);
+    if (parsedVersion !== undefined && parsedVersion !== PROJECT_VERSION) {
+      return undefined;
+    }
+
+    const rawElements = Array.isArray(parsed.elements)
+      ? parsed.elements
+      : Array.isArray(parsed.tracks)
+      ? parsed.tracks
+      : undefined;
+
+    if (!rawElements) {
+      return undefined;
+    }
+
+    return {
+      elements: buildElementsFromPayload(rawElements),
+      metadata: isPlainObject(parsed.metadata) ? parsed.metadata : {},
+      files: Array.isArray(parsed.files) ? parsed.files : [],
+      appState: isPlainObject(parsed.appState) ? parsed.appState : {},
+    };
   } catch {
     return undefined;
   }
 };
 
-export const DEFAULT_TRACKS: CompositionTrack[] = [
+export const DEFAULT_ELEMENTS: CompositionTrack[] = [
   {
     id: 'hero-image',
     type: 'image',
+    track: 0,
     startInFrames: 0,
     durationInFrames: 150,
     props: {
@@ -56,19 +164,44 @@ export const DEFAULT_TRACKS: CompositionTrack[] = [
 export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [width, setWidthState] = useState(1920);
   const [height, setHeightState] = useState(1080);
-  const [tracks, setTracksState] = useState<CompositionTrack[]>(DEFAULT_TRACKS);
+  const [metadata, setMetadataState] = useState<QuickEditMetadata>({
+    width: 1920,
+    height: 1080,
+  });
+  const [elements, setElementsState] = useState<CompositionTrack[]>(DEFAULT_ELEMENTS);
+  const [files, setFilesState] = useState<unknown[]>([]);
+  const [appState, setAppStateState] = useState<Record<string, unknown>>({});
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const setWidth = useCallback((nextWidth: number) => {
     setWidthState(nextWidth);
+    setMetadataState((prev) => ({ ...prev, width: nextWidth }));
   }, []);
 
   const setHeight = useCallback((nextHeight: number) => {
     setHeightState(nextHeight);
+    setMetadataState((prev) => ({ ...prev, height: nextHeight }));
   }, []);
 
-  const setTracks = useCallback((nextTracks: CompositionTrack[]) => {
-    setTracksState(nextTracks);
+  const setElements = useCallback((nextElements: CompositionTrack[]) => {
+    setElementsState(
+      nextElements.map((track, index) => ({
+        ...track,
+        track: typeof track.track === 'number' ? track.track : Math.max(0, index),
+      })),
+    );
+  }, []);
+
+  const setFiles = useCallback((nextFiles: unknown[]) => {
+    setFilesState(nextFiles);
+  }, []);
+
+  const setAppState = useCallback((nextAppState: Record<string, unknown>) => {
+    setAppStateState(nextAppState);
+  }, []);
+
+  const setMetadata = useCallback((nextMetadata: QuickEditMetadata) => {
+    setMetadataState(nextMetadata);
   }, []);
 
   const handleFile = useCallback(
@@ -84,13 +217,26 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        const parsedTracks = parseTracksFromPayload(reader.result as string);
+        const parsedProject = parseProjectPayload(reader.result as string);
 
-        if (parsedTracks) {
-          setTracks(parsedTracks);
-        } else {
-          console.error('Selected file does not contain a valid tracks array');
+        if (!parsedProject) {
+          console.error('Selected file is not a valid QuickEditVideo project');
+          return;
         }
+
+        setElements(parsedProject.elements);
+        setFiles(parsedProject.files);
+        setAppState(parsedProject.appState);
+        setMetadataState((prev) => ({
+          ...prev,
+          ...parsedProject.metadata,
+        }));
+
+        const metadataWidth = toFiniteNumber(parsedProject.metadata.width);
+        const metadataHeight = toFiniteNumber(parsedProject.metadata.height);
+
+        setWidth(metadataWidth ?? width);
+        setHeight(metadataHeight ?? height);
       };
 
       reader.onerror = () => {
@@ -99,7 +245,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
 
       reader.readAsText(file);
     },
-    [setTracks],
+    [setElements, setFiles, setAppState, setWidth, setHeight, width, height],
   );
 
   useEffect(() => {
@@ -131,9 +277,21 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <VideoSizeContext.Provider value={{ width, height, setWidth, setHeight }}>
-      <TracksContext.Provider value={{ tracks, setTracks, promptOpenFile }}>
+      <ElementsContext.Provider
+        value={{
+          elements,
+          setElements,
+          promptOpenFile,
+          files,
+          setFiles,
+          metadata,
+          setMetadata,
+          appState,
+          setAppState,
+        }}
+      >
         {children}
-      </TracksContext.Provider>
+      </ElementsContext.Provider>
     </VideoSizeContext.Provider>
   );
 };
@@ -146,10 +304,10 @@ export const useVideoSize = () => {
   return context;
 };
 
-export const useTracks = () => {
-  const context = useContext(TracksContext);
+export const useElements = () => {
+  const context = useContext(ElementsContext);
   if (!context) {
-    throw new Error('useTracks must be used within EditorProvider');
+    throw new Error('useElements must be used within EditorProvider');
   }
   return context;
 };

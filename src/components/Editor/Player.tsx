@@ -8,7 +8,7 @@ import {
   getRootCompositionDurationInFrames,
   RootCompositionInputProps,
 } from './compositions/tracks';
-import { useVideoSize, useTracks } from './useEditor';
+import { useVideoSize, useElements } from './useEditor';
 
 const COMPOSITION_FPS = 30;
 
@@ -21,20 +21,16 @@ const PLAYER_STYLE: CSSProperties = {
 
 const Player = () => {
   const { width, height } = useVideoSize();
-  const { tracks } = useTracks();
-  const durationInFrames = getRootCompositionDurationInFrames(tracks);
-  const inputProps: RootCompositionInputProps = useMemo(() => {
-    return {
-      tracks,
-    }
-  }, [tracks]);
-  const hasTracks = tracks.length > 0;
+  const { elements } = useElements();
+  const durationInFrames = getRootCompositionDurationInFrames(elements);
+  const inputProps: RootCompositionInputProps = useMemo(() => ({ elements }), [elements]);
+  const hasElements = elements.length > 0;
 
-  if (!hasTracks) {
+  if (!hasElements) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="text-sm font-semibold text-slate-900">
-          No tracks to preview. Add or open a project to render the player.
+          No elements to preview. Add or open a project to render the player.
         </div>
       </div>
     );

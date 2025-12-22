@@ -8,6 +8,7 @@ export type TrackType = 'text' | 'image' | 'video' | 'audio';
 interface BaseCompositionTrack {
   id: string;
   type: TrackType;
+  track: number;
   startInFrames: number;
   durationInFrames: number;
 }
@@ -19,13 +20,17 @@ export type CompositionTrack =
   | (BaseCompositionTrack & { type: 'audio'; props: AudioCompositionProps });
 
 export interface RootCompositionInputProps {
-  tracks: CompositionTrack[];
+  elements?: CompositionTrack[];
+  /**
+   * Legacy property kept for backward compatibility with older project files.
+   */
+  tracks?: CompositionTrack[];
 }
 
-export const getRootCompositionDurationInFrames = (tracks: CompositionTrack[]) =>
-  tracks.length === 0
+export const getRootCompositionDurationInFrames = (elements: CompositionTrack[]) =>
+  elements.length === 0
     ? 1
-    : tracks.reduce((max, track) => Math.max(max, track.startInFrames + track.durationInFrames), 0);
+    : elements.reduce((max, track) => Math.max(max, track.startInFrames + track.durationInFrames), 0);
 
 const stableStringify = (value: unknown): string => {
   if (value === null) {
@@ -44,11 +49,11 @@ const stableStringify = (value: unknown): string => {
   return JSON.stringify(value);
 };
 
-export const getTracksFingerprint = (tracks: CompositionTrack[]) => {
-  const serial = tracks
+export const getElementsFingerprint = (elements: CompositionTrack[]) => {
+  const serial = elements
     .map((track) => {
       const propsValue = stableStringify(track.props);
-      return `${track.id}|${track.type}|${track.startInFrames}|${track.durationInFrames}|${propsValue}`;
+      return `${track.id}|${track.type}|${track.track}|${track.startInFrames}|${track.durationInFrames}|${propsValue}`;
     })
     .join(';');
 

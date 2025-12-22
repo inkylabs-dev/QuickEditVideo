@@ -16,7 +16,7 @@ import {
 	MenubarTrigger,
 } from '../ui/menubar';
 import { RedoIcon, UndoIcon } from 'lucide-react';
-import { useTracks } from './useEditor';
+import { useElements } from './useEditor';
 
 export interface MenubarProps {
 	className?: string;
@@ -25,7 +25,7 @@ export interface MenubarProps {
 const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 	const [isResizeDialogOpen, setResizeDialogOpen] = useState(false);
 	const [isResetDialogOpen, setResetDialogOpen] = useState(false);
-	const { setTracks } = useTracks();
+	const { setElements } = useElements();
 
 	const openResizeDialog = useCallback(() => {
 		setResizeDialogOpen(true);
@@ -44,8 +44,8 @@ const EditorMenubar: FC<MenubarProps> = ({ className }) => {
 	}, []);
 
 	const handleResetConfirm = useCallback(() => {
-		setTracks([]);
-	}, [setTracks]);
+		setElements([]);
+	}, [setElements]);
 
 	const handleUndo = useCallback(() => {
 		console.log('Undo clicked');
