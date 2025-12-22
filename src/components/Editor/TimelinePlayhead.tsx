@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Signpost } from 'lucide-react';
 import { useElements, usePlayerRef } from './useEditor';
 
 const TimelinePlayhead = () => {
@@ -73,7 +72,9 @@ const TimelinePlayhead = () => {
       onMouseDown={handleMouseDown}
     >
       <div className="flex flex-col items-center">
-        <Signpost className="h-4 w-4 text-black fill-black" />
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9.9 2.121a2 2 0 0 1-.586 1.414l-2.95 2.95a2 2 0 0 1-2.828 0l-2.95-2.95A2 2 0 0 1 0 2.122V2a2 2 0 0 1 2-2h5.9a2 2 0 0 1 2 2v.121Z" fill="#0E1318"/>
+        </svg>
         <div className="h-2" />
         <div className="w-0.5 bg-black" style={{ height: 'calc(100vh - 200px)' }} />
       </div>
