@@ -2,16 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { SkipBack, Play, Pause, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePlayerRef } from './useEditor';
-
-const FPS = 30;
-
-const formatTime = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  const wholeSecs = Math.floor(secs);
-  const decisec = Math.floor((secs - wholeSecs) * 10);
-  return `${mins.toString().padStart(2, '0')}:${wholeSecs.toString().padStart(2, '0')}.${decisec}`;
-};
+import { FPS, formatTime } from './timeUtils';
 
 const TimelineProgressControl = () => {
   const { getPlayerRef, getTotalFrames } = usePlayerRef();
