@@ -56,7 +56,7 @@ const Player = () => {
         inputProps={inputProps}
         autoPlay={false}
         loop={false}
-        controls={true}
+        controls={false}
         playbackRate={playbackRate}
         style={PLAYER_STYLE}
         // QuickEditVideo project is ran by non-profit organization so we can
