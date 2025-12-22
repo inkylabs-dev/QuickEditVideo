@@ -4,6 +4,7 @@ import type { CompositionTrack } from './compositions/tracks';
 import TimelineControls from './TimelineControls';
 import { TimelineScrollArea } from './TimelineScrollArea';
 import TimelineRuler from './TimelineRuler';
+import TimelinePlayhead from './TimelinePlayhead';
 
 const Timeline = () => {
   const { elements } = useElements();
@@ -32,7 +33,10 @@ const Timeline = () => {
       <TimelineControls />
       <div className="flex-1 overflow-hidden">
         <TimelineScrollArea>
-          <TimelineRuler />
+          <div className="relative">
+            <TimelineRuler />
+            <TimelinePlayhead />
+          </div>
           <div className="flex h-full flex-1 flex-col gap-4 p-5">
             <div className="flex-1 space-y-3 overflow-hidden">
               {tracks.map(({ trackNumber, elements: trackElements }) => (

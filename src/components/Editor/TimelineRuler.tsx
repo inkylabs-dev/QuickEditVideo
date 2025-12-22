@@ -59,7 +59,7 @@ const TimelineRuler = () => {
 
   return (
     <div
-      className="relative h-8 border-b border-gray-200 bg-gray-50 cursor-pointer"
+      className="relative h-8 border-b border-gray-200 cursor-pointer"
       style={{ width: `${totalWidth}px` }}
       onClick={handleRulerClick}
     >
@@ -69,7 +69,7 @@ const TimelineRuler = () => {
         return (
           <div
             key={frame}
-            className="absolute top-0 cursor-pointer"
+            className="absolute top-1 cursor-pointer"
             style={{ left: `${position}px` }}
             onClick={(e) => handleLabelClick(frame, e)}
           >
