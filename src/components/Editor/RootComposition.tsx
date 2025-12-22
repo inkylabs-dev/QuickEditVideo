@@ -9,12 +9,6 @@ import TextComposition from './compositions/TextComposition';
 import { CompositionTrack, RootCompositionInputProps } from './compositions/tracks';
 import { DEFAULT_ELEMENTS } from './useEditor';
 
-const containerStyle: CSSProperties = {
-  background: 'radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.25), transparent 40%), #020617',
-  color: '#f8fafc',
-  position: 'relative',
-};
-
 const renderTrack = (track: CompositionTrack) => {
   if (track.type === 'audio') {
     return <AudioComposition {...track.props} />;
@@ -61,7 +55,7 @@ const RootComposition = ({ elements, inputProps }: RootCompositionProps) => {
     .sort((a, b) => a - b);
 
   return (
-    <AbsoluteFill style={containerStyle}>
+    <AbsoluteFill className="bg-white text-black relative">
       {sortedTrackIndices.map((trackIndex) => {
         const trackElements = (elementsByTrack[trackIndex] ?? []).slice().sort((a, b) => {
           if (a.startInFrames === b.startInFrames) {

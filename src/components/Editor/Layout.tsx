@@ -9,8 +9,8 @@ import { useGroupRef } from 'react-resizable-panels';
 export const LEFT_PANEL_ID = 'editor-sidebar';
 export const MAIN_PANEL_ID = 'editor-main';
 
-const DEFAULT_LEFT_SIZE = 20;
-const DEFAULT_MAIN_SIZE = 80;
+const DEFAULT_LEFT_SIZE = 30;
+const DEFAULT_MAIN_SIZE = 70;
 
 export interface EditorLayoutProps {
   sidebar: ReactNode;
@@ -100,8 +100,8 @@ const EditorLayout = ({ sidebar, topPanel, bottomPanel, navLeft, navRight }: Edi
           collapsible
           collapsedSize="0%"
           defaultSize="16rem"
-          maxSize="25%"
-          minSize="14rem"
+          maxSize="30%"
+          minSize="3rem"
           className={`transition-all duration-200 ease-in-out bg-white overflow-hidden ${
             isSidebarOpen ? 'border border-gray-200 shadow' : 'border-none'
           }`}

@@ -59,7 +59,7 @@ const TimelineRuler = () => {
 
   return (
     <div
-      className="relative h-8 cursor-pointer"
+      className="relative h-8 cursor-pointer select-none"
       style={{ width: `${totalWidth}px` }}
       onClick={handleRulerClick}
     >
