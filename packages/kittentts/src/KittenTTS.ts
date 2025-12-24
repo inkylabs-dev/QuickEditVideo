@@ -221,6 +221,31 @@ export class KittenTTS {
     });
   }
 
+  private normalizeVoiceEmbedding(voiceId: string, voiceData: unknown): { numericVoiceId: string; embedding: Float32Array } | null {
+    const numericVoiceId = VOICE_ID_MAPPING[voiceId];
+    if (!numericVoiceId) {
+      this.log(`Skipping unmapped voice ${voiceId}`);
+      return null;
+    }
+
+    let flattenedData: number[] | null = null;
+    if (Array.isArray(voiceData) && Array.isArray((voiceData as any)[0])) {
+      flattenedData = (voiceData as number[][])[0];
+    } else if (Array.isArray(voiceData)) {
+      flattenedData = voiceData as number[];
+    }
+
+    if (!flattenedData) {
+      console.error(`Invalid voice data format for ${voiceId}:`, voiceData);
+      return null;
+    }
+
+    return {
+      numericVoiceId,
+      embedding: new Float32Array(flattenedData),
+    };
+  }
+
   /**
    * Save model buffer to IndexedDB cache
    * @param modelBuffer The model buffer to cache
@@ -335,23 +360,13 @@ export class KittenTTS {
       if (this.config.useEmbeddedAssets) {
         this.log('Using embedded voice embeddings...');
         const voicesData = getEmbeddedVoices();
-        
-        // Convert voices data to Float32Array format
+
         for (const [voiceId, voiceData] of Object.entries(voicesData)) {
-          let flattenedData: number[];
-          if (Array.isArray(voiceData) && Array.isArray((voiceData as any)[0])) {
-            // Nested array case: [[...]]
-            flattenedData = (voiceData as number[][])[0];
-          } else if (Array.isArray(voiceData)) {
-            // Flat array case: [...]
-            flattenedData = voiceData as number[];
-          } else {
-            console.error(`Invalid voice data format for ${voiceId}:`, voiceData);
-            continue;
-          }
-          
-          this.voices[voiceId] = new Float32Array(flattenedData);
-          this.log(`Loaded voice ${voiceId}: ${flattenedData.length} dimensions`);
+          const parsed = this.normalizeVoiceEmbedding(voiceId, voiceData);
+          if (!parsed) continue;
+
+          this.voices[parsed.numericVoiceId] = parsed.embedding;
+          this.log(`Loaded voice ${voiceId} (${parsed.numericVoiceId}): ${parsed.embedding.length} dimensions`);
         }
       } else {
         // Fallback to fetch
@@ -362,23 +377,13 @@ export class KittenTTS {
         }
         
         const voicesData = await voicesResponse.json();
-        
-        // Convert voices data to Float32Array format
+
         for (const [voiceId, voiceData] of Object.entries(voicesData)) {
-          let flattenedData: number[];
-          if (Array.isArray(voiceData) && Array.isArray((voiceData as any)[0])) {
-            // Nested array case: [[...]]
-            flattenedData = (voiceData as number[][])[0];
-          } else if (Array.isArray(voiceData)) {
-            // Flat array case: [...]
-            flattenedData = voiceData as number[];
-          } else {
-            console.error(`Invalid voice data format for ${voiceId}:`, voiceData);
-            continue;
-          }
-          
-          this.voices[voiceId] = new Float32Array(flattenedData);
-          this.log(`Loaded voice ${voiceId}: ${flattenedData.length} dimensions`);
+          const parsed = this.normalizeVoiceEmbedding(voiceId, voiceData);
+          if (!parsed) continue;
+
+          this.voices[parsed.numericVoiceId] = parsed.embedding;
+          this.log(`Loaded voice ${voiceId} (${parsed.numericVoiceId}): ${parsed.embedding.length} dimensions`);
         }
       }
 
@@ -421,9 +426,9 @@ export class KittenTTS {
     if (!numericVoiceId) {
       throw new Error(`Voice '${voice}' not available. Choose from: ${Object.keys(VOICE_ID_MAPPING).join(', ')}`);
     }
-    
+
     if (!this.voices[numericVoiceId]) {
-      throw new Error(`Voice '${voice}' not available. Choose from: ${this.getAvailableVoices()}`);
+      throw new Error(`Voice '${voice}' not embedded. Choose from: ${this.getAvailableVoices()}`);
     }
 
     this.log('Preparing inputs for text:', text);
