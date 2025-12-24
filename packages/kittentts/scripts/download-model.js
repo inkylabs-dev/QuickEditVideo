@@ -171,7 +171,7 @@ function createEmbeddedAssets() {
   
   const packagesDir = path.join(__dirname, '..');
   const assetsDir = path.join(packagesDir, 'assets');
-  const modelPath = path.join(assetsDir, 'kitten_tts_nano_v0_1.onnx');
+  const modelPath = path.join(assetsDir, 'kitten_tts_nano_v0_2.onnx');
   const voicesPath = path.join(assetsDir, 'voices.json');
   const outputPath = path.join(packagesDir, 'src', 'embeddedAssets.ts');
   
@@ -188,12 +188,17 @@ function createEmbeddedAssets() {
 
 `;
 
-  // Embed ONNX model as base64
-  if (existsSync(modelPath)) {
-    const modelBuffer = readFileSync(modelPath);
-    const modelBase64 = modelBuffer.toString('base64');
-    
-    embeddedCode += `// ONNX Model (${(modelBuffer.length / 1024 / 1024).toFixed(1)} MB)
+  if (!existsSync(modelPath)) {
+    throw new Error(`ONNX model not found at ${modelPath}`);
+  }
+  if (!existsSync(voicesPath)) {
+    throw new Error(`Voice embeddings not found at ${voicesPath}`);
+  }
+
+  const modelBuffer = readFileSync(modelPath);
+  const modelBase64 = modelBuffer.toString('base64');
+
+  embeddedCode += `// ONNX Model (${(modelBuffer.length / 1024 / 1024).toFixed(1)} MB)
 export const EMBEDDED_MODEL_BASE64 = '${modelBase64}';
 
 export function getEmbeddedModel(): ArrayBuffer {
@@ -206,29 +211,12 @@ export function getEmbeddedModel(): ArrayBuffer {
 }
 
 `;
-  } else {
-    embeddedCode += `// ONNX Model not found during build
-export const EMBEDDED_MODEL_BASE64 = '';
-export function getEmbeddedModel(): ArrayBuffer {
-  throw new Error('ONNX model not embedded. Run build with assets.');
-}
 
-`;
-  }
-
-  // Embed voices as JSON
-  if (existsSync(voicesPath)) {
-    const voicesJson = readFileSync(voicesPath, 'utf8');
-    embeddedCode += `// Voice Embeddings
+  const voicesJson = readFileSync(voicesPath, 'utf8');
+  embeddedCode += `// Voice Embeddings
 export const EMBEDDED_VOICES = ${voicesJson} as const;
 
 `;
-  } else {
-    embeddedCode += `// Voice embeddings not found during build
-export const EMBEDDED_VOICES = {} as const;
-
-`;
-  }
 
   // Add utility functions
   embeddedCode += `// Utility functions

@@ -3,9 +3,7 @@ import { phonemize } from 'phonemizer';
 import { TextCleaner, cleanTextForTTS, chunkText } from './TextCleaner.js';
 import { 
   getEmbeddedModel, 
-  getEmbeddedVoices, 
-  hasEmbeddedAssets,
-  EMBEDDED_VOICES 
+  getEmbeddedVoices,
 } from './embeddedAssets.js';
 
 export interface VoiceEmbeddings {
@@ -284,7 +282,7 @@ export class KittenTTS {
       // If not in cache, load from embedded assets or fetch
       if (!modelBuffer) {
         // Check if we should use embedded assets
-        if (this.config.useEmbeddedAssets && hasEmbeddedAssets()) {
+        if (this.config.useEmbeddedAssets) {
           this.log('Using embedded ONNX model...');
           modelBuffer = getEmbeddedModel();
           this.log(`Embedded model loaded: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(1)} MB`);
@@ -334,7 +332,7 @@ export class KittenTTS {
       }
 
       // Load voice embeddings
-      if (this.config.useEmbeddedAssets && hasEmbeddedAssets()) {
+      if (this.config.useEmbeddedAssets) {
         this.log('Using embedded voice embeddings...');
         const voicesData = getEmbeddedVoices();
         
