@@ -62,6 +62,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",
     "happy-dom": "^7.8.1",
+    "npyjs": "^1.0.4",
     "tailwindcss-animate": "^1.0.7",
     "vitest": "^1.6.1"
   },

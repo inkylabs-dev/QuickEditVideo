@@ -4,8 +4,9 @@ import { downloadFile } from '@huggingface/hub';
 import { mkdirSync, existsSync, writeFileSync, readFileSync, statSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import '@tensorflow/tfjs-node';
-import { npz } from 'tfjs-npy-node';
+import JSZip from 'jszip';
+import { load as loadNpy } from 'npyjs';
+import { reshape } from 'npyjs/reshape';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,18 +48,17 @@ async function downloadModel() {
         try {
           const response = await downloadFile({
             repo: MODEL_REPO_ID,
-            filename: filename,
+            path: filename,
           });
           
-          if (response && response.size > 0) {
-            // Write the blob/response to file
-            const arrayBuffer = await response.arrayBuffer();
-            writeFileSync(localPath, Buffer.from(arrayBuffer));
-          } else {
-            throw new Error('Empty response from @huggingface/hub');
+          if (!response) {
+            throw new Error(`File ${filename} not found in ${MODEL_REPO_ID}`);
           }
+
+          const arrayBuffer = await response.arrayBuffer();
+          writeFileSync(localPath, Buffer.from(arrayBuffer));
         } catch (hubError) {
-          // Fallback to direct fetch
+          console.log(`    @huggingface/hub download failed for ${filename}:`, hubError?.message ?? hubError);
           console.log(`    Falling back to direct fetch for ${filename}...`);
           const url = `https://huggingface.co/${MODEL_REPO_ID}/resolve/main/${filename}`;
           const response = await fetch(url);
@@ -113,26 +113,27 @@ async function convertVoicesToJson() {
   }
   
   try {
-    // Load NPZ file using tfjs-npy-node
-    const npzData = await npz.load(npzPath);
+    const archiveBuffer = readFileSync(npzPath);
+    const archive = await JSZip.loadAsync(archiveBuffer);
+
+    const npyEntries = Object.values(archive.files).filter((entry) => {
+      return !entry.dir && entry.name.toLowerCase().endsWith('.npy');
+    });
     
-    // Convert to JSON-serializable format
+    if (!npyEntries.length) {
+      throw new Error(`No .npy entries found inside ${npzPath}`);
+    }
+
     const jsonData = {};
     
-    for (const [key, tensor] of Object.entries(npzData)) {
-      // Convert tensor to nested array
-      const array = await tensor.data();
-      const shape = tensor.shape;
-      
-      // Convert to nested array structure based on shape
-      let nestedArray = Array.from(array);
-      if (shape.length > 1) {
-        // Reshape flat array to match original dimensions
-        nestedArray = reshapeArray(Array.from(array), shape);
-      }
+    for (const entry of npyEntries) {
+      const arrayBuffer = await entry.async('arraybuffer');
+      const { data, shape, dtype, fortranOrder } = await loadNpy(arrayBuffer);
+      const nestedArray = reshape(data, shape, fortranOrder);
+      const key = path.basename(entry.name, '.npy');
       
       jsonData[key] = nestedArray;
-      console.log(`  Converted ${key}: shape [${shape.join(', ')}], dtype ${tensor.dtype}`);
+      console.log(`  Converted ${key}: shape [${shape.join(', ')}], dtype ${dtype}`);
     }
     
     // Write to JSON file with compact formatting
@@ -160,44 +161,6 @@ async function convertVoicesToJson() {
     console.error('Error converting NPZ to JSON:', error);
     throw error;
   }
-}
-
-/**
- * Reshape flat array to match original tensor dimensions
- */
-function reshapeArray(flatArray, shape) {
-  if (shape.length === 1) {
-    return flatArray;
-  }
-  
-  const result = [];
-  const totalSize = shape.reduce((a, b) => a * b, 1);
-  
-  if (flatArray.length !== totalSize) {
-    throw new Error(`Array size ${flatArray.length} doesn't match shape ${shape.join('x')} = ${totalSize}`);
-  }
-  
-  if (shape.length === 2) {
-    const [rows, cols] = shape;
-    for (let i = 0; i < rows; i++) {
-      result.push(flatArray.slice(i * cols, (i + 1) * cols));
-    }
-  } else if (shape.length === 3) {
-    const [depth, rows, cols] = shape;
-    for (let d = 0; d < depth; d++) {
-      const plane = [];
-      for (let r = 0; r < rows; r++) {
-        const rowStart = d * rows * cols + r * cols;
-        plane.push(flatArray.slice(rowStart, rowStart + cols));
-      }
-      result.push(plane);
-    }
-  } else {
-    // For higher dimensions, just return flat array
-    return flatArray;
-  }
-  
-  return result;
 }
 
 /**

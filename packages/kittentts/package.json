@@ -44,11 +44,11 @@
   "devDependencies": {
     "@huggingface/hub": "^2.4.1",
     "@rollup/plugin-typescript": "^12.1.1",
-    "@tensorflow/tfjs-node": "^4.22.0",
     "@types/node": "^22.10.2",
+    "jszip": "^3.10.1",
+    "npyjs": "^1.0.4",
     "rollup": "^4.28.1",
     "rollup-plugin-copy": "^3.5.0",
-    "tfjs-npy-node": "^0.4.1",
     "tslib": "^2.8.1",
     "typescript": "^5.7.2"
   },
