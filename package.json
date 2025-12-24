@@ -1,7 +1,7 @@
 {
   "name": "quickeditvideo",
   "type": "module",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "scripts": {
     "dev": "next dev",
     "build": "pnpm run build:packages && pnpm run copy:onnxruntime && next build",
