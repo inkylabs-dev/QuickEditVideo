@@ -14,11 +14,12 @@ export const TimelineScrollArea = ({ children }: TimelineScrollAreaProps) => {
 
     if (!scrollElement) return;
 
-    const handleWheel = (e: WheelEvent) => {
+    const handleWheel = (e: Event) => {
       // If scrolling horizontally (shift+wheel or trackpad horizontal scroll)
-      if (Math.abs(e.deltaX) > 0) {
-        e.preventDefault();
-        scrollElement.scrollLeft += e.deltaX;
+      const wheelEvent = e as WheelEvent;
+      if (Math.abs(wheelEvent.deltaX) > 0) {
+        wheelEvent.preventDefault();
+        scrollElement.scrollLeft += wheelEvent.deltaX;
       }
     };
 

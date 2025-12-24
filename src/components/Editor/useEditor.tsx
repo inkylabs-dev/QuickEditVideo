@@ -99,7 +99,7 @@ const normalizeTrackElement = (element: unknown, fallbackTrack: number): Composi
     durationInFrames: Math.max(1, Math.floor(parsedDuration)),
     props: props as CompositionTrack['props'],
     track: normalizedTrack,
-  };
+  } as CompositionTrack;
 };
 
 const buildElementsFromPayload = (elements: unknown[]): CompositionTrack[] =>
